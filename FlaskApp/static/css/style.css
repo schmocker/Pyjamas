@@ -16,7 +16,7 @@ body{
   height: 700px;
 }
 
-#working_field>svg{
+.wsg{
   background-color: GhostWhite;
   border-style: solid;
   border-color: grey;
@@ -24,6 +24,28 @@ body{
   width: 100%;
   height: 100%;
 }
+
+.wsg>.model>.box{
+    fill: grey;
+    stroke: grey;
+    stroke-width: 3;
+    cursor: move;
+}
+.wsg>.model>.box:hover{
+    stroke: black;
+}
+.wsg>.model>*:hover ~ .box{
+    stroke: black;
+}
+.wsg>.model>.box_draged{
+    stroke: black;
+}
+.wsg>.model>.box_sizer{
+    fill: blue;
+    cursor: nw-resize;
+}
+
+
 
 
 
@@ -40,43 +62,8 @@ body{
   stroke: black;
 }
 
-.box{
-  display: grid;
-  grid-gap: 10px;
-  grid-template-columns: auto auto;
-  position: absolute;
-  left: 0px;
-  top: 0px;
-  cursor: pointer;
-  border-style: solid;
-  border-color: grey;
-  border-width: 3px;
-  background-color: grey;
-  padding: 10px;
-  z-index: 0;
-}
-.box:hover{
-  border-color: black;
-}
-.box_drag{
-  background-color: DarkGray;
-}
-.box>.name{
-  align-self: center;
-  justify-self: center;
-}
-.sizeChanger{
-    fill: grey;
-    stroke: grey;
-    stroke-width: 3;
-    cursor: nw-resize;
-}
-.sizeChanger:hover{
-    stroke: black;
-}
-sizeChangerDrag{
-    fill: blue;
-}
+
+
 
 
 .port{

@@ -40,6 +40,7 @@ class WebSimGui {
     constructor(){
 
         this.svgContainer = d3.select("#working_field").append("svg")
+            .classed("wsg", true)
             .attr("width", "100%")
             .attr("height", "100%");
         this.boxes = {};

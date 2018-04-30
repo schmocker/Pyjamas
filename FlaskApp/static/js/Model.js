@@ -3,9 +3,7 @@ class Box {
         this.WebSimGui = WebSimGui;
         this.id = id;
 
-
-
-        var this_box = this
+        let this_box = this;
         this.div = d3.select("#working_field").append('div')
             .html('<div class="name">'+model_obj.name+'</div>')
             .classed("box", true)
@@ -24,43 +22,102 @@ class Box {
         });
 
         this.model = websimgui.svgContainer.append("g")
-            .data(this.rectangle)
-            .call(d3.drag()
-                .on("start", function (d) {
-                    d3.select(this).classed("sizeChangerDrag", true);
-                })
-                .on("drag", function (d) {
-                    d3.select(this).select("text")
-                        .attr("x", d.x = d3.event.x)
-                        .attr("y", d.y = d3.event.y);
-                    d3.select(this).select("rect")
-                        .attr("x", d.x = d3.event.x)
-                        .attr("y", d.y = d3.event.y);
-                })
-                .on("end", function (d) {
-                    d3.select(this).classed("sizeChangerDrag", false);
-                })
-            );
+            .classed("model",true)
+            .data(this.rectangle);
 
         this.box = this.model.append("rect")
+            .classed("box",true)
             .attr("x", function(d) { return d.x; })
             .attr("y", function(d) { return d.y; })
             .attr("width", 120)
             .attr("height", 60)
-            .attr("model", this.id)
-            .classed("sizeChanger",true);
+            .call(d3.drag()
+                .on("start", function (d) {})
+                .on("drag", function (d) {
+                    let model = d3.select(d3.select(this).node().parentNode);
+                    update_box_pos(model,d,d3.event.x,d3.event.y);
+                })
+                .on("end", function (d) {})
+            );
 
-        let bb = this.box;
-        this.text = this.model.append("text")
+
+
+        this.box_sizer = this.model.append("rect")
+            .classed("box_sizer",true)
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 10)
+            .attr("height", 10)
+            .call(d3.drag()
+                .on("start", function (d) {})
+                .on("drag", function (d) {
+                    let model = d3.select(d3.select(this).node().parentNode);
+                    let width = parseFloat(model.select(".box").attr("width")) + d3.event.dx;
+                    let height = parseFloat(model.select(".box").attr("height")) + d3.event.dy;
+                    update_box_size(model,width,height);
+                })
+                .on("end", function (d) {})
+            );
+
+        this.box_name = this.model.append("text")
+            .classed("box_name",true)
             .attr("x", function(d) { return d.x; })
             .attr("y", function(d) { return d.y; })
             .attr("text-anchor", "middle")
-            .text(model_obj.name);
+            .text(model_obj.name)
+            .call(d3.drag()
+                .on("start", function (d) {})
+                .on("drag", function (d) {
+                    let model = d3.select(d3.select(this).node().parentNode);
+                    update_box_pos(model,d,d3.event.x,d3.event.y);
+                })
+                .on("end", function (d) {})
+            );
 
-        this.input = new Rail(this, 'in', 'left', model_obj.inputs);
-        this.output = new Rail(this, 'out', 'right', model_obj.outputs);
+        this.input = this.model.append("g")
+            .classed("input",true);
 
-        this.updatePosition(model_obj.posX,model_obj.posY);
+        this.output = this.model.append("g")
+            .classed("output",true);
+
+        //this.input = new Rail(this, 'in', 'left', model_obj.inputs);
+        //this.output = new Rail(this, 'out', 'right', model_obj.outputs);
+
+
+
+        function update_box_size(model,width, height){
+            model.select(".box")
+                .attr("width", Math.max(width,30))
+                .attr("height", Math.max(height,30));
+            update_box_name_pos(model);
+            update_box_sizer_pos(model);
+        }
+
+        function update_box_pos(model,d,x,y){
+            model.select(".box").attr("x", d.x = x).attr("y", d.y = y);
+            update_box_name_pos(model);
+            update_box_sizer_pos(model);
+        }
+
+        function update_box_name_pos(model){
+            let box = model.select(".box");
+            let box_name = model.select(".box_name");
+            box_name
+                .attr("x", parseFloat(box.attr("x")) + box.attr("width")/2)
+                .attr("y", parseFloat(box.attr("y")) + box.attr("height")/2 + parseFloat(box_name.style("font-size"))/2);
+        }
+
+        function update_box_sizer_pos(model){
+            let box = model.select(".box");
+            let box_sizer = model.select(".box_sizer");
+            box_sizer
+                .attr("x", parseFloat(box.attr("x")) + parseFloat(box.attr("width"))-parseFloat(box_sizer.attr("width")))
+                .attr("y", parseFloat(box.attr("y")) + parseFloat(box.attr("height"))-parseFloat(box_sizer.attr("height")));
+        }
+
+        function update_rail_pos(model){
+
+        }
 
     }
 
@@ -124,10 +181,6 @@ class Box {
         //eigene Position
         this.div.style("left", x + "px");
         this.div.style("top", y + "px");
-
-
-        this.input.updatePosition();
-        this.output.updatePosition();
     }
 
 
