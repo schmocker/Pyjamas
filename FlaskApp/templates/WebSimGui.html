@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/4.0.1/math.min.js"></script>
+
+    <script src="{{ url_for('static', filename='js/WebSimGui.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/Model.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/Port.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/Rail.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/Connection.js')}}"></script>
+    <script>let agent_data = {{ agent|tojson|safe }}</script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css')}}">
+</head>
+<body>
+    <div id="app">
+      <div id="working_field"></div>
+      <div><button id="myBtn">Add Box</button></div>
+      <div id="myModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <form name="addBoxForm" onsubmit="return validateForm()" action="javascript:void(0);">
+            Box Name:<br>
+            <input type="text" name="boxName" value="">
+            <br><br>
+            <input type="submit" value="Submit">
+          </form>
+        </div>
+      </div>
+    </div>
+</body>
+</html>
