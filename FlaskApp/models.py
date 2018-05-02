@@ -2,7 +2,8 @@ from .app import app
 from flask_security import UserMixin, RoleMixin
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore
-
+import random
+import json
 
 db = SQLAlchemy(app)
 
@@ -36,21 +37,33 @@ class Agent(db.Model):
     def __repr__(self):
         return '<Agent %r>' % self.name
 
-
-class Agents_Models(db.Model):
+class Model(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id'))
-    model_design_name = db.Column(db.String(80), nullable=False)
-    model_name = db.Column(db.String(80), nullable=False)
-    state = db.Column(db.String(80), nullable=False)
-    settings = db.Column(db.String(80))
+    name = db.Column(db.String(80), nullable=False)
+    info = db.Column(db.Text())
 
-    def __init__(self, agent_id, model_design_name, model_name, state, settings):
-        self.fk_agent = agent_id
-        self.model_design_name = model_design_name
-        self.model_name = model_name
-        self.state = state
-        self.settings = settings
+    def __init__(self, name, info=None):
+        self.name = name
+        self.info = info
+
+class Model_used(db.Model):
+    # id_model_instance fk_agent fk_model name settings pos_x pos_y
+    id = db.Column(db.Integer, primary_key=True)
+    fk_model = db.Column(db.Integer(), db.ForeignKey('model.id'))
+    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id'))
+    name = db.Column(db.String(80), nullable=False)
+    settings = db.Column(db.String(80))
+    x = db.Column(db.Integer())
+    y = db.Column(db.Integer())
+    width = db.Column(db.Integer())
+    height = db.Column(db.Integer())
+
+    def __init__(self, name, fk_model, fk_agent):
+        self.name = name
+        self.fk_model = fk_model
+        self.fk_agent = fk_agent
+        self.width = 120
+        self.height = 60
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -60,9 +73,47 @@ security = Security(app, user_datastore)
 @app.before_first_request
 def create_user():
     db.create_all()
-    all_users = User.query.all()
-    for user in all_users:
+
+    for user in User.query.all():
         user_datastore.delete_user(user)
     db.session.commit()
     user_datastore.create_user(email='spg@fhnw.ch', password='test123')
     db.session.commit()
+
+    # Create new Dummy Data !! deletes existing Data
+    if True:
+        Model_used.query.delete()
+        db.session.commit()
+
+        Model.query.delete()
+        db.session.commit()
+
+        Agent.query.delete()
+        db.session.commit()
+
+
+        for i in range(0, 5):
+            db.session.add(Agent(name="Agent " + str(i)))
+        db.session.commit()
+
+        for i in range(0, 5):
+            inputs = list()
+            db.session.add(Model(name="Model " + str(i),
+                                 info=get_model_infos()))
+        db.session.commit()
+
+        for i in range(0, 25):
+            db.session.add(Model_used(name="Used Model " + str(i),
+                                      fk_model=random.choice(Model.query.all()).id,
+                                      fk_agent=random.choice(Agent.query.all()).id))
+        db.session.commit()
+
+def get_model_infos():
+    inputs = {'input_1': {'name': 'Input 1'},
+              'input_2': {'name': 'Input 2'},
+              'input_3': {'name': 'Input 3'}}
+    outputs = {'output_1': {'name': 'Output 1'},
+               'output_2': {'name': 'Output 2'}}
+    info = {'inputs': inputs, 'outputs': outputs}
+
+    return json.dumps(info)

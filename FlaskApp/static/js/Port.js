@@ -27,7 +27,7 @@ class Port{
                         .attr("y2", thisPort.linePoint[1]);
                 })
                 .on("drag", function (d) {
-                    var pos = d3.mouse(this);
+                    let pos = d3.mouse(this);
                     line.attr("x2", pos[0]);
                     line.attr("y2", pos[1]);
                 })

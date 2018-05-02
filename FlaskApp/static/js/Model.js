@@ -14,23 +14,26 @@ class Box {
             .on("mouseover", function() {this_box.on_hover(d3.event)})
             .on("dblclick ", function() {this_box.on_dbclick(d3.event)});
 
-        this.rectangle = d3.range(20).map(function() {
+        this.pos = d3.range(2).map(function() {
             return {
-                x: 0,
-                y: 0
+                x: model_obj.posX,
+                y: model_obj.posY,
+                width: model_obj.width,
+                height: model_obj.height
             };
         });
 
         this.model = websimgui.svgContainer.append("g")
             .classed("model",true)
-            .data(this.rectangle);
+            .data(this.pos)
+            .enter()
 
         this.box = this.model.append("rect")
             .classed("box",true)
             .attr("x", function(d) { return d.x; })
             .attr("y", function(d) { return d.y; })
-            .attr("width", 120)
-            .attr("height", 60)
+            .attr("width", function(d) { return d.width; })
+            .attr("height", function(d) { return d.height/2; })
             .call(d3.drag()
                 .on("start", function (d) {})
                 .on("drag", function (d) {
@@ -54,7 +57,7 @@ class Box {
                     let model = d3.select(d3.select(this).node().parentNode);
                     let width = parseFloat(model.select(".box").attr("width")) + d3.event.dx;
                     let height = parseFloat(model.select(".box").attr("height")) + d3.event.dy;
-                    update_box_size(model,width,height);
+                    update_box_size(model,d,width,height);
                 })
                 .on("end", function (d) {})
             );
@@ -85,10 +88,10 @@ class Box {
 
 
 
-        function update_box_size(model,width, height){
+        function update_box_size(model,d,width, height){
             model.select(".box")
-                .attr("width", Math.max(width,30))
-                .attr("height", Math.max(height,30));
+                .attr("width", d.width = Math.max(width,30))
+                .attr("height", d.height = Math.max(height,30));
             update_box_name_pos(model);
             update_box_sizer_pos(model);
         }

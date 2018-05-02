@@ -9,12 +9,8 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/4.0.1/math.min.js"></script>
 
-    <script src="{{ url_for('static', filename='js/WebSimGui.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/Model.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/Port.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/Rail.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/Connection.js')}}"></script>
-    <script>let agent_data = {{ agent|tojson|safe }}</script>
+    <script src="{{ url_for('static', filename='js/newWebSimGui.js')}}"></script>
+    <script>let agent_data = JSON.parse({{ agent|tojson|safe }})</script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css')}}">
 </head>
 <body>

@@ -1,5 +1,11 @@
+html{
+    background-color: black;
+}
+
 body{
-  margin: 0;
+    margin: 0;
+    background-color: #888888;
+    padding: 50px;
 }
 #app{
   display: grid;
@@ -17,35 +23,70 @@ body{
 }
 
 .wsg{
-  background-color: GhostWhite;
+  background-color: cadetblue;
   border-style: solid;
   border-color: grey;
   border-width: 1px;
   width: 100%;
   height: 100%;
 }
+.wsg>.zoomer{
+    width: 100%;
+    height: 100%;
+    fill: none;
+}
+.wsg>.main>.model{
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
-.wsg>.model>.box{
+.wsg>.main>.model>.box{
     fill: grey;
     stroke: grey;
     stroke-width: 3;
     cursor: move;
 }
-.wsg>.model>.box:hover{
+.wsg>.main>.model>.box:hover{
     stroke: black;
 }
-.wsg>.model>*:hover ~ .box{
+.wsg>.main>.model>.box_draged{
     stroke: black;
 }
-.wsg>.model>.box_draged{
-    stroke: black;
-}
-.wsg>.model>.box_sizer{
+.wsg>.main>.model>.sizer{
     fill: blue;
     cursor: nw-resize;
 }
-
-
+.wsg>.main>.model>.name{
+    font-size: small;
+}
+.wsg>.main>.model>.sizer:hover{
+    fill: red;
+}
+.wsg>.main>.model .port{
+    font-size: x-small;
+}
+.wsg>.main>.model .port:hover{
+    fill: deeppink;
+}
+.wsg>.main>.model .port_choice1{
+    font-size: large;
+}
+.wsg>.main>.model .port_inselectable{
+    font-size: small;
+    color: gray;
+    fill: gray;
+}
+.wsg>.main>.model .port_selectable{
+    fill: yellow;
+}
+.wsg>.main>.model .port_selectable:hover{
+    fill: green;
+}
+.wsg>.main>.connection>.line{
+    stroke: black;
+}
+.wsg>.main>.connection>.line:hover{
+    stroke: aqua;
+}
 
 
 
@@ -61,32 +102,6 @@ body{
 .connection{
   stroke: black;
 }
-
-
-
-
-
-.port{
-    fill: black;
-    cursor: crosshair;
-}
-.port:hover{
-    fill: deeppink;
-}
-.port_inselectable {
-    fill: black;
-}
-.port_selectable {
-    fill: yellow;
-}
-.port_selectable:hover {
-    fill: blue;
-}
-.port_choice1{
-    fill: green;
-}
-
-
 
 
 
