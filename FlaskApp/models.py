@@ -47,7 +47,6 @@ class Model(db.Model):
         self.info = info
 
 class Model_used(db.Model):
-    # id_model_instance fk_agent fk_model name settings pos_x pos_y
     id = db.Column(db.Integer, primary_key=True)
     fk_model = db.Column(db.Integer(), db.ForeignKey('model.id'))
     fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id'))
@@ -64,6 +63,21 @@ class Model_used(db.Model):
         self.fk_agent = fk_agent
         self.width = 120
         self.height = 60
+
+class Connection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id'))
+    fk_model_used_from = db.Column(db.Integer(), db.ForeignKey('model_used.id'), nullable=False)
+    port_id_from = db.Column(db.String(80), nullable=False)
+    fk_model_used_to = db.Column(db.Integer(), db.ForeignKey('model_used.id'), nullable=False)
+    port_id_to = db.Column(db.String(80), nullable=False)
+
+    def __init__(self, fk_agent, fk_model_used_from, port_id_from, fk_model_used_to, port_id_to):
+        self.fk_agent = fk_agent
+        self.fk_model_used_from = fk_model_used_from
+        self.port_id_from = port_id_from
+        self.fk_model_used_to = fk_model_used_to
+        self.port_id_to = port_id_to
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
@@ -82,6 +96,9 @@ def create_user():
 
     # Create new Dummy Data !! deletes existing Data
     if True:
+        Connection.query.delete()
+        db.session.commit()
+
         Model_used.query.delete()
         db.session.commit()
 

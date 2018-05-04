@@ -1,8 +1,7 @@
+let agent_data;
+let main;
 
-window.onload = function() {
-
-    agent_data = $.get("/websimgui/data",function(result){console.log(result)});
-
+window.onload = async function() {
     d3.select("#working_field").append("svg")
         .classed("wsg", true)
         .attr("width", "100%")
@@ -17,118 +16,104 @@ window.onload = function() {
             )
         );
 
-    let main = d3.select(".wsg").append("g")
+    main = d3.select(".wsg").append("g")
         .classed("main",true);
+    await update_all();
 
-
-
-    update_models_elements(main);
-    update_connections_elements(main);
-
-    recalculate_properties();
-
-    update_positions(main);
+    /*setInterval(async function(){
+        await update_all()
+    }, 5000);*/
 };
 
-function decode_data(data){
-    data.models = d3.entries(data.models);
-    return data;
+
+async function update_all(){
+    await get_data();
+
+
+
+    await update_models_elements();
+    await update_connections_elements();
+    await update_positions();
 }
 
-function encode_data(data){
-    data.models = d3.nest()
-        .key(function(d) { return d.id; })
-        .rollup(function(v) { return v[0]; })
-        .object(data.models);
-    return data;
+async function get_data(){
+    agent_data = await $.getJSON( "/websimgui/data", function( data ) {
+        data.models = d3.values(data.models);
+        $.each(data.models, function( index, value ) {
+            value.inputs.ports = d3.values(value.inputs.ports);
+            value.outputs.ports = d3.values(value.outputs.ports);
+        });
+        data.connections = d3.values(data.connections);
+        return data;
+    })
+        .done(function() {console.log( "success" );})
+        .fail(function() {console.log( "error" );})
+        .always(function() {console.log( "complete" );});
+}
+
+async function encode_data(data){
+    //
 }
 
 
 
-function update_models_elements(main){
+async function update_models_elements(){
 
-
+    main.selectAll(".model").remove();//// !!!!!!!!!!!!!!!!!!!
     let models = main.selectAll(".model").data(agent_data.models);
 
     //exit
     models.exit().remove();
+    //models.remove();
+    //models = main.selectAll(".model").data(agent_data.models);
 
     //enter
     models = models.enter().append("g")
         .classed("model",true)
-        .attr("id", function (d) { return d.id; });
+        .attr("id", function (d) { return d.id_html; });
     models.append("rect")
         .classed("box",true)
-        .call(d3.drag()
-            .on("start", function (d) {})
-            .on("drag", function (d) {
-                d.x = d.x + d3.event.dx;
-                d.y = d.y + d3.event.dy;
-                recalculate_properties();
-                update_positions(main);
-            })
-            .on("end", function (d) {
-                $.post("/websimgui", {
-                        'model': d.id,
-                        'function': 'set_model_pos',
-                        'data': JSON.stringify(agent_data)},
-                    function(result){
-                        console.log(result)
-                    });
-            })
-        );
+        .call(await onModelDrag());
     models.append("text")
-        .classed("name",true)
+        .classed("model_name",true)
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "central")
-        .call(d3.drag()
-            .on("start", function (d) {})
-            .on("drag", function (d) {
-                d.x = d.x + d3.event.dx;
-                d.y = d.y + d3.event.dy;
-                recalculate_properties();
-                update_positions(main);
-            })
-            .on("end", function (d) {})
-        );
+        .call(await onModelDrag());
 
     models.append("rect")
         .classed("sizer",true)
-        .call(d3.drag()
-            .on("start", function (d) {})
-            .on("drag", function (d) {
-                d.width = Math.max(d.width+d3.event.dx,30);
-                d.height = Math.max(d.height+d3.event.dy,30);
-                recalculate_properties();
-                update_positions(main);
-            })
-            .on("end", function (d) {
+        .call(await onModelResize());
 
-            })
-        );
+    let directions = ['inputs', 'outputs'];
+    for (let i = 0; i < directions.length; i++) {
+        let direction = directions[i];
 
-    update_ports_elements("inputs");
-    update_ports_elements("outputs");
+
+
+
+        let rail = models.append("g")
+            .classed(direction, true);
+
+
+        let ports = rail.selectAll(".port").data(function (d) {return d[direction].ports });
+        ports.exit().remove();
+        ports = ports.enter().append("g")
+            .classed("port", true)
+            .attr("id", function (d) {
+                return d.id;
+            })
+            .attr("id_model", function (d) {
+                return d.id_model
+            });
+        ports.append("polyline")
+            .classed("arrow", true)
+            .call(await onConnecting());
+        ports.append("text")
+            .classed("port_name", true);
+    }
 }
 
-function update_ports_elements(direction) {
-    let models = d3.selectAll(".model");
-    let rail = models.append("g")
-        .classed(direction,true);
-
-    let ports = rail.selectAll(".port").data(function (d) { return d[direction].ports });
-    ports.exit().remove();
-    ports = ports.enter().append("g")
-        .classed("port", true)
-        .attr("id", function (d) { return d.id; });
-    ports.append("polyline")
-        .classed("arrow", true)
-        .call(connecting());
-    ports.append("text")
-        .classed("name", true);
-}
-
-function update_connections_elements(main){
+function update_connections_elements(){
     let connections = main.selectAll(".connection").data(agent_data.connections);
 
     //exit
@@ -142,13 +127,61 @@ function update_connections_elements(main){
         .classed("line",true);
 }
 
-function connecting(){
+async function onModelDrag() {
     return d3.drag()
-        .on("start", function (d) {connecting_start(this, d)})
-        .on("drag", function (d) {connecting_drag(this, d)})
-        .on("end", function (d) {connecting_end(this, d)});
+        .on("start", async function (d) {})
+        .on("drag", async function (d) {
+            d.x = d.x + d3.event.dx;
+            d.y = d.y + d3.event.dy;
+            await update_positions();
+        })
+        .on("end", async function (d) {
+            await $.post("/websimgui", {
+                    'fnc': 'set_model_pos',
+                    'data': JSON.stringify({
+                        'agent': agent_data.id,
+                        'model': d.id,
+                        'x': d.x,
+                        'y': d.y})},
+                async function(result){
+                    console.log(result);
+                });
+            await update_all()
+        })
+}
 
-    function connecting_start(arrow, d){
+async function onModelResize() {
+    return d3.drag()
+        .on("start", async function (d) {})
+        .on("drag", async function (d) {
+            d.width = Math.max(d.width+d3.event.dx,30);
+            d.height = Math.max(d.height+d3.event.dy,30);
+            await update_positions();
+        })
+        .on("end", async function (d) {
+            await $.post("/websimgui", {
+                    'fnc': 'set_model_size',
+                    'data': JSON.stringify({
+                        'agent': agent_data.id,
+                        'model': d.id,
+                        'width': d.width,
+                        'height': d.height})},
+                async function(result){
+                    console.log(result);
+                });
+            await update_all()
+
+
+        })
+}
+
+async function onConnecting(){
+    return d3.drag()
+        .on("start", async function (d) {await connecting_start(this, d)})
+        .on("drag", async function (d) {await connecting_drag(this, d)})
+        .on("end", async function (d) {await connecting_end(this, d)});
+
+    async function connecting_start(arrow, d){
         connecting_line = d3.select(".main").append("line")
             .classed("connecting_line", true)
             .style("stroke", "black")
@@ -158,7 +191,7 @@ function connecting(){
             .attr("x2", d.arrow.line_point_x)
             .attr("y2", d.arrow.line_point_y);
 
-        let direction_1 = d3.select(arrow).data()[0].direction
+        let direction_1 = d3.select(arrow).data()[0].direction;
 
 
         d3.select(arrow)
@@ -177,11 +210,13 @@ function connecting(){
 
 
         d3.selectAll('.port_selectable')
-            .on("mouseover", function() { d3.select(this).classed("connecting_to", true);})
-            .on("mouseout", function() { d3.select(this).classed("connecting_to", false);});
+            .on("mouseover", function() { d3.select(this).attr("fill", "red"); d3.select(this).classed("connecting_to", true);})
+            .on("mouseout", function() { d3.select(this).classed("connecting_to", false);})
+            .on("touchstart", function() { d3.select(this).attr("fill", "red"); d3.select(this).classed("connecting_to", true);})
+            .on("touchend", function() { d3.select(this).classed("connecting_to", false);});
     }
 
-    function connecting_drag(arrow,d){
+    async function connecting_drag(arrow,d){
         if (d3.select(".connecting_to").empty()) {
             let pos = d3.mouse(arrow);
             d3.select(".connecting_line")
@@ -194,11 +229,11 @@ function connecting(){
         }
     }
 
-    function connecting_end(arrow,d){
+    async function connecting_end(arrow,d){
         d3.select(".connecting_line").remove();
 
         if (!d3.select(".connecting_to").empty()) {
-            add_connection(1, 2);
+            await add_connection(d3.select(".connecting_from"), d3.select(".connecting_to"));
         }
 
         d3.selectAll('.connecting_to').classed("connecting_to", false);
@@ -211,44 +246,27 @@ function connecting(){
     }
 }
 
-function add_connection(port1, port2){
-    if (false) {
-
-        let input={};
-        let output={};
-
-        switch (d3.select(selection.parentNode).attr("class")){
-            case 'inputs':
-                input.port_id = selection.id;
-                input.model_id = selection.parentElement.parentElement.id;
-                output.port_id = d3.select(".port_choice1").attr("id");
-                output.model_id = '';
-                break;
-            case 'outputs':
-                input.port_id = d3.select(".port_choice1").attr("id");
-                input.model_id = arrow.parentElement.parentElement.id;
-                output.port_id = selection.id;
-                output.model_id = selection.parentElement.parentElement.id;
-                break;
-            default:
-                // errror
-                break;
-        }
-
-        let new_connection = {'id': 'connection_10', 'input': input, 'output': output};
-
-        agent_data.connections.push(new_connection);
-        selection = null;
-        update();
-    }
+async function add_connection(arrow1, arrow2){
+    await $.post("/websimgui", {
+            'fnc': 'add_connection',
+            'data': JSON.stringify({
+                'agent': agent_data.id,
+                'model_from': arrow1.data()[0].model.id,
+                'port_from': arrow1.data()[0].id,
+                'model_to': arrow2.data()[0].model.id,
+                'port_to': arrow2.data()[0].id})},
+        async function(result){
+            console.log(result);
+        });
+    await update_all()
 }
 
-function recalculate_properties() {
+async function recalculate_properties() {
     for (let i_mod = 0; i_mod < agent_data.models.length; i_mod++) {
         let model = agent_data.models[i_mod];
-        model.name = {};
-        model.name.x = model.x + model.width / 2;
-        model.name.y = model.y + model.height / 2;
+        model.name_pos = {};
+        model.name_pos.x = model.x + model.width / 2;
+        model.name_pos.y = model.y + model.height / 2;
 
         model.sizer = {};
         model.sizer.size = 10;
@@ -362,7 +380,9 @@ function recalculate_properties() {
     }
 }
 
-function update_positions(main){
+async function update_positions(){
+    await recalculate_properties();
+
     let models = main.selectAll(".model");
 
     models.select(".box")
@@ -371,9 +391,9 @@ function update_positions(main){
         .attr("width", function(d) { return d.width; })
         .attr("height", function(d) { return d.height; });
 
-    models.select(".name")
-        .attr("x", function(d) { return d.name.x; })
-        .attr("y", function(d) { return d.name.y; })
+    models.select(".model_name")
+        .attr("x", function(d) { return d.name_pos.x; })
+        .attr("y", function(d) { return d.name_pos.y; })
         .text(function(d) { return d.name; });
 
     models.select(".sizer")
@@ -383,9 +403,8 @@ function update_positions(main){
         .attr("height", function (d) { return d.sizer.size });
 
     let ports = main.selectAll(".port");
-
-    ports.select(".name")
-        .attr("x", function(d){ return d.text.x + 2; })
+    ports.select(".port_name")
+        .attr("x", function(d){ return d.text.x; })
         .attr("y", function(d){ return d.text.y; })
         .text(function(d) { return d.name; })
         .attr("text-anchor", function(d) { return d.text.anchor})
@@ -397,10 +416,10 @@ function update_positions(main){
     let connections = main.selectAll(".connection");
 
     connections.select(".line")
-        .attr("x1", function (d) {return d3.select("#" +d.input).data()[0].arrow.line_point_x})
-        .attr("y1", function (d) {return d3.select("#" +d.input).data()[0].arrow.line_point_y})
-        .attr("x2", function (d) {return d3.select("#" +d.output).data()[0].arrow.line_point_x})
-        .attr("y2", function (d) {return d3.select("#" +d.output).data()[0].arrow.line_point_y});
+        .attr("x1", function (d) {return d3.select("#" + d.port_from + "[id_model='"+d.model_from+"']").data()[0].arrow.line_point_x})
+        .attr("y1", function (d) {return d3.select("#" + d.port_from + "[id_model='"+d.model_from+"']").data()[0].arrow.line_point_y})
+        .attr("x2", function (d) {return d3.select("#" + d.port_to + "[id_model='"+d.model_to+"']").data()[0].arrow.line_point_x})
+        .attr("y2", function (d) {return d3.select("#" + d.port_to + "[id_model='"+d.model_to+"']").data()[0].arrow.line_point_y});
 }
 
 
