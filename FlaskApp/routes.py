@@ -18,7 +18,9 @@ def home():
 @app.route('/doc')
 def doc():
     f = open('README.md', 'r')
-    htmlmarkdown = markdown.markdown(f.read())
+    md = f.read()
+    md = md.replace("\n", " ")
+    htmlmarkdown = markdown.markdown(md)
     print(htmlmarkdown)
     return htmlmarkdown
 
