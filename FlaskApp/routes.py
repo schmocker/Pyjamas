@@ -6,6 +6,7 @@ from flask import render_template, request, send_from_directory
 from flask_security import current_user, login_required
 import json
 import random
+import markdown
 
 
 @app.route('/')
@@ -13,6 +14,14 @@ def home():
     return render_template("home.html",
                            loggedin=current_user.is_authenticated,
                            test_agent=Agent.query.first())
+
+@app.route('/doc')
+def doc():
+    f = open('README.md', 'r')
+    htmlmarkdown = markdown.markdown(f.read())
+    print(htmlmarkdown)
+    return htmlmarkdown
+
 
 @app.route("/agents", methods=['GET', 'POST'])
 @login_required
