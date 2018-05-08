@@ -13,21 +13,25 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/websimgui.css')}}">
 </head>
 <body>
-    <div id="app">
-      <div id="working_field"></div>
-      <div><button id="myBtn">Add Box</button></div>
-      <div id="myModal" class="modal">
+<div>
+    <h2>Agent '{{agent.name}}'</h2>
+</div>
+<div id="app">
+
+    <div id="working_field"></div>
+    <div><button id="myBtn">Add Box</button></div>
+    <div id="myModal" class="modal">
         <!-- Modal content -->
         <div class="modal-content">
-          <span class="close">&times;</span>
-          <form name="addBoxForm" onsubmit="return validateForm()" action="javascript:void(0);">
-            Box Name:<br>
-            <input type="text" name="boxName" value="">
-            <br><br>
-            <input type="submit" value="Submit">
-          </form>
+            <span class="close">&times;</span>
+            <form name="addBoxForm" onsubmit="return validateForm()" action="javascript:void(0);">
+                Box Name:<br>
+                <input type="text" name="boxName" value="">
+                <br><br>
+                <input type="submit" value="Submit">
+            </form>
         </div>
-      </div>
     </div>
+</div>
 </body>
 </html>

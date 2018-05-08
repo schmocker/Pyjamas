@@ -16,32 +16,32 @@ def home():
 @app.route("/agents", methods=['GET', 'POST'])
 @login_required
 def agents():
-    if request.method == 'POST':
-        agentName = request.form['agent_name']
+    if request.method == 'GET':
+        agent_id = request.args.get('agent_id', None)
+        if agent_id == None:
+            all_agents = Agent.query.all()
+            return render_template("agents.html", agents=all_agents, loggedin=current_user.is_authenticated)
+        else:
+            currentAgent = Agent.query.filter_by(id=agent_id).first()
+            return render_template("agentX.html", agent=currentAgent,  loggedin=current_user.is_authenticated)
 
+    elif request.method == 'POST':
+        agentName = request.form['agent_name']
+        agent = Agent(name=agentName)
         db.session.add(Agent(name=agentName))
         db.session.commit()
-    all_agents = Agent.query.all()
-    return render_template("agents.html", agents=all_agents,
-                           loggedin=current_user.is_authenticated)
+        return render_template("agentX.html", agent=agent, loggedin=current_user.is_authenticated)
 
-@app.route("/agents/<agent>", methods=['GET', 'POST'])
-@login_required
-def agentX(agent):
-        currentAgent = Agent.query.filter_by(name=agent).first()
-        return render_template("agentX.html", agent=currentAgent,
-                               loggedin=current_user.is_authenticated)
 
 @app.route('/websimgui', methods=['GET', 'POST'])
 def websimgui():
     if request.method == 'GET':
-        agent_id = request.form.get('agent_id', None)
+        agent_id = request.args.get('agent_id', None)
         if agent_id == None:
             db_agent = Agent.query.first()
         else:
-            db_agent = Agent.query.filter(Agent.id == agent_id).first()
-        agent_id = db_agent.id
-        return render_template("websimgui.html")
+            db_agent = Agent.query.filter_by(id=agent_id).first()
+        return render_template("websimgui.html",agent=db_agent)
     elif request.method == 'POST':
 
         if request.form['fnc'] == 'set_model_pos':
