@@ -37,6 +37,20 @@ class Agent(db.Model):
     def __repr__(self):
         return '<Agent %r>' % self.name
 
+    @property
+    def dict(self):
+        agent = dict()
+        agent['id'] = self.id
+
+        agent['models'] = dict()
+        for db_model_used in Model_used.query.filter(Model_used.fk_agent == self.id).all():
+            agent['models'][db_model_used.id] = db_model_used.dict
+
+        agent['connections'] = dict()
+        for db_connection in Connection.query.filter(Connection.fk_agent == self.id).all():
+            agent['connections'][db_connection.id] = db_connection.dict
+        return agent
+
 class Model(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
@@ -64,6 +78,38 @@ class Model_used(db.Model):
         self.width = 120
         self.height = 60
 
+    @property
+    def id_html(self):
+        return 'model_' + str(self.id)
+
+    @property
+    def dict(self):
+        d = dict()
+        for attr in ['id','id_html','name','x','y','width','height','settings']:
+            d[attr] = getattr(self, attr)
+
+        db_model = Model.query.filter(Model.id == self.fk_model).first()
+
+        model_info = json.loads(db_model.info)
+
+        orientations = ['left', 'right', 'top', 'bottom']
+
+        for out_in in ['inputs', 'outputs']:
+            dock = dict()
+            ports = dict()
+
+            for input_key, input_value in model_info[out_in].items():
+                port = dict()
+                port['name'] = input_value['name']
+                port['id'] = input_key
+                port['id_model'] = d['id']
+                port['id_html'] = 'port_' + str(d['id']) + '_' + input_key
+                ports[input_key] = port
+            dock['ports'] = ports
+            dock['orientation'] = 'left' if out_in == 'inputs' else 'right'
+            d[out_in] = dock
+        return d
+
 class Connection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id'))
@@ -78,6 +124,13 @@ class Connection(db.Model):
         self.port_id_from = port_id_from
         self.fk_model_used_to = fk_model_used_to
         self.port_id_to = port_id_to
+
+    @property
+    def dict(self):
+        d = dict()
+        for attr in ['id', 'fk_model_used_from', 'port_id_from', 'fk_model_used_to', 'port_id_to']:
+            d[attr] = getattr(self, attr)
+        return d
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)

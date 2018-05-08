@@ -251,10 +251,10 @@ async function add_connection(arrow1, arrow2){
             'fnc': 'add_connection',
             'data': JSON.stringify({
                 'agent': agent_data.id,
-                'model_from': arrow1.data()[0].model.id,
-                'port_from': arrow1.data()[0].id,
-                'model_to': arrow2.data()[0].model.id,
-                'port_to': arrow2.data()[0].id})},
+                'fk_model_used_from': arrow1.data()[0].model.id,
+                'port_id_from': arrow1.data()[0].id,
+                'fk_model_used_to': arrow2.data()[0].model.id,
+                'port_id_to': arrow2.data()[0].id})},
         async function(result){
             console.log(result);
         });
@@ -416,10 +416,10 @@ async function update_positions(){
     let connections = main.selectAll(".connection");
 
     connections.select(".line")
-        .attr("x1", function (d) {return d3.select("#" + d.port_from + "[id_model='"+d.model_from+"']").data()[0].arrow.line_point_x})
-        .attr("y1", function (d) {return d3.select("#" + d.port_from + "[id_model='"+d.model_from+"']").data()[0].arrow.line_point_y})
-        .attr("x2", function (d) {return d3.select("#" + d.port_to + "[id_model='"+d.model_to+"']").data()[0].arrow.line_point_x})
-        .attr("y2", function (d) {return d3.select("#" + d.port_to + "[id_model='"+d.model_to+"']").data()[0].arrow.line_point_y});
+        .attr("x1", function (d) {return d3.select("#" + d.port_id_from + "[id_model='"+d.fk_model_used_from+"']").data()[0].arrow.line_point_x})
+        .attr("y1", function (d) {return d3.select("#" + d.port_id_from + "[id_model='"+d.fk_model_used_from+"']").data()[0].arrow.line_point_y})
+        .attr("x2", function (d) {return d3.select("#" + d.port_id_to + "[id_model='"+d.fk_model_used_to+"']").data()[0].arrow.line_point_x})
+        .attr("y2", function (d) {return d3.select("#" + d.port_id_to + "[id_model='"+d.fk_model_used_to+"']").data()[0].arrow.line_point_y});
 }
 
 

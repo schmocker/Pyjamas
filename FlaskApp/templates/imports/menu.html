@@ -1,0 +1,13 @@
+<div id="menu" class="grid-item, grid-container">
+    <div class="grid-item">Menu</div>
+    <a class="grid-item" href="/">Home</a>
+    {% if loggedin %}
+    <a class="grid-item" href="/agents">Agents</a>
+    {% endif %}
+    <a class="grid-item" href="/doc">Documentation</a>
+    {% if loggedin %}
+    <a class="grid-item" href="/logout">Logout</a>
+    {% else %}
+    <a class="grid-item" href="/login">Login</a>
+    {% endif %}
+</div>
