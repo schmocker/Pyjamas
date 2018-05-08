@@ -62,8 +62,8 @@ class Model(db.Model):
 
 class Model_used(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fk_model = db.Column(db.Integer(), db.ForeignKey('model.id'))
-    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id'))
+    fk_model = db.Column(db.Integer(), db.ForeignKey('model.id', ondelete="CASCADE"))
+    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id', ondelete="CASCADE"))
     name = db.Column(db.String(80), nullable=False)
     settings = db.Column(db.String(80))
     x = db.Column(db.Integer())
@@ -112,10 +112,10 @@ class Model_used(db.Model):
 
 class Connection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id'))
-    fk_model_used_from = db.Column(db.Integer(), db.ForeignKey('model_used.id'), nullable=False)
+    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id', ondelete="CASCADE"))
+    fk_model_used_from = db.Column(db.Integer(), db.ForeignKey('model_used.id', ondelete="CASCADE"), nullable=False)
     port_id_from = db.Column(db.String(80), nullable=False)
-    fk_model_used_to = db.Column(db.Integer(), db.ForeignKey('model_used.id'), nullable=False)
+    fk_model_used_to = db.Column(db.Integer(), db.ForeignKey('model_used.id', ondelete="CASCADE"), nullable=False)
     port_id_to = db.Column(db.String(80), nullable=False)
 
     def __init__(self, fk_agent, fk_model_used_from, port_id_from, fk_model_used_to, port_id_to):
@@ -137,7 +137,7 @@ user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 # Create a user to test with
-@app.before_first_request
+#@app.before_first_request
 def create_user():
     db.create_all()
 

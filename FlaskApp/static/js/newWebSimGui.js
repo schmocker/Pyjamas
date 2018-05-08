@@ -37,7 +37,9 @@ async function update_all(){
 }
 
 async function get_data(){
-    agent_data = await $.getJSON( "/websimgui/data", function( data ) {
+    let url = new URL(document.URL);
+    let agent_id = url.searchParams.get("agent_id");
+    agent_data = await $.getJSON("/websimgui/data?agent_id=" + agent_id, function( data ) {
         data.models = d3.values(data.models);
         $.each(data.models, function( index, value ) {
             value.inputs.ports = d3.values(value.inputs.ports);
@@ -77,7 +79,7 @@ async function update_models_elements(){
     models.append("text")
         .classed("model_name",true)
         .attr("text-anchor", "middle")
-        .attr("alignment-baseline", "central")
+        .attr("alignment-baseline", "top") // central
         .call(await onModelDrag());
 
     models.append("rect")
@@ -146,7 +148,7 @@ async function onModelDrag() {
                 async function(result){
                     console.log(result);
                 });
-            await update_all()
+            await update_all();
         })
 }
 
@@ -266,7 +268,8 @@ async function recalculate_properties() {
         let model = agent_data.models[i_mod];
         model.name_pos = {};
         model.name_pos.x = model.x + model.width / 2;
-        model.name_pos.y = model.y + model.height / 2;
+        model.name_pos.y = model.y - 4;
+        // model.name_pos.y = model.y + model.height / 2;
 
         model.sizer = {};
         model.sizer.size = 10;

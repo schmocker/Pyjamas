@@ -1,8 +1,8 @@
 from .app import app
-
+import os
 from .models import *
 from .functions import get_agent
-from flask import render_template, request
+from flask import render_template, request, send_from_directory
 from flask_security import current_user, login_required
 import json
 import random
@@ -11,7 +11,8 @@ import random
 @app.route('/')
 def home():
     return render_template("home.html",
-                           loggedin=current_user.is_authenticated)
+                           loggedin=current_user.is_authenticated,
+                           test_agent=Agent.query.first())
 
 @app.route("/agents", methods=['GET', 'POST'])
 @login_required
@@ -30,18 +31,20 @@ def agents():
         agent = Agent(name=agentName)
         db.session.add(Agent(name=agentName))
         db.session.commit()
+        agent = Agent.query.filter_by(name=agentName).first()
         return render_template("agentX.html", agent=agent, loggedin=current_user.is_authenticated)
 
 
+#@login_required
 @app.route('/websimgui', methods=['GET', 'POST'])
 def websimgui():
     if request.method == 'GET':
         agent_id = request.args.get('agent_id', None)
-        if agent_id == None:
-            db_agent = Agent.query.first()
+        db_agent = Agent.query.filter_by(id=agent_id).first()
+        if db_agent != None:
+            return render_template("websimgui.html", agent=db_agent)
         else:
-            db_agent = Agent.query.filter_by(id=agent_id).first()
-        return render_template("websimgui.html",agent=db_agent)
+            return "no valid Agent chosen"
     elif request.method == 'POST':
 
         if request.form['fnc'] == 'set_model_pos':
@@ -73,12 +76,10 @@ def websimgui():
 @app.route('/websimgui/data', methods=['GET', 'POST'])
 def websimgui_data():
     if request.method == 'GET':
-        agent_id = request.form.get('agent_id', None)
-        if agent_id == None:
-            db_agent = Agent.query.first()
-        else:
-            db_agent = Agent.query.filter(Agent.id == agent_id).first()
+        agent_id = request.args.get('agent_id', None)
+        db_agent = Agent.query.filter_by(id=agent_id).first()
 
-        print(db_agent.id)
 
-        return json.dumps(db_agent.dict)
+        if db_agent != None:
+            return json.dumps(db_agent.dict)
+

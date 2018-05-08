@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Pyjamas</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css')}}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/home.css')}}">
 </head>
@@ -11,7 +12,17 @@
     {% include 'imports/menu.html' %}
 
     <div id="content">
-        <a href="/websimgui">Hier gehts zum WebSimGui</a>
+        <h2>Welcome to Pyjamas</h2>
+        <p>Pyjamas is a web-based simulation environment. The word Pyjamas stands for:</p>
+        <ul>
+            <li><b>Py</b>thon: Pyjamas is running mainly on python.</li>
+            <li><b>J</b>oint: Pyjamas grew out of a collaboration within the FHNW.</li>
+            <li><b>A</b>gent based: Pyjamas grew out of a collaboration within the FHNW.</li>
+            <li><b>M</b>gulti model: Pyjamas is all about model and modular construction of simulations.</li>
+            <li><b>A</b>synchronous: Pyjamas is based on asynchronous functions.</li>
+            <li><b>S</b>imulation program: That's actually what Pyjamas is all about</li>
+        </ul>
+        <a href="/websimgui?agent_id={{ test_agent.id }}">Take a look at our new GUI</a>
     </div>
 </body>
 </html>
