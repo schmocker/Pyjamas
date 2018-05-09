@@ -1,66 +1,84 @@
+html{
+}
+
 body{
     margin: 0px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .grid-container{
     display: grid;
 }
 body.grid-container{
-    grid-template-columns: 150px auto;
+    grid-template-columns: 100%;
 }
 body.grid-container>.grid-item{
     background-color: grey;
 }
 #header{
-    grid-column: 1 / 3;
     color: black;
     background-color: deepskyblue;
     padding: 10px;
 }
-
-#menu{
-    grid-row: 2;
-    grid-column: 1;
-    background-color: darkcyan;
-    height: 500px;
-}
-
-#live_content{
-    grid-row: 3;
+#header.grid-item{
     grid-column: 1 / 3;
-    background-color: black;
-    color: white;
 }
+#header.grid-container{
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+}
+#title{
 
-
-#menu.grid-container{
-    grid-template-columns: auto;
-    align-content: start;
-    padding: 5px;
 }
-#menu>.grid-item{
+#title.grid-item{
 }
-#menu>div{
-    margin: 5px;
-    font-weight: bold;
+#title.grid-container{
+    grid-template-columns: auto auto;
+    grid-column-gap: 1em;
 }
-#menu>a{
-    background-color: skyblue;
-    margin: 5px;
-    padding: 5px;
+#title>#title-text{
     text-decoration: none;
     color: black;
 }
-#menu>a:hover{
-    background-color: deepskyblue;
-    color: black;
+#title>#title-text.grid-item{
+    align-self: center;
 }
-#menu>a:active{
-    background-color: deepskyblue;
-    color: black;
+#title>#title-logo{
+    height: 35px;
+}
+#title>#title-logo>img{
+    height: 100%
+}
+#title>#title-logo.grid-item{
+    align-self: center;
+}
+#menu{
+    font-weight: bold;
+}
+#menu.grid-item{
+    align-self: center;
+}
+#menu.grid-container{
+  grid-template-rows: auto;
+    grid-column-gap: 1em;
+}
+.menu_item{
+    background-color: black;
+    text-decoration: none;
+    color: white;
+    padding: 5px
+}
+.menu_item:hover{
+    color: deepskyblue;
+
+}
+.menu_item.grid-item{
+    grid-row: 1;
+    justify-self: center;
+    align-self: center;
 }
 
 #content{
-    padding: 10px;
+    width: 100%;
 }
 
 h1{

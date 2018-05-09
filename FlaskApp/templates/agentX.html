@@ -10,7 +10,6 @@
 </head>
 <body class="grid-container">
 {% include 'imports/header.html' %}
-{% include 'imports/menu.html' %}
 
 
 
@@ -18,6 +17,8 @@
     <h2>Agent '{{agent.name}}'</h2>
 
     <p>Hier folgen Informationen zum Modell</p>
+
+    {% include 'websimgui.html' %}
 
     <a href="/websimgui?agent_id={{agent.id}}">Agent bearbeiten</a>
 

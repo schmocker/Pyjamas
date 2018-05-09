@@ -1,40 +1,40 @@
-html{
-    background-color: black;
+:root {
+    --hover-color: darkturquoise;
 }
 
-body{
-    margin: 0;
-    background-color: #888888;
-    padding: 50px;
-}
-#app{
-  display: grid;
-  width: 100%;
-  height: 100%;
-  grid-template-columns: 100%;
-  grid-template-rows: auto auto;
-}
 
+
+#websimgui{
+    display: grid;
+    width: 100%;
+    height: 100%;
+    grid-template-columns: 100%;
+    grid-template-rows: minmax(500px,1fr) 60px;
+
+    background-color: darkturquoise;
+}
+#websimgui.full-screen{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 #working_field{
-  position: relative;
-  background-color: yellow;
-  width: 100%;
-  height: 700px;
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 .wsg{
-  background-color: cadetblue;
-  border-style: solid;
-  border-color: grey;
-  border-width: 1px;
-  width: 100%;
-  height: 100%;
-}
-.wsg>.zoomer{
+    background-color: cadetblue;
+    border-style: solid;
+    border-color: grey;
+    border-width: 1px;
     width: 100%;
     height: 100%;
-    fill: none;
 }
+
 .wsg>.main>.model{
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -46,65 +46,78 @@ body{
     cursor: move;
 }
 .wsg>.main>.model>.box:hover{
-    stroke: black;
+    stroke: var(--hover-color);
 }
 .wsg>.main>.model>.box_draged{
     stroke: black;
 }
 .wsg>.main>.model>.sizer{
-    fill: blue;
+    fill: black;
     cursor: nw-resize;
 }
 .wsg>.main>.model>.name{
     font-size: small;
 }
 .wsg>.main>.model>.sizer:hover{
-    fill: red;
+    fill: var(--hover-color);
 }
-.wsg>.main>.model .port{
+.wsg>.main>.model .port>.port_name{
     font-size: x-small;
 }
-.wsg>.main>.model .port:hover{
-    fill: deeppink;
+.wsg>.main>.model .port>.arrow{
+    cursor: crosshair;
+}
+.wsg>.main>.model .port>.arrow:hover{
+    fill: var(--hover-color);
 }
 .wsg>.main>.model .port_choice1{
     font-size: large;
 }
-.wsg>.main>.model .port_inselectable{
-    font-size: small;
-    color: gray;
-    fill: gray;
-}
 .wsg>.main>.model .port_selectable{
-    fill: yellow;
+    fill: green;
 }
 .wsg>.main>.model .port_selectable:hover{
-    fill: green;
+    fill: var(--hover-color);
 }
 .wsg>.main>.connection>.line{
     stroke: black;
+    stroke-width: 2;
 }
-.wsg>.main>.connection>.line:hover{
-    stroke: aqua;
-}
-
-
-
-
-.arrow{
-  cursor: pointer;
-}.arrow:hover{
-    fill: blue;
-}
-.line{
-  stroke: black;
-}
-.connection{
-  stroke: black;
+.wsg>.main>.connection>.line_hover{
+    stroke: var(--hover-color);
+    stroke-width: 4;
 }
 
 
 
+
+
+
+
+.context-menu {
+	position: absolute;
+	display: none;
+	background-color: #888888;
+	border-radius: 4px;
+	font-family: Arial, sans-serif;
+	font-size: 14px;
+	min-width: 150px;
+	border: 1px solid #d4d4d4;
+	z-index:1200;
+}
+.context-menu ul {
+	list-style-type: none;
+	margin: 4px 0px;
+	padding: 0px;
+	cursor: default;
+}
+.context-menu ul li {
+	padding: 4px 16px;
+}
+.context-menu ul li:hover {
+	background-color: #4677f8;
+	color: #fefefe;
+}
 
 
 

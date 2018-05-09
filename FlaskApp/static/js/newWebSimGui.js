@@ -2,29 +2,43 @@ let agent_data;
 let main;
 
 window.onload = async function() {
+
+
+
     d3.select("#working_field").append("svg")
-        .classed("wsg", true)
-        .attr("width", "100%")
-        .attr("height", "100%");
+        .classed("wsg", true);
 
 
     d3.select(".wsg").append("rect")
         .classed("zoomer", true)
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("fill", "none")
         .attr("pointer-events", "all")
-        .call(d3.zoom().scaleExtent([0.1, 8])
-            .on("zoom", function () {main.attr("transform", d3.event.transform);}
-            )
-        );
+        .call(await onZoom());
 
     main = d3.select(".wsg").append("g")
         .classed("main",true);
     await update_all();
+
+    d3.select('body').append('div')
+		.attr('class', 'context-menu');
+
+	// close menu
+	d3.select('body').on('click.context-menu', function() {
+		d3.select('.context-menu').style('display', 'none');
+	});
 
     /*setInterval(async function(){
         await update_all()
     }, 5000);*/
 };
 
+
+async function full_screen() {
+    d3.select("#websimgui")
+        .classed("full-screen",!d3.select("#websimgui").classed("full-screen"));
+}
 
 async function update_all(){
     await get_data();
@@ -115,7 +129,7 @@ async function update_models_elements(){
     }
 }
 
-function update_connections_elements(){
+async function update_connections_elements(){
     let connections = main.selectAll(".connection").data(agent_data.connections);
 
     //exit
@@ -126,7 +140,33 @@ function update_connections_elements(){
         .classed("connection",true)
         .attr("id", function (d) { return d.id; });
     connections.append("line")
-        .classed("line",true);
+        .classed("line",true)
+        .on("mouseover", function(d){d3.select(this).classed("line_hover",true);})
+        .on("mouseout", function(d){d3.select(this).classed("line_hover",false);})
+        .on("contextmenu", await onContextMenu(menu));
+}
+
+let menu = [{
+    title: "Remove",
+    action: async function(elm, d, i) {
+        await $.post("/websimgui", {
+                'fnc': 'remove_connection',
+                'data': JSON.stringify({
+                    'agent': agent_data.id,
+                    'connection': d.id})},
+            function(result){
+                console.log(result);
+            });
+        await update_all();
+    }
+}];
+
+
+async function onZoom() {
+    return d3.zoom().scaleExtent([0.1, 8])
+        .on("zoom", function (d) {
+            main.attr("transform", d3.event.transform);
+        })
 }
 
 async function onModelDrag() {
@@ -176,7 +216,6 @@ async function onModelResize() {
 
         })
 }
-
 async function onConnecting(){
     return d3.drag()
         .on("start", async function (d) {await connecting_start(this, d)})
@@ -195,6 +234,8 @@ async function onConnecting(){
 
         let direction_1 = d3.select(arrow).data()[0].direction;
 
+        d3.selectAll(".line").on("mouseover", null);
+
 
         d3.select(arrow)
             .classed("connecting_from", true);
@@ -212,10 +253,8 @@ async function onConnecting(){
 
 
         d3.selectAll('.port_selectable')
-            .on("mouseover", function() { d3.select(this).attr("fill", "red"); d3.select(this).classed("connecting_to", true);})
-            .on("mouseout", function() { d3.select(this).classed("connecting_to", false);})
-            .on("touchstart", function() { d3.select(this).attr("fill", "red"); d3.select(this).classed("connecting_to", true);})
-            .on("touchend", function() { d3.select(this).classed("connecting_to", false);});
+            .on("mouseover", function() { d3.select(this).classed("connecting_to", true);})
+            .on("mouseout", function() { d3.select(this).classed("connecting_to", false);});
     }
 
     async function connecting_drag(arrow,d){
@@ -243,6 +282,8 @@ async function onConnecting(){
         d3.selectAll('.port_inselectable').classed("port_inselectable", false).classed("port", true);
         d3.selectAll('.port_selectable').classed("port_selectable", false).classed("port", true);
         d3.selectAll('.port').on("mouseover", null).on("mouseout", null);
+
+        d3.selectAll(".line").on("mouseover", function(d){d3.select(this).classed("line_hover",true);});
 
 
     }
@@ -331,7 +372,7 @@ async function recalculate_properties() {
                         break;
                 }
 
-                form = get_port_arrow_form(model[direction].orientation, direction, 10);
+                form = get_port_arrow_form(model[direction].orientation, direction, 15);
 
                 port.arrow = {};
                 port.arrow.points = "X1,Y1 X2,Y2 X3,Y3"
@@ -428,3 +469,41 @@ async function update_positions(){
 
 
 
+onContextMenu = async function (menu, openCallback) {
+
+	// this gets executed when a contextmenu event occurs
+	return await async function(data, index) {
+	    console.log("context menu triggerd");
+
+		let elm = this;
+
+		d3.selectAll('.context-menu').html('');
+		let list = d3.selectAll('.context-menu').append('ul');
+		list.selectAll('li').data(menu).enter()
+			.append('li')
+			.html(function(d) {return d.title;})
+			.on('click', async function(d, i) {
+				await d.action(elm, data, index);
+				d3.select('.context-menu').style('display', 'none');
+			});
+
+		// the openCallback allows an action to fire before the menu is displayed
+		// an example usage would be closing a tooltip
+		if (openCallback) openCallback(data, index);
+
+		// display context menu
+		d3.select('.context-menu')
+			.style('left', (d3.event.pageX - 2) + 'px')
+			.style('top', (d3.event.pageY - 2) + 'px')
+			.style('display', 'block');
+
+		d3.event.preventDefault();
+	};
+};
+
+class Connections {
+    constructor(parentElement, data) {
+        this.height = height;
+        this.width = width;
+    }
+}

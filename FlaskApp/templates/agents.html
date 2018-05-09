@@ -8,14 +8,17 @@
 </head>
 <body class="grid-container">
 {% include 'imports/header.html' %}
-{% include 'imports/menu.html' %}
-<div>
+<div id="content">
     <h2>Agents</h2>
-    <ul>
-        {% for agent in agents %}
-        <li><a href="/agents?agent_id={{agent.id}}">{{agent.name}}</a></li>
-        {% endfor %}
-    </ul>
+    <div class="agents agents-grid-container">
+            {% for agent in agents %}
+            <div class="agent agents-grid-item">
+                <a href="/agents?agent_id={{agent.id}}">{{agent.name}}</a>
+
+            </div>
+            {% endfor %}
+        </ul>
+    </div>
     <form method="post" action="">
         <label>Add Agent:</label>
         <input id="agent_name" name="agent_name" type="text" placeholder="agent_name" required/>

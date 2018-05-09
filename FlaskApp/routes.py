@@ -17,7 +17,7 @@ def home():
 @app.route('/doc')
 def doc():
     content = Markup(open('README.md', 'r').read())
-    return render_template("doc.html", content=content)
+    return render_template("doc.html", content=content, loggedin=current_user.is_authenticated)
 
 
 @app.route("/agents", methods=['GET', 'POST'])
@@ -48,7 +48,7 @@ def websimgui():
         agent_id = request.args.get('agent_id', None)
         db_agent = Agent.query.filter_by(id=agent_id).first()
         if db_agent != None:
-            return render_template("websimgui.html", agent=db_agent)
+            return render_template("websimgui.html", agent=db_agent, loggedin=current_user.is_authenticated)
         else:
             return "no valid Agent chosen"
     elif request.method == 'POST':
@@ -78,6 +78,14 @@ def websimgui():
                                       data['port_id_to']))
             db.session.commit()
             return json.dumps(True)
+
+        if request.form['fnc'] == 'remove_connection':
+            data = json.loads(request.form['data'])
+            con = Connection.query.filter_by(id=data['connection']).first()
+            db.session.delete(con)
+            db.session.commit()
+            return json.dumps(True)
+
 
 @app.route('/websimgui/data', methods=['GET', 'POST'])
 def websimgui_data():
