@@ -1,12 +1,11 @@
 from .app import app
-import os
 from .models import *
 from .functions import get_agent
 from flask import render_template, request, send_from_directory
 from flask_security import current_user, login_required
 import json
 import random
-import markdown
+from flask import Markup
 
 
 @app.route('/')
@@ -17,12 +16,8 @@ def home():
 
 @app.route('/doc')
 def doc():
-    f = open('README.md', 'r')
-    md = f.read()
-    md = md.replace("\n", " ")
-    htmlmarkdown = markdown.markdown(md)
-    print(htmlmarkdown)
-    return htmlmarkdown
+    content = Markup(open('README.md', 'r').read())
+    return render_template("doc.html", content=content)
 
 
 @app.route("/agents", methods=['GET', 'POST'])

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pyjamas</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css')}}">
+</head>
+<body class="grid-container">
+    {% include 'imports/header.html' %}
+    {% include 'imports/menu.html' %}
+
+    <div id="content">{{ content }}</div>
+</body>
+</html>
