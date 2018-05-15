@@ -44,22 +44,38 @@ def agents():
 #@login_required
 @app.route('/websimgui', methods=['GET', 'POST'])
 def websimgui():
-    if request.method == 'GET':
-        agent_id = request.args.get('agent_id', None)
-        db_agent = Agent.query.filter_by(id=agent_id).first()
-        if db_agent != None:
-            return render_template("websimgui.html", agent=db_agent, loggedin=current_user.is_authenticated)
-        else:
-            return "no valid Agent chosen"
-    elif request.method == 'POST':
 
+
+    if request.method == 'GET':
+        fnc = request.args.get('fnc', None)
+
+        if fnc == 'get_model_selection':
+            models = dict()
+
+            for model in Model.query.all():
+                models[model.id] = model.name
+
+
+            return json.dumps(models)
+
+        else:
+            agent_id = request.args.get('agent_id', None)
+            db_agent = Agent.query.filter_by(id=agent_id).first()
+            if db_agent != None:
+                return render_template("websimgui.html", agent=db_agent, loggedin=current_user.is_authenticated)
+            else:
+                return "no valid Agent chosen"
+
+    elif request.method == 'POST':
         if request.form['fnc'] == 'set_model_pos':
             data = json.loads(request.form['data'])
             model_used = Model_used.query.filter(Model_used.id==data['model']).first()
             model_used.x = data['x']
             model_used.y = data['y']
             db.session.commit()
-            return json.dumps(True)
+
+            db_agent = Agent.query.filter_by(id=data['agent']).first()
+            return json.dumps(db_agent.dict)
 
         if request.form['fnc'] == 'set_model_size':
             data = json.loads(request.form['data'])
@@ -67,7 +83,9 @@ def websimgui():
             model_used.width = data['width']
             model_used.height = data['height']
             db.session.commit()
-            return json.dumps(True)
+
+            db_agent = Agent.query.filter_by(id=data['agent']).first()
+            return json.dumps(db_agent.dict)
 
         if request.form['fnc'] == 'add_connection':
             data = json.loads(request.form['data'])
@@ -77,14 +95,37 @@ def websimgui():
                                       data['fk_model_used_to'],
                                       data['port_id_to']))
             db.session.commit()
-            return json.dumps(True)
+
+            db_agent = Agent.query.filter_by(id=data['agent']).first()
+            return json.dumps(db_agent.dict)
+
+        if request.form['fnc'] == 'add_model_used':
+            data = json.loads(request.form['data'])
+            db.session.add(Model_used(data['name'],
+                                      data['fk_model'],
+                                      data['agent']))
+            db.session.commit()
+
+            db_agent = Agent.query.filter_by(id=data['agent']).first()
+            return json.dumps(db_agent.dict)
 
         if request.form['fnc'] == 'remove_connection':
             data = json.loads(request.form['data'])
             con = Connection.query.filter_by(id=data['connection']).first()
             db.session.delete(con)
             db.session.commit()
-            return json.dumps(True)
+
+            db_agent = Agent.query.filter_by(id=data['agent']).first()
+            return json.dumps(db_agent.dict)
+
+        if request.form['fnc'] == 'remove_model':
+            data = json.loads(request.form['data'])
+            model_used = Model_used.query.filter_by(id=data['model']).first()
+            db.session.delete(model_used)
+            db.session.commit()
+
+            db_agent = Agent.query.filter_by(id=data['agent']).first()
+            return json.dumps(db_agent.dict)
 
 
 @app.route('/websimgui/data', methods=['GET', 'POST'])
@@ -97,3 +138,10 @@ def websimgui_data():
         if db_agent != None:
             return json.dumps(db_agent.dict)
 
+        else:
+            return json.dumps(False)
+
+
+@app.route('/test')
+def test():
+    return render_template("test.html")

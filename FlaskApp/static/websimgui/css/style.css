@@ -4,7 +4,7 @@
 
 
 
-#websimgui{
+#wsg{
     display: grid;
     width: 100%;
     height: 100%;
@@ -13,77 +13,74 @@
 
     background-color: darkturquoise;
 }
-#websimgui.full-screen{
+#wsg.full-screen{
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
 }
-#working_field{
+#wsg_drawing{
+    grid-row: 1;
     position: relative;
     width: 100%;
     height: 100%;
-}
 
-.wsg{
     background-color: cadetblue;
     border-style: solid;
     border-color: grey;
     border-width: 1px;
-    width: 100%;
-    height: 100%;
 }
 
-.wsg>.main>.model{
+#wsg .main>.model{
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.wsg>.main>.model>.box{
+#wsg .main>.model>.box{
     fill: grey;
     stroke: grey;
     stroke-width: 3;
     cursor: move;
 }
-.wsg>.main>.model>.box:hover{
+#wsg .main>.model>.box:hover{
     stroke: var(--hover-color);
 }
-.wsg>.main>.model>.box_draged{
+#wsg .main>.model>.box_draged{
     stroke: black;
 }
-.wsg>.main>.model>.sizer{
+#wsg .main>.model>.sizer{
     fill: black;
     cursor: nw-resize;
 }
-.wsg>.main>.model>.name{
+#wsg .main>.model>.name{
     font-size: small;
 }
-.wsg>.main>.model>.sizer:hover{
+#wsg .main>.model>.sizer:hover{
     fill: var(--hover-color);
 }
-.wsg>.main>.model .port>.port_name{
+#wsg .main>.model .port>.port_name{
     font-size: x-small;
 }
-.wsg>.main>.model .port>.arrow{
+#wsg .main>.model .port>.arrow{
     cursor: crosshair;
 }
-.wsg>.main>.model .port>.arrow:hover{
+#wsg .main>.model .port>.arrow:hover{
     fill: var(--hover-color);
 }
-.wsg>.main>.model .port_choice1{
+#wsg .main>.model .port_choice1{
     font-size: large;
 }
-.wsg>.main>.model .port_selectable{
+#wsg .main>.model .port_selectable{
     fill: green;
 }
-.wsg>.main>.model .port_selectable:hover{
+#wsg .main>.model .port_selectable:hover{
     fill: var(--hover-color);
 }
-.wsg>.main>.connection>.line{
+#wsg .main>.connection>.line{
     stroke: black;
     stroke-width: 2;
 }
-.wsg>.main>.connection>.line_hover{
+#wsg .main>.connection>.line_hover{
     stroke: var(--hover-color);
     stroke-width: 4;
 }
