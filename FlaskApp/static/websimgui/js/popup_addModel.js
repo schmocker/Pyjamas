@@ -23,9 +23,11 @@ class Popup_addModel {
             .attr("id","version_selection")
             .attr("name","version_selection");
         obj.append("span").html('<br>');
+        let kkk = this;
         obj.append("input")
             .attr("type","submit")
-            .attr("value","Submit");
+            .attr("value","Submit")
+            .on("click",function(){kkk.validateForm()});
 
 
 
@@ -99,7 +101,7 @@ class Popup_addModel {
 
 
     async validateForm() {
-        let boxName = document.forms["addBoxForm"]["boxName"].value;
+        let boxName = document.forms["addBoxForm"]["model_name"].value;
 
         let v = d3.select("#version_selection").property("selectedOptions")[0].__data__;
         let model_id = v.value.id;
