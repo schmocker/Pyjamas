@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore
 import random
 import json
+from Models import get_models
 
 db = SQLAlchemy(app)
 
@@ -54,11 +55,68 @@ class Agent(db.Model):
 class Model(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
+    topic = db.Column(db.String(80), nullable=False)
+    version = db.Column(db.String(80), nullable=False)
     info = db.Column(db.Text())
 
-    def __init__(self, name, info=None):
+
+
+    def __init__(self, name, topic, version, info=None):
         self.name = name
+        self.topic = topic
+        self.version = version
         self.info = info
+
+    @property
+    def dict(self):
+        d = dict()
+        for attr in ['id','name','topic','version','info']:
+            d[attr] = getattr(self, attr)
+        d['info'] = json.loads(d['info'])
+        return d
+
+    @classmethod
+    def update_all(cls):
+        models = get_models()
+
+        for topic in models:
+            for model in models[topic]:
+                for version in models[topic][model]:
+                    info = json.dumps(models[topic][model][version]["info"])
+                    db_model = cls.query.filter_by(name=model).filter_by(topic=topic).filter_by(version=version).first()
+                    if db_model is None:
+                        db.session.add(cls(model, topic, version, info=info))
+                    else:
+                        db_model.info = info
+        db.session.commit()
+
+        db_model_ids = list()
+        for topic in models:
+            for model in models[topic]:
+                for version in models[topic][model]:
+                    db_model = cls.query.filter_by(name=model).filter_by(topic=topic).filter_by(version=version).first()
+                    db_model_ids.append(db_model.id)
+
+        cls.query.filter(cls.id.notin_(db_model_ids)).delete(synchronize_session=False)
+        db.session.commit()
+
+    @classmethod
+    def get_all(cls):
+        d = dict()
+        for model in cls.query.all():
+            if model.topic not in d.keys():
+                d[model.topic] = dict()
+            if model.name not in d[model.topic].keys():
+                d[model.topic][model.name] = dict()
+            d[model.topic][model.name][model.version] = dict()
+            d[model.topic][model.name][model.version]['id'] = model.id
+            d[model.topic][model.name][model.version]['info'] = json.loads(model.info)
+
+        return d
+
+
+
+        
 
 class Model_used(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -89,6 +147,8 @@ class Model_used(db.Model):
             d[attr] = getattr(self, attr)
 
         db_model = Model.query.filter(Model.id == self.fk_model).first()
+
+        model_infos2 = db_model.dict
 
         model_info = json.loads(db_model.info)
 
@@ -137,7 +197,7 @@ user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 # Create a user to test with
-#@app.before_first_request
+@app.before_first_request
 def create_user():
     db.create_all()
 
@@ -155,8 +215,7 @@ def create_user():
         Model_used.query.delete()
         db.session.commit()
 
-        Model.query.delete()
-        db.session.commit()
+        Model.update_all()
 
         Agent.query.delete()
         db.session.commit()
@@ -166,11 +225,7 @@ def create_user():
             db.session.add(Agent(name="Agent " + str(i)))
         db.session.commit()
 
-        for i in range(0, 5):
-            inputs = list()
-            db.session.add(Model(name="Model " + str(i),
-                                 info=get_model_infos()))
-        db.session.commit()
+
 
         for i in range(0, 25):
             db.session.add(Model_used(name="Used Model " + str(i),
@@ -178,12 +233,3 @@ def create_user():
                                       fk_agent=random.choice(Agent.query.all()).id))
         db.session.commit()
 
-def get_model_infos():
-    inputs = {'input_1': {'name': 'Input 1'},
-              'input_2': {'name': 'Input 2'},
-              'input_3': {'name': 'Input 3'}}
-    outputs = {'output_1': {'name': 'Output 1'},
-               'output_2': {'name': 'Output 2'}}
-    info = {'inputs': inputs, 'outputs': outputs}
-
-    return json.dumps(info)

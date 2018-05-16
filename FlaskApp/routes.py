@@ -1,5 +1,5 @@
 from .app import app
-from .models import *
+from .db_models import *
 from .functions import get_agent
 from flask import render_template, request, send_from_directory
 from flask_security import current_user, login_required
@@ -50,13 +50,7 @@ def websimgui():
         fnc = request.args.get('fnc', None)
 
         if fnc == 'get_model_selection':
-            models = dict()
-
-            for model in Model.query.all():
-                models[model.id] = model.name
-
-
-            return json.dumps(models)
+            return json.dumps(Model.get_all())
 
         else:
             agent_id = request.args.get('agent_id', None)

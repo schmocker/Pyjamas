@@ -2,10 +2,13 @@
 let agent_data;
 let main;
 
-let connections = new Connections();
-let models = new Models();
+let connections;
+let models;
+let popup_addModel;
 
 window.onload = async function() {
+    connections = new Connections();
+    models = new Models();
 
 
     d3.select("#wsg").append("svg")
@@ -14,6 +17,9 @@ window.onload = async function() {
 
     d3.select("#wsg").append("div")
         .attr("id", "wsg_menu");
+
+
+    popup_addModel = new Popup_addModel(d3.select("#wsg"));
 
     d3.select("#wsg_menu").append("img")
         .attr("src","static/images/icons/arrows_in.png")
@@ -28,17 +34,7 @@ window.onload = async function() {
         .attr("width", 30)
         .attr("height", 30)
         .on("click", async function() {
-            let models_dict = await $.get("/websimgui", {
-                'fnc': 'get_model_selection',
-                'data': JSON.stringify({})});
-            models_dict = JSON.parse(models_dict);
-            d3.select("#model_selection").selectAll("option").remove()
-            for (let key in models_dict){
-                d3.select("#model_selection").append("option")
-                    .attr("value",key)
-                    .text(models_dict[key]);
-            }
-            modal.style.display = "block";
+            await popup_addModel.popup()
         });
 
 
@@ -62,37 +58,6 @@ window.onload = async function() {
         d3.select('.context-menu').style('display', 'none');
     });
 
-    /*setInterval(async function(){
-        await update_all()
-    }, 5000);*/
-
-
-
-
-
-
-
-
-
-
-
-    // //////////////////////// modals
-
-
-    let modal = document.getElementById('myModal');
-
-// Get the <span> element that closes the modal
-    let span = document.getElementsByClassName("close")[0];
-
-// When the user clicks the button, open the modal
-
-
-// When the user clicks on <span> (x), close the modal
-    span.onclick = function() {
-        modal.style.display = "none";
-    }
-
-// When the user clicks on submit , close the modal and add box
 
 
 // When the user clicks anywhere outside of the modal, close it
@@ -104,17 +69,7 @@ window.onload = async function() {
     }
 };
 
-async function validateForm() {
-    let boxName = document.forms["addBoxForm"]["boxName"].value;
-    let boxType = document.forms["addBoxForm"]["boxType"].value;
-    if (boxName == "") {
-        alert("Box Name must be filled out");
-        return false;
-    }
-    let modal = document.getElementById('myModal');
-    modal.style.display = "none";
-    await models.add(boxName, boxType);
-}
+
 
 async function full_screen() {
     let isfullscreen = d3.select("#wsg").classed("full-screen");

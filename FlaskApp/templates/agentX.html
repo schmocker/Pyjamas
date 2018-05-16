@@ -15,6 +15,7 @@
     <script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script>
     <script type="text/javascript" src="static/websimgui/js/Models.js"></script>
     <script type="text/javascript" src="static/websimgui/js/Connections.js"></script>
+    <script type="text/javascript" src="static/websimgui/js/popup_addModel.js"></script>
     <script type="text/javascript" src="static/websimgui/websimgui.js"></script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='websimgui/css/style.css')}}">
 
@@ -31,22 +32,7 @@
 
     <p>Hier folgen Informationen zum Modell</p>
 
-    <div id="wsg">
-        <div id="myModal" class="modal">
-            <!-- Modal content -->
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <form name="addBoxForm" onsubmit="return validateForm()" action="javascript:void(0);">
-                    Box Name:<br>
-                    <input type="text" name="boxName" value=""><br>
-                    Box Type:<br>
-                    <select id="model_selection" name="boxType"></select><br>
-                    <br>
-                    <input type="submit" value="Submit">
-                </form>
-            </div>
-        </div>
-    </div>
+    <div id="wsg"></div>
 
 
 
