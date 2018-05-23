@@ -1,5 +1,5 @@
-from pyjama.core.test_agent import TestAgent
-from pyjama.models.Math.Add.V1.model import Model
+from core.test_agent import TestAgent
+from Models.Math.Add.V1.model import Model
 
 t = TestAgent()
 
