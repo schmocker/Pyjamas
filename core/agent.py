@@ -1,6 +1,6 @@
 import asyncio
 from multiprocessing import Process
-from Lib import queue
+# from Lib import queue
 import logging
 
 class Agent(Process):
@@ -21,6 +21,9 @@ class Agent(Process):
         self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
     def run(self):
+
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
 
         self.running = True
 
