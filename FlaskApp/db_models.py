@@ -97,6 +97,7 @@ class Agent(db.Model):
     def dict(self):
         agent = dict()
         agent['id'] = self.id
+        agent['active'] = self.active
 
         agent['model_used'] = list()
         agent['connection'] = list()
