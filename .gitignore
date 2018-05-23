@@ -1,3 +1,4 @@
 .idea
 instance
 venv
+__pycache__/
