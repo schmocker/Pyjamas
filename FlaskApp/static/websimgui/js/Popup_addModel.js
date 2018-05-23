@@ -101,13 +101,13 @@ class Popup_addModel {
 
 
     async validateForm() {
-        let boxName = document.forms["addBoxForm"]["model_name"].value;
+        let boxName = d3.select("#model_name").property("value");
 
         let v = d3.select("#version_selection").property("selectedOptions")[0].__data__;
         let model_id = v.value.id;
 
         if (boxName == "") {
-            d3.select("#model_name").style("background-color","red")
+            d3.select("#model_name").style("background-color","red");
             return false;
         }
         let modal = document.getElementById('myModal');

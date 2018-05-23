@@ -9,8 +9,8 @@ from Models import get_models
 db = SQLAlchemy(app)
 
 roles_users = db.Table('roles_users',
-                       db.Column('fk_user', db.Integer(), db.ForeignKey('user.id')),
-                       db.Column('fk_role', db.Integer(), db.ForeignKey('role.id')))
+                       db.Column('fk_user', db.Integer, db.ForeignKey('user.id')),
+                       db.Column('fk_role', db.Integer, db.ForeignKey('role.id')))
 
 
 class Role(db.Model, RoleMixin):
@@ -23,7 +23,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
-    active = db.Column(db.Boolean())
+    active = db.Column(db.Boolean)
     confirmed_at = db.Column(db.DateTime())
     roles = db.relationship('Role', secondary=roles_users,backref=db.backref('users', lazy='dynamic'))
 
@@ -31,25 +31,23 @@ class User(db.Model, UserMixin):
 class Agent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
+    active = db.Column(db.Boolean, nullable=False)
 
     def __init__(self, name):
         self.name = name
-
-    def __repr__(self):
-        return '<Agent %r>' % self.name
+        self.active = False
 
     @property
     def dict(self):
         agent = dict()
         agent['id'] = self.id
 
-        agent['models'] = dict()
-        for db_model_used in Model_used.query.filter(Model_used.fk_agent == self.id).all():
-            agent['models'][db_model_used.id] = db_model_used.dict
-
-        agent['connections'] = dict()
-        for db_connection in Connection.query.filter(Connection.fk_agent == self.id).all():
-            agent['connections'][db_connection.id] = db_connection.dict
+        agent['model_used'] = list()
+        agent['connection'] = list()
+        for db_model_used in self.models_used:
+            agent['model_used'].append(db_model_used.dict)
+            for db_connection in db_model_used.connections_from:
+                agent['connection'].append(db_connection.list)
         return agent
 
 class Model(db.Model):
@@ -57,9 +55,7 @@ class Model(db.Model):
     name = db.Column(db.String(80), nullable=False)
     topic = db.Column(db.String(80), nullable=False)
     version = db.Column(db.String(80), nullable=False)
-    info = db.Column(db.Text())
-
-
+    info = db.Column(db.Text)
 
     def __init__(self, name, topic, version, info=None):
         self.name = name
@@ -69,9 +65,8 @@ class Model(db.Model):
 
     @property
     def dict(self):
-        d = dict()
-        for attr in ['id','name','topic','version','info']:
-            d[attr] = getattr(self, attr)
+        atrs = self.__class__.__table__.columns.keys()
+        d = {atr: getattr(self, atr) for atr in atrs}
         d['info'] = json.loads(d['info'])
         return d
 
@@ -120,14 +115,19 @@ class Model(db.Model):
 
 class Model_used(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fk_model = db.Column(db.Integer(), db.ForeignKey('model.id', ondelete="CASCADE"))
-    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id', ondelete="CASCADE"))
+    fk_model = db.Column(db.Integer, db.ForeignKey('model.id', ondelete="CASCADE"), nullable=False)
+    fk_agent = db.Column(db.Integer, db.ForeignKey('agent.id', ondelete="CASCADE"), nullable=False)
     name = db.Column(db.String(80), nullable=False)
-    settings = db.Column(db.String(80))
-    x = db.Column(db.Integer())
-    y = db.Column(db.Integer())
-    width = db.Column(db.Integer())
-    height = db.Column(db.Integer())
+    settings = db.Column(db.Text, nullable=False)
+    x = db.Column(db.Integer)
+    y = db.Column(db.Integer)
+    width = db.Column(db.Integer)
+    height = db.Column(db.Integer)
+    ###
+    model = db.relationship("Model", foreign_keys=[fk_model],
+                            backref=db.backref("models_used", cascade="all, delete-orphan", lazy=True))
+    agent = db.relationship("Agent", foreign_keys=[fk_agent],
+                            backref=db.backref("models_used", cascade="all, delete-orphan", lazy=True))
 
     def __init__(self, name, fk_model, fk_agent):
         self.name = name
@@ -135,62 +135,40 @@ class Model_used(db.Model):
         self.fk_agent = fk_agent
         self.width = 120
         self.height = 60
-
-    @property
-    def id_html(self):
-        return 'model_' + str(self.id)
+        self.settings = json.dumps(None)
 
     @property
     def dict(self):
-        d = dict()
-        for attr in ['id','id_html','name','x','y','width','height','settings']:
-            d[attr] = getattr(self, attr)
+        atrs = self.__class__.__table__.columns.keys()
+        d = {atr: getattr(self, atr) for atr in atrs}
 
-        db_model = Model.query.filter(Model.id == self.fk_model).first()
+        d['settings'] = json.loads(d['settings'])
+        d['model'] = self.model.dict
 
-        model_infos2 = db_model.dict
-
-        model_info = json.loads(db_model.info)
-
-        orientations = ['left', 'right', 'top', 'bottom']
-
-        for out_in in ['inputs', 'outputs']:
-            dock = dict()
-            ports = dict()
-
-            for input_key, input_value in model_info[out_in].items():
-                port = dict()
-                port['name'] = input_value['name']
-                port['id'] = input_key
-                port['id_model'] = d['id']
-                port['id_html'] = 'port_' + str(d['id']) + '_' + input_key
-                ports[input_key] = port
-            dock['ports'] = ports
-            dock['orientation'] = 'left' if out_in == 'inputs' else 'right'
-            d[out_in] = dock
         return d
 
 class Connection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fk_agent = db.Column(db.Integer(), db.ForeignKey('agent.id', ondelete="CASCADE"))
-    fk_model_used_from = db.Column(db.Integer(), db.ForeignKey('model_used.id', ondelete="CASCADE"), nullable=False)
+    fk_model_used_from = db.Column(db.Integer, db.ForeignKey('model_used.id', ondelete="CASCADE"), nullable=False)
     port_id_from = db.Column(db.String(80), nullable=False)
-    fk_model_used_to = db.Column(db.Integer(), db.ForeignKey('model_used.id', ondelete="CASCADE"), nullable=False)
+    fk_model_used_to = db.Column(db.Integer, db.ForeignKey('model_used.id', ondelete="CASCADE"), nullable=False)
     port_id_to = db.Column(db.String(80), nullable=False)
+    ###
+    model_used_from = db.relationship("Model_used", foreign_keys=[fk_model_used_from],
+                                      backref=db.backref("connections_from", cascade="all, delete-orphan", lazy=True))
+    model_used_to = db.relationship("Model_used", foreign_keys=[fk_model_used_to],
+                                    backref=db.backref("connections_to", cascade="all, delete-orphan", lazy=True))
 
-    def __init__(self, fk_agent, fk_model_used_from, port_id_from, fk_model_used_to, port_id_to):
-        self.fk_agent = fk_agent
+    def __init__(self, fk_model_used_from, port_id_from, fk_model_used_to, port_id_to):
         self.fk_model_used_from = fk_model_used_from
         self.port_id_from = port_id_from
         self.fk_model_used_to = fk_model_used_to
         self.port_id_to = port_id_to
 
     @property
-    def dict(self):
-        d = dict()
-        for attr in ['id', 'fk_model_used_from', 'port_id_from', 'fk_model_used_to', 'port_id_to']:
-            d[attr] = getattr(self, attr)
-        return d
+    def list(self):
+        atrs = self.__class__.__table__.columns.keys()
+        return {atr: getattr(self, atr) for atr in atrs}
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)

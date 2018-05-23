@@ -36,18 +36,28 @@
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-#wsg .main>.model>.box{
-    fill: grey;
-    stroke: grey;
+#wsg .box{
+    fill: rgba(128,128,128,1);
+    stroke: gray;
     stroke-width: 3;
     cursor: move;
 }
-#wsg .main>.model>.box:hover{
+
+#wsg .box_dragging{
+    fill: rgba(128,128,128,0.5);
     stroke: var(--hover-color);
 }
-#wsg .main>.model>.box_draged{
-    stroke: black;
+
+
+#wsg .box_hover{
+    stroke: var(--hover-color);
 }
+
+
+
+
+
+
 #wsg .main>.model>.sizer{
     fill: black;
     cursor: nw-resize;
@@ -58,9 +68,15 @@
 #wsg .main>.model>.sizer:hover{
     fill: var(--hover-color);
 }
-#wsg .main>.model .port>.port_name{
+#wsg .port_name{
     font-size: x-small;
+    cursor: move;
 }
+#wsg .port_name:hover ~ .box{
+    fill: red;
+}
+
+
 #wsg .main>.model .port>.arrow{
     cursor: crosshair;
 }

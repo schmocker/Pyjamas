@@ -1,0 +1,3 @@
+
+def view():
+    return "Halaa"

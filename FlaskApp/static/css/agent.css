@@ -14,10 +14,45 @@
     grid-gap: 30px;
 }
 .agents-grid-item{
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: auto;
     justify-self: center;
     align-self: center;
     height: 100%;
     width: 100%;
     background-color: deepskyblue;
     padding: 10px;
+
+}
+
+.agent img{
+    width: 20px;
+    opacity: 0.5;
+}
+.agent img:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+.edit{
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: end;
+    align-self: end;
+}
+
+.remove{
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: end;
+    align-self: start;
+}
+
+
+.name{
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: center;
+    align-self: center;
 }
