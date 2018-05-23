@@ -3,3 +3,5 @@ flask_security
 flask_sqlalchemy
 pymysql
 bcrypt
+numpy
+scipy
