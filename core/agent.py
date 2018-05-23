@@ -18,7 +18,8 @@ class Agent(Process):
         self.logger = None
 
     def log_debug(self, msg):
-        self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
+        if self.logger:
+            self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
     def run(self):
 
