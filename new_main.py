@@ -1,4 +1,4 @@
-from pyjama.core.controller import Controller
+from core.controller import Controller
 import time
 
 def main():

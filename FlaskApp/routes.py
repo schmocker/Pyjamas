@@ -7,6 +7,7 @@ import json
 import random
 from flask import Markup
 
+
 @app.route('/')
 def home():
     return render_template("home.html",
@@ -135,13 +136,13 @@ def websimgui():
             db.session.commit()
 
         if request.form['fnc'] == 'start':
-            print("starting...")
+            db_agent.start()
 
         if request.form['fnc'] == 'pause':
-            print("pausing...")
+            db_agent.pause()
 
         if request.form['fnc'] == 'stop':
-            print("stoping...")
+            db_agent.stop()
 
         if request.form['fnc'] == 'update':
             print("updateing...")

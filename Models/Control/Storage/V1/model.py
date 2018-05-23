@@ -1,5 +1,5 @@
 import asyncio
-from pyjama.core.supermodel import Supermodel
+from core.supermodel import Supermodel
 
 class Model(Supermodel):
     """

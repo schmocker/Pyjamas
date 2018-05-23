@@ -14,7 +14,7 @@ class Controller():
         self.thread_running = False
 
     def add_agent(self, agent_name: str):
-        a = importlib.import_module("pyjama.core.agent").Agent(agent_name, self.queue)
+        a = importlib.import_module("core.agent").Agent(agent_name, self.queue)
         self.agents[agent_name] = a
         if not self.thread_running:
             self.start()
@@ -29,7 +29,7 @@ class Controller():
     def add_model(self, agent_name: str, model_path: str, model_name: str):
         if not self.is_agent_running(agent_name):
             i = uuid.uuid4()
-            mod = importlib.import_module(f"pyjama.models.{model_path}").Model(i,model_name)
+            mod = importlib.import_module(f"Models.{model_path}").Model(i,model_name)
             self.agents[agent_name].add_model(mod)
             return i
 

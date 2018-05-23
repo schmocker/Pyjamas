@@ -5,6 +5,9 @@ from flask_security import Security, SQLAlchemyUserDatastore
 import random
 import json
 from Models import get_models
+from core.controller import Controller
+
+controller = Controller()
 
 db = SQLAlchemy(app)
 
@@ -36,6 +39,59 @@ class Agent(db.Model):
     def __init__(self, name):
         self.name = name
         self.active = False
+
+
+    def start(self):
+        self.active = True
+        db.session.commit()
+
+        # controller.add_agent(self) TODO: implement method
+        controller.add_agent(self.name)
+
+        boxes = []
+        links = []
+
+        boxes.append(("Math.Constant.V1.model", "constant number"))
+        boxes.append(("Math.Incrementer.V1.model", "Incrementer"))
+        boxes.append(("Math.Add.V1.model", "Adder"))
+        boxes.append(("InOutput.ConsolePrint.V1.model", "Printer"))
+        boxes.append(("Control.Sleep.V1.model", "Sleeper"))
+        boxes.append(("Control.Storage.V1.model", "Storage"))
+        boxes.append(("Scheduler.Regular.V1.model", "cron_job"))
+
+        links.append(("constant number", "const", "Adder", "in1"))
+        links.append(("Incrementer", "num", "Adder", "in2"))
+        links.append(("Storage", "stored", "Adder", "in3"))
+        links.append(("Adder", "sum", "Sleeper", "input"))
+        links.append(("Sleeper", "output", "Printer", "to_print"))
+        links.append(("Adder", "sum", "Storage", "to_store"))
+
+        mods = {}
+
+        for box in boxes:
+            uuid1 = controller.add_model(self.name, box[0], box[1])
+            mods[box[1]] = uuid1
+
+        for link in links:
+            controller.link_models(self.name, mods[link[0]], link[1], mods[link[2]], link[3])
+
+        controller.start_agent(self.name)
+
+
+        # controller.start_agent(self.id)
+
+
+    def pause(self):
+        # controller.pause_agent(self.id) TODO: implement method
+        pass
+
+    def stop(self):
+        # controller.stop_agent(self.id) TODO: implement method
+        controller.stop_agent(self.name)
+
+        self.active = False
+        db.session.commit()
+
 
     @property
     def dict(self):
@@ -111,7 +167,7 @@ class Model(db.Model):
 
 
 
-        
+
 
 class Model_used(db.Model):
     id = db.Column(db.Integer, primary_key=True)
