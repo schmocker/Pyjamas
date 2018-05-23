@@ -18,8 +18,7 @@ class Agent(Process):
         self.logger = None
 
     def log_debug(self, msg):
-        return
-        # self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
+        self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
     def run(self):
 
@@ -61,8 +60,8 @@ class Agent(Process):
         self.start_simulation()
         self.log_debug("finished simulation")
 
-        self.log_debug("sending dead order")
         self.send_dead_order(self.name)
+        self.log_debug("sent dead order")
 
     def prepare_models(self):
         # execute func_birth for all models
