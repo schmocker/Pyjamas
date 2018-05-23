@@ -15,10 +15,11 @@ class Agent(Process):
 
         self.running = False
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = None
 
     def log_debug(self, msg):
-        self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
+        return
+        # self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
     def run(self):
 
@@ -27,6 +28,7 @@ class Agent(Process):
 
         self.running = True
 
+        self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
         con = logging.FileHandler("pyjama_log_" + self.name + ".txt")
         con.setLevel(logging.DEBUG)
