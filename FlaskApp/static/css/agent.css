@@ -56,3 +56,7 @@
     justify-self: center;
     align-self: center;
 }
+
+#agent_name{
+    width: 100%;
+}

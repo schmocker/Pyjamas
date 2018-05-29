@@ -1,0 +1,20 @@
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    links:
+      - mysql
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: pyjamas
+      MYSQL_ROOT_PASSWORD: root_pw
+      MYSQL_ROOT_HOST: 0.0.0.0
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_pw
+    ports:
+      - "3306:3306"

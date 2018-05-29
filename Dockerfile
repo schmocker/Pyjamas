@@ -16,5 +16,7 @@ EXPOSE 5000
 # Define environment variable
 # ENV NAME World
 
-# Run app.py when the container launches
+# This is only for some systems like rpi
+CMD "#!/bin/bash"
+# Run run.py when the container launches
 CMD ["python", "run.py"]
