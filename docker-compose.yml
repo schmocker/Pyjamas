@@ -1,20 +1,45 @@
 version: '3'
+
 services:
-  app:
+  pyjamas:
     build: .
-    ports:
-      - "5000:5000"
     volumes:
       - .:/app
+    ports:
+      - "5000:5000"
     links:
-      - mysql
-  mysql:
-    image: mysql:latest
+      - db
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db:3306
+      DB_USER: user
+      DB_PASSWORD: user_pw
+
+  db:
+    image: mariadb:latest
     environment:
       MYSQL_DATABASE: pyjamas
       MYSQL_ROOT_PASSWORD: root_pw
       MYSQL_ROOT_HOST: 0.0.0.0
       MYSQL_USER: user
       MYSQL_PASSWORD: user_pw
-    ports:
+    volumes:
+      - dbvolume:/var/lib/mysql/data
+    ports: # only for using from outside / not necessary for pyjamas
       - "3306:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links:
+      - db
+    ports:
+      - 8181:80 # use "localhost:8181" for phpMyAdmin
+    environment:
+      MYSQL_USERNAME: user
+      MYSQL_PASSWORD: user_pw
+      MYSQL_ROOT_PASSWORD: root_pw
+
+# mount volume for persistent data in DB
+volumes:
+  dbvolume:

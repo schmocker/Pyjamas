@@ -6,7 +6,7 @@ from flask_security import current_user, login_required
 import json
 import random
 from flask import Markup
-
+import os
 
 @app.route('/')
 def home():

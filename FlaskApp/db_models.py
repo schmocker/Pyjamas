@@ -6,10 +6,19 @@ import random
 import json
 from Models import get_models
 from core import Controller
+from os import environ as env
+
 
 controller = Controller()
 
+# QLALCHEMY_DATABASE_URI = "mysql+pymysql://pyjamas:PYJAMAS_FHNW@www.tobiasschmocker.ch:3306/pyjamas"
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+db_uri = "mysql+pymysql://" + env.get('DB_USER') + ":" + env.get('DB_PASSWORD') + "@" + env.get('DB_HOST') + "/pyjamas"
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+
+
 db = SQLAlchemy(app)
+
 
 roles_users = db.Table('roles_users',
                        db.Column('fk_user', db.Integer, db.ForeignKey('user.id')),
@@ -42,7 +51,6 @@ class Agent(db.Model):
 
 
     def start(self):
-
         try:
 
             # controller.add_agent(self) TODO: implement method
