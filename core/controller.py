@@ -10,58 +10,61 @@ class Controller():
     def __init__(self):
         self.agents = {}
         self.agents_running = []
-        self.queue = multiprocessing.Queue()
+        self.controller_queue = multiprocessing.Queue()
+        self.agent_queues = {}
         self.thread_running = False
 
-    def add_agent(self, agent_name: str):
-        a = importlib.import_module("core.agent").Agent(agent_name, self.queue)
-        self.agents[agent_name] = a
+    def add_agent(self, agent_id, agent_name: str):
+        agent_queue = multiprocessing.Queue()
+        self.agent_queues[agent_id] = agent_queue
+        a = importlib.import_module("core.agent").Agent(agent_id, agent_name, self.controller_queue, agent_queue)
+        self.agents[agent_id] = a
         if not self.thread_running:
             self.start()
 
-    def remove_agent(self, agent_name: str):
-        if self.is_agent_running(agent_name):
-            self.kill_agent(agent_name)
-        del self.agents[agent_name]
+    def remove_agent(self, agent_id: str):
+        if self.is_agent_running(agent_id):
+            self.kill_agent(agent_id)
+        del self.agent_queues[agent_id]
+        del self.agents[agent_id]
         if len(self.agents) <= 0:
             self.stop()
     
-    def add_model(self, agent_name: str, model_path: str, model_name: str):
-        if not self.is_agent_running(agent_name):
-            i = uuid.uuid4()
-            mod = importlib.import_module(f"Models.{model_path}").Model(i,model_name)
-            self.agents[agent_name].add_model(mod)
-            return i
+    def add_model(self, agent_id, model_path: str, model_id, model_name: str):
+        if not self.is_agent_running(agent_id):
+            mod = importlib.import_module(f"Models.{model_path}").Model(model_id,model_name)
+            self.agents[agent_id].add_model(mod)
+            return model_id
 
-    def remove_model(self, agent_name: str, model_id):
-        if not self.is_agent_running(agent_name):
-            self.agents[agent_name].remove_model(model_id)
+    def remove_model(self, agent_id, model_id):
+        if not self.is_agent_running(agent_id):
+            self.agents[agent_id].remove_model(model_id)
     
-    def link_models(self, agent_name: str, output_model_id, output_name: str, input_model_id, input_name: str):
-        if not self.is_agent_running(agent_name):
-            self.agents[agent_name].link_models(output_model_id,output_name,input_model_id,input_name)
+    def link_models(self, agent_id, output_model_id, output_name: str, input_model_id, input_name: str):
+        if not self.is_agent_running(agent_id):
+            self.agents[agent_id].link_models(output_model_id,output_name,input_model_id,input_name)
 
-    def set_property(self, agent_name: str, model_id, property_name: str, property_value):
-        if self.is_agent_running(agent_name):
-            self.send_set_property_order(agent_name,model_id,property_name,property_value)
+    def set_property(self, agent_id, model_id, property_name: str, property_value):
+        if self.is_agent_running(agent_id):
+            self.send_set_property_order(agent_id,model_id,property_name,property_value)
         else:
-            self.agents[agent_name].set_property(model_id,property_name,property_value)
+            self.agents[agent_id].set_property(model_id,property_name,property_value)
 
-    def start_agent(self, agent_name: str):
-        if not self.is_agent_running(agent_name):
-            self.agents_running.append(agent_name)
-            self.agents[agent_name].start()
+    def start_agent(self, agent_id):
+        if not self.is_agent_running(agent_id):
+            self.agents_running.append(agent_id)
+            self.agents[agent_id].start()
 
-    def stop_agent(self, agent_name: str):
-        if self.is_agent_running(agent_name):
-            self.send_stop_order(agent_name)
+    def stop_agent(self, agent_id):
+        if self.is_agent_running(agent_id):
+            self.send_stop_order(agent_id)
 
-    def kill_agent(self, agent_name: str):
-        if self.is_agent_running(agent_name):
-            self.send_kill_order(agent_name)
+    def kill_agent(self, agent_id):
+        if self.is_agent_running(agent_id):
+            self.send_kill_order(agent_id)
 
-    def is_agent_running(self, agent_name: str):
-        if agent_name in self.agents_running:
+    def is_agent_running(self, agent_id):
+        if agent_id in self.agents_running:
             return True
         return False
 
@@ -83,17 +86,12 @@ class Controller():
         self.thread_running = False
 
     def read_queue(self):
-        while self.thread_running:
-            if not self.queue.empty():
-                try:
-                    msg = self.queue.get(False)
-                    if msg["order"] == "dead":
-                        self.handle_input(msg) 
-                    else:
-                        self.queue.put(msg)
-                except Exception:
-                    pass
-            time.sleep(.1)
+        while self.thread_running or self.agents_running:
+            try:
+                msg = self.controller_queue.get(True)
+                self.handle_input(msg)
+            except Exception as e:
+                print(e)
 
     def handle_input(self, msg):
         if msg["order"] == "dead":
@@ -101,26 +99,26 @@ class Controller():
 
     # orders
 
-    def send_set_property_order(self, agent_name, model_id, property_name, property_value):
+    def send_set_property_order(self, agent_id, model_id, property_name, property_value):
         text = {}
         text["property_name"] = property_name
         text["property_value"] = property_value
 
         order = {}
         order["order"] = "prop"
-        order["agent"] = agent_name
+        order["agent"] = agent_id
         order["model"] = model_id
         order["text"] = text
-        self.queue.put(order)
+        self.agent_queues[agent_id].put(order)
 
-    def send_stop_order(self, agent_name):
+    def send_stop_order(self, agent_id):
         order = {}
         order["order"] = "stop"
-        order["agent"] = agent_name
-        self.queue.put(order)
+        order["agent"] = agent_id
+        self.agent_queues[agent_id].put(order)
 
-    def send_kill_order(self, agent_name):
+    def send_kill_order(self, agent_id):
         order = {}
         order["order"] = "kill"
-        order["agent"] = agent_name
-        self.queue.put(order)
+        order["agent"] = agent_id
+        self.agent_queues[agent_id].put(order)

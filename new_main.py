@@ -5,10 +5,8 @@ def main():
 
     c = Controller()
 
-    # c.start()
-
-    c.add_agent("smith")
-    c.add_agent("anderson")
+    c.add_agent(1,"smith")
+    c.add_agent(2,"anderson")
 
     boxes = []
     links = []
@@ -31,33 +29,33 @@ def main():
     mods = {}
     mods2 = {}
 
-    for box in boxes:
-        uuid1 = c.add_model("smith",box[0],box[1])
-        uuid2 = c.add_model("anderson",box[0],box[1])
+    for i, box in enumerate(boxes):
+        uuid1 = c.add_model(1,box[0],i,box[1])
+        uuid2 = c.add_model(2,box[0],i,box[1])
         mods[box[1]] = uuid1
         mods2[box[1]] = uuid2
 
     for link in links:
-        c.link_models("smith",mods[link[0]],link[1],mods[link[2]],link[3])
-        c.link_models("anderson",mods2[link[0]],link[1],mods2[link[2]],link[3])
+        c.link_models(1,mods[link[0]],link[1],mods[link[2]],link[3])
+        c.link_models(2,mods2[link[0]],link[1],mods2[link[2]],link[3])
 
     print(c.get_agents())
     print(c.get_agents_running())
 
     time.sleep(3)
 
-    c.start_agent("smith")
-    c.start_agent("anderson")
+    c.start_agent(1)
+    c.start_agent(2)
 
     print(c.get_agents())
     print(c.get_agents_running())
 
     time.sleep(2)
-    c.set_property("smith", mods["Sleeper"], "sleep_amount", 0)
+    c.set_property(1, mods["Sleeper"], "sleep_amount", 0)
 
-    time.sleep(.1)
+    time.sleep(1)
 
-    c.stop_agent("smith")
+    c.stop_agent(1)
 
     print(c.get_agents())
     print(c.get_agents_running())
@@ -67,24 +65,22 @@ def main():
     print(c.get_agents())
     print(c.get_agents_running())
 
-    c.remove_agent("smith")
+    c.remove_agent(1)
 
     print(c.get_agents())
     print(c.get_agents_running())
 
-    c.stop_agent("anderson")
+    c.stop_agent(2)
 
     time.sleep(2)
 
     print(c.get_agents())
     print(c.get_agents_running())
 
-    c.remove_agent("anderson")
+    c.remove_agent(2)
 
     print(c.get_agents())
     print(c.get_agents_running())
-
-    # c.stop()
 
 if __name__ == "__main__":
     main()
