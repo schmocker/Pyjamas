@@ -1,15 +1,16 @@
 import asyncio
 from multiprocessing import Process
-# from Lib import queue
 import logging
 
 class Agent(Process):
 
-    def __init__(self, name: str, queue):
+    def __init__(self, agent_id, name: str, controller_queue, agent_queue):
         super(Agent,self).__init__()
 
-        self.queue = queue
+        self.agent_queue = agent_queue
+        self.controller_queue = controller_queue
 
+        self.id = agent_id
         self.name = name
         self.models = {}
 
@@ -30,7 +31,7 @@ class Agent(Process):
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
-        con = logging.FileHandler("pyjama_log_" + self.name + ".txt")
+        con = logging.FileHandler("pyjama_log_" + str(self.id) + "_" + str(self.name) + ".txt")
         con.setLevel(logging.DEBUG)
         formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')
         con.setFormatter(formatter)
@@ -61,7 +62,7 @@ class Agent(Process):
         self.start_simulation()
         self.log_debug("finished simulation")
 
-        self.send_dead_order(self.name)
+        self.send_dead_order(self.id)
         self.log_debug("sent dead order")
 
     def prepare_models(self):
@@ -144,16 +145,14 @@ class Agent(Process):
         
     async def read_queue(self):
         while self.running:
-            if not self.queue.empty():
+            if not self.agent_queue.empty():
                 try:
-                    msg = self.queue.get(False)
-                    if self.name == msg["agent"]:
+                    msg = self.agent_queue.get(False)
+                    if self.id == msg["agent"]:
                         await self.handle_input(msg) 
-                    else:
-                        self.queue.put(msg)
                 except Exception:
                     self.log_debug("queue was empty")
-            await asyncio.sleep(.1)
+            await asyncio.sleep(0)
 
     async def handle_input(self, msg):
         order = msg['order']
@@ -181,4 +180,4 @@ class Agent(Process):
         order = {}
         order["order"] = "dead"
         order["agent"] = agent_name
-        self.queue.put(order)
+        self.controller_queue.put(order)
