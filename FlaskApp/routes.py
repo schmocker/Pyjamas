@@ -146,6 +146,7 @@ def websimgui():
 
         if request.form['fnc'] == 'update':
             print("updateing...")
+            Model.update_all()
 
         return json.dumps(db_agent.dict)
 
