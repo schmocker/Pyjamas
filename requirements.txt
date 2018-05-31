@@ -7,3 +7,4 @@ bcrypt
 # not used by pyjamas, but by models
 numpy
 scipy
+matplotlib
