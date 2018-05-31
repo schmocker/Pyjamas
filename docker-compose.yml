@@ -11,6 +11,7 @@ services:
       - db
     depends_on:
       - db
+      - phpmyadmin
     environment:
       DB_HOST: db:3306
       DB_USER: user
@@ -20,14 +21,14 @@ services:
     image: mariadb:latest
     environment:
       MYSQL_DATABASE: pyjamas
-      MYSQL_ROOT_PASSWORD: root_pw
+      MYSQL_ROOT_PASSWORD: XTmDQ3TbQf$z3dm
       MYSQL_ROOT_HOST: 0.0.0.0
-      MYSQL_USER: user
-      MYSQL_PASSWORD: user_pw
+      MYSQL_USER: pyjamas
+      MYSQL_PASSWORD: PYJAMAS_FHNW
     volumes:
-      - dbvolume:/var/lib/mysql/data
+      - db:/var/lib/mysql
     ports: # only for using from outside / not necessary for pyjamas
-      - "3306:3306"
+      - "3306:3306" # delete for security reason
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -36,10 +37,12 @@ services:
     ports:
       - 8181:80 # use "localhost:8181" for phpMyAdmin
     environment:
-      MYSQL_USERNAME: user
-      MYSQL_PASSWORD: user_pw
-      MYSQL_ROOT_PASSWORD: root_pw
+      MYSQL_USERNAME: pyjamas
+      MYSQL_PASSWORD: PYJAMAS_FHNW
+      MYSQL_ROOT_PASSWORD: XTmDQ3TbQf$z3dm
 
 # mount volume for persistent data in DB
 volumes:
-  dbvolume:
+  db:
+  # to list all volumes:  docker volume ls
+  # to delete volume:     docker volume rm pyjamas_db

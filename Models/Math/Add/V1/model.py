@@ -8,7 +8,7 @@ class Model(Supermodel):
 
     def __init__(self, uuid, name :str):
         super(Model, self).__init__(uuid,name,["sum"])
-    
+
     async def func_peri(self, prep_to_peri=None):
         all_inputs = [await self.get_input(name) for name in self.inputs]
         
