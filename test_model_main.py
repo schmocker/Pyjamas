@@ -3,7 +3,8 @@ from Models.Math.Add.V1.model import Model
 
 t = TestAgent()
 
-add = Model(1,"Adder",t)
+add = Model(1,"Adder")
+add.agent = t
 
 t.set_model(add)
 
