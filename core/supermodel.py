@@ -20,9 +20,9 @@ class Supermodel:
         except AttributeError:
             pass
 
-    def log_error(self, msg: str):
+    def log_warning(self, msg: str):
         try:
-            self.agent.logger.error(f"[{self.id}][{__name__}][{self.name}] : {msg}")
+            self.agent.logger.warning(f"[{self.id}][{__name__}][{self.name}] : {msg}")
         except AttributeError:
             pass
 
@@ -49,7 +49,7 @@ class Supermodel:
         try:
             return self.inputs[input_name][0].outputs[self.inputs[input_name][1]]
         except KeyError:
-            self.log_error(f'input {input_name} could not retrieve Future')
+            self.log_warning(f'input {input_name} could not retrieve Future')
             return None
 
     def set_output(self, output_name: str, output):
@@ -57,14 +57,14 @@ class Supermodel:
             self.outputs[output_name].set_result(output)      
             self.log_debug(f"set value for output {output_name}")
         except KeyError:
-            self.log_error(f'could not set output for output_name {output_name}')
+            self.log_warning(f'could not set output for output_name {output_name}')
 
     def set_property(self, property_name: str, property_value):
         try:
             self.change_properties[property_name] = property_value
             self.log_debug(f"set value for property {property_name}")
         except KeyError:
-            self.log_error(f'could not change property for property_name {property_name}')
+            self.log_warning(f'could not change property for property_name {property_name}')
 
     async def sync(self):
         self.log_debug("waiting at first sync gate")

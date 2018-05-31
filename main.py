@@ -3,7 +3,7 @@ import time
 
 def main():
 
-    c = Controller()
+    c = Controller(DEBUG=False)
 
     c.add_agent(1,"smith")
     c.add_agent(2,"anderson")

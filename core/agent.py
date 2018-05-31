@@ -5,7 +5,7 @@ import concurrent
 
 class Agent(Process):
 
-    def __init__(self, agent_id, name: str, controller_queue, agent_queue):
+    def __init__(self, agent_id, name: str, controller_queue, agent_queue, DEBUG):
         super(Agent,self).__init__()
 
         self.agent_queue = agent_queue
@@ -19,14 +19,15 @@ class Agent(Process):
         self.paused = False
 
         self.logger = None
+        self.DEBUG = DEBUG
 
     def log_debug(self, msg):
         if self.logger:
             self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
-    def log_error(self, msg):
+    def log_warning(self, msg):
         if self.logger:
-            self.logger.error(f"[AGENT][{__name__}][{self.name}] : {msg}")
+            self.logger.warning(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
     def run(self):
 
@@ -36,7 +37,10 @@ class Agent(Process):
         self.running = True
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        if self.DEBUG:
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.WARNING)
         con = logging.FileHandler("pyjama_log_" + str(self.id) + "_" + str(self.name) + ".txt")
         con.setLevel(logging.DEBUG)
         formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')
@@ -86,7 +90,7 @@ class Agent(Process):
             self.log_debug("finished preparing models")
             return True
         except Exception:
-            self.log_error(f'failed to execute all func_births --> stopping simulation')
+            self.log_warning(f'failed to execute all func_births --> stopping simulation')
             return False
 
     def start_simulation(self):
@@ -219,8 +223,8 @@ class Agent(Process):
             else:
                 self.log_debug(f'recieved order could not be executed')
         except KeyError:
-            self.log_error(f'message could not be handled correctly')
-            self.log_error(f'message = {msg}')
+            self.log_warning(f'message could not be handled correctly')
+            self.log_warning(f'message = {msg}')
 
     def pause(self):
         self.pause_gate.clear()

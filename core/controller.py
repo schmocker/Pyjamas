@@ -8,7 +8,7 @@ import logging
 
 class Controller():
 
-    def __init__(self):
+    def __init__(self, DEBUG=False):
         self.agents = {}
         self.agents_running = []
         self.agents_paused = []
@@ -16,9 +16,13 @@ class Controller():
         self.agent_queues = {}
         self.thread_running = False
 
+        self.DEBUG = DEBUG
 
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        if self.DEBUG:
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.WARNING)
         con = logging.FileHandler("pyjama_log_Controller.txt")
         con.setLevel(logging.DEBUG)
         formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')
@@ -30,19 +34,19 @@ class Controller():
         if self.logger:
             self.logger.debug(f"[CONTROLLER][{__name__}] : {msg}")
 
-    def log_error(self, msg):
+    def log_warning(self, msg):
         if self.logger:
-            self.logger.error(f"[CONTROLLER][{__name__}] : {msg}")
+            self.logger.warning(f"[CONTROLLER][{__name__}] : {msg}")
 
     def add_agent(self, agent_id, agent_name: str):
         self.log_debug('starting add_agent')
         try:
-            if self.is_existing_agent(agent_id):
-                self.log_error(f'agent with id {agent_id} is already existing')
+            if agent_id in self.agents:
+                self.log_warning(f'agent with id {agent_id} is already existing')
                 return False
             agent_queue = multiprocessing.Queue()
             self.agent_queues[agent_id] = agent_queue
-            a = importlib.import_module("core.agent").Agent(agent_id, agent_name, self.controller_queue, agent_queue)
+            a = importlib.import_module("core.agent").Agent(agent_id, agent_name, self.controller_queue, agent_queue, self.DEBUG)
             self.log_debug(f'created agent (agent_id = {a.id} agent_name = {a.name})')
             self.agents[agent_id] = a
             self.log_debug(f'added agent (agent_id = {a.id} agent_name = {a.name})')
@@ -83,7 +87,7 @@ class Controller():
                     self.log_debug(f'added model (model_id = {model_id} model_name = {model_name}) to agent {agent_id}')
                     return True
                 else:
-                    self.log_error(f'model (model_id = {model_id} model_name = {model_name}) could not be added')
+                    self.log_warning(f'model (model_id = {model_id} model_name = {model_name}) could not be added')
             else:
                 self.log_debug(f'agent {agent_id} is running -> model was not added')
         return False
@@ -96,7 +100,7 @@ class Controller():
                     self.log_debug(f'removed model {model_id} from agent {agent_id}')
                     return True
                 else:
-                    self.log_error(f'model {model_id} could not be removed')
+                    self.log_warning(f'model {model_id} could not be removed')
             else:
                 self.log_debug(f'agent {agent_id} is running -> model was not removed')
         return False
@@ -109,7 +113,7 @@ class Controller():
                     self.log_debug(f'added link from (model {output_model_id} / output {output_name}) to (model {input_model_id} / input {input_name}) in agent {agent_id}')
                     return True
                 else:
-                    self.log_error(f'link from (model {output_model_id} / output {output_name}) to (model {input_model_id} / input {input_name}) in agent {agent_id} could not be created')
+                    self.log_warning(f'link from (model {output_model_id} / output {output_name}) to (model {input_model_id} / input {input_name}) in agent {agent_id} could not be created')
             else:
                 self.log_debug(f'agent {agent_id} is running -> models were not linked')
         return False
@@ -122,7 +126,7 @@ class Controller():
                     self.log_debug(f'removed link from (model {output_model_id}:{output_name}) to (model {input_model_id}:{input_name}) in agent {agent_id}')
                     return True
                 else:
-                    self.log_error(f'link from (model {output_model_id}:{output_name}) to (model {input_model_id}:{input_name}) in agent {agent_id} could not be removed')
+                    self.log_warning(f'link from (model {output_model_id}:{output_name}) to (model {input_model_id}:{input_name}) in agent {agent_id} could not be removed')
             else:
                 self.log_debug(f'agent {agent_id} is running -> models were not unlinked')
         return False
@@ -139,7 +143,7 @@ class Controller():
                     self.log_debug(f'set property {property_name} of model {model_id} in agent {agent_id}')
                     return True
                 else:
-                    self.log_error(f'property {property_name} of model {model_id} in agent {agent_id} could not be set')
+                    self.log_warning(f'property {property_name} of model {model_id} in agent {agent_id} could not be set')
         return False
 
     def start_agent(self, agent_id):
@@ -210,7 +214,7 @@ class Controller():
     def is_existing_agent(self, agent_id):
         if agent_id in self.agents:
             return True
-        self.log_error(f'agent {agent_id} is not existing')
+        self.log_warning(f'agent {agent_id} is not existing')
         return False
 
     def is_agent_running(self, agent_id):
@@ -262,8 +266,8 @@ class Controller():
                     self.agents_paused.remove(agent_id)
                 self.log_debug(f'agent {agent_id} removed from running list')
         except KeyError:
-            self.log_error(f'message could not be handled correctly')
-            self.log_error(f'message = {msg}')
+            self.log_warning(f'message could not be handled correctly')
+            self.log_warning(f'message = {msg}')
 
     # orders
 
@@ -307,5 +311,5 @@ class Controller():
             self.log_debug(f'sent order {order["order"]} to agent {order["agent"]}')
             return True
         except KeyError:
-            self.log_error(f'no queue found for agent_id {agent_id}')
+            self.log_warning(f'no queue found for agent_id {agent_id}')
         return False
