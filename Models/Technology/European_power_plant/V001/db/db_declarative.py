@@ -1,6 +1,6 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -50,7 +50,7 @@ class Kraftwerk(Base):
     long = Column(Float, nullable=False)
     lat = Column(Float, nullable=False)
     power_inst = Column(Float, nullable=False)
-    wt_nabenhoehe = Column(Float, nullable=False)
+    spez_info = Column(Text)
     # declare relations
     kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp])
 

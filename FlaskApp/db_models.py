@@ -10,10 +10,9 @@ from os import environ as env
 
 controller = Controller()
 
-# QLALCHEMY_DATABASE_URI = "mysql+pymysql://pyjamas:PYJAMAS_FHNW@www.tobiasschmocker.ch:3306/pyjamas"
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
-db_uri = "mysql+pymysql://" + env.get('DB_USER') + ":" + env.get('DB_PASSWORD') + "@" + env.get('DB_HOST') + "/pyjamas"
-app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+### docker-compose
+# db_uri = "mysql+pymysql://" + env.get('DB_USER') + ":" + env.get('DB_PASSWORD') + "@" + env.get('DB_HOST') + "/pyjamas"
+# app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 
 
 db = SQLAlchemy(app)
@@ -246,40 +245,39 @@ user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
 # Create a user to test with
-#@app.before_first_request
-
+@app.before_first_request
 def create_user():
     db.create_all()
 
     for user in User.query.all():
         user_datastore.delete_user(user)
     db.session.commit()
-    user_datastore.create_user(email='spg@fhnw.ch', password='test123')
+    user_datastore.create_user(email='pyjamas@fhnw.ch', password='PYJAMAS_FHNW')
     db.session.commit()
 
-    # Create new Dummy Data !! deletes existing Data
-    if True:
-        Connection.query.delete()
-        db.session.commit()
+#unused
+def create_dummy_Data():
+    Connection.query.delete()
+    db.session.commit()
 
-        Model_used.query.delete()
-        db.session.commit()
+    Model_used.query.delete()
+    db.session.commit()
 
-        Model.update_all()
+    Model.update_all()
 
-        Agent.query.delete()
-        db.session.commit()
-
-
-        for i in range(0, 5):
-            db.session.add(Agent(name="Agent " + str(i)))
-        db.session.commit()
+    Agent.query.delete()
+    db.session.commit()
 
 
+    for i in range(0, 5):
+        db.session.add(Agent(name="Agent " + str(i)))
+    db.session.commit()
 
-        for i in range(0, 25):
-            db.session.add(Model_used(name="Used Model " + str(i),
-                                      fk_model=random.choice(Model.query.all()).id,
-                                      fk_agent=random.choice(Agent.query.all()).id))
-        db.session.commit()
+
+
+    for i in range(0, 25):
+        db.session.add(Model_used(name="Used Model " + str(i),
+                                  fk_model=random.choice(Model.query.all()).id,
+                                  fk_agent=random.choice(Agent.query.all()).id))
+    db.session.commit()
 

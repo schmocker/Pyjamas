@@ -19,3 +19,4 @@ if __name__ == "__main__":
     preis = [b.preis for b in bsp]
 
     r=5
+    

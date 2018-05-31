@@ -1,4 +1,6 @@
 .idea
 instance
 venv
+data
+chaos
 __pycache__/
