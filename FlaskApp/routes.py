@@ -51,7 +51,7 @@ def agents():
             return render_template("agents.html", agents=all_agents, loggedin=current_user.is_authenticated)
 
         if fnc == 'add_agent':
-            db.session.add(Agent(name=data['agent_name']))
+            db.session.add(Agent(name=data['agent_name'], db_id=1337)) # TODO: give agent PK as id
             db.session.commit()
             return json.dumps(True)
 

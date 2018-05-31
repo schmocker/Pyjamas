@@ -8,7 +8,6 @@ from Models import get_models
 from core import Controller
 from os import environ as env
 
-
 controller = Controller()
 
 # QLALCHEMY_DATABASE_URI = "mysql+pymysql://pyjamas:PYJAMAS_FHNW@www.tobiasschmocker.ch:3306/pyjamas"
@@ -45,16 +44,17 @@ class Agent(db.Model):
     name = db.Column(db.String(80), unique=True, nullable=False)
     active = db.Column(db.Boolean, nullable=False)
 
-    def __init__(self, name):
+    def __init__(self, db_id, name):
         self.name = name
         self.active = False
+        self.id = db_id
 
 
     def start(self):
         try:
 
             # controller.add_agent(self) TODO: implement method
-            controller.add_agent(self.name)
+            controller.add_agent(self.id, self.name)
 
             boxes = []
             links = []
@@ -76,14 +76,14 @@ class Agent(db.Model):
 
             mods = {}
 
-            for box in boxes:
-                uuid1 = controller.add_model(self.name, box[0], box[1])
-                mods[box[1]] = uuid1
+            for i, box in enumerate(boxes):
+                controller.add_model(self.id, box[0], i, box[1])
+                mods[box[1]] = i
 
             for link in links:
-                controller.link_models(self.name, mods[link[0]], link[1], mods[link[2]], link[3])
+                controller.link_models(self.id, mods[link[0]], link[1], mods[link[2]], link[3])
 
-            controller.start_agent(self.name)
+            controller.start_agent(self.id)
 
 
             # controller.start_agent(self.id)
@@ -98,12 +98,10 @@ class Agent(db.Model):
 
 
     def pause(self):
-        # controller.pause_agent(self.id) TODO: implement method
-        pass
+        controller.pause_agent(self.id)
 
     def stop(self):
-        # controller.stop_agent(self.id) TODO: implement method
-        controller.stop_agent(self.name)
+        controller.stop_agent(self.id)
 
         self.active = False
         db.session.commit()

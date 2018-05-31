@@ -15,7 +15,16 @@ class Supermodel:
         self.alive = True
 
     def log_debug(self, msg: str):
-        self.agent.logger.debug(f"[{self.id}][{__name__}][{self.name}] : {msg}")
+        try:
+            self.agent.logger.debug(f"[{self.id}][{__name__}][{self.name}] : {msg}")
+        except AttributeError:
+            pass
+
+    def log_error(self, msg: str):
+        try:
+            self.agent.logger.error(f"[{self.id}][{__name__}][{self.name}] : {msg}")
+        except AttributeError:
+            pass
 
     def clean_outputs(self):
         for name in self.output_names:
@@ -23,19 +32,39 @@ class Supermodel:
         self.log_debug("outputs cleaned")
 
     def link_input(self, output_model, output_name: str, input_name: str):
-        self.inputs[input_name] = (output_model,output_name)
+        try:
+            self.inputs[input_name] = (output_model,output_name)
+            return True
+        except KeyError:
+            return False
+
+    def unlink_input(self, input_name: str):
+        try:
+            del self.inputs[input_name]
+            return True
+        except KeyError:
+            return False
 
     def get_input(self, input_name: str):
-        # TODO: catch keyerror that is thrown when input is not connected
-        return self.inputs[input_name][0].outputs[self.inputs[input_name][1]]
+        try:
+            return self.inputs[input_name][0].outputs[self.inputs[input_name][1]]
+        except KeyError:
+            self.log_error(f'input {input_name} could not retrieve Future')
+            return None
 
     def set_output(self, output_name: str, output):
-        self.outputs[output_name].set_result(output)      
-        self.log_debug(f"set value for output {output_name}")
+        try:
+            self.outputs[output_name].set_result(output)      
+            self.log_debug(f"set value for output {output_name}")
+        except KeyError:
+            self.log_error(f'could not set output for output_name {output_name}')
 
     def set_property(self, property_name: str, property_value):
-        self.change_properties[property_name] = property_value
-        self.log_debug(f"set value for property {property_name}")
+        try:
+            self.change_properties[property_name] = property_value
+            self.log_debug(f"set value for property {property_name}")
+        except KeyError:
+            self.log_error(f'could not change property for property_name {property_name}')
 
     async def sync(self):
         self.log_debug("waiting at first sync gate")
