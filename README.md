@@ -1,4 +1,4 @@
-# Pyjamas ![alt text](https://raw.githubusercontent.com/schmocker/Pyjamas/master/FlaskApp/static/images/Logo48.png "Logo Title Text 1")
+# Pyjamas ![alt text](https://raw.githubusercontent.com/schmocker/Pyjamas/master/FlaskApp/static/images/favicon48.png "Logo Title Text 1")
 Pyjamas is a web-based simulation environment. The word Pyjamas stands for:
 
 * **Py**thon: Pyjamas is running mainly on python.
