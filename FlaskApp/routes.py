@@ -7,7 +7,7 @@ import json
 import random
 from flask import Markup
 import os
-
+from markdown import markdown
 @app.route('/')
 def home():
     return render_template("home.html",
@@ -16,7 +16,7 @@ def home():
 
 @app.route('/doc')
 def doc():
-    content = Markup(open('README.md', 'r', encoding="utf8").read())
+    content = Markup(markdown(open('README.md', 'r', encoding="utf8").read()))
     return render_template("doc.html", content=content, loggedin=current_user.is_authenticated)
 
 
