@@ -3,7 +3,8 @@ flask_security
 flask_sqlalchemy
 pymysql
 bcrypt
-Markdown
+markdown2
+pygments
 
 # not used by pyjamas, but by models
 numpy
