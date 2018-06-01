@@ -1,19 +1,27 @@
 import asyncio
+from core.util import Input, Output, Property
 from core.supermodel import Supermodel
 
 class Model(Supermodel):
     """
-        sleeps for a set amount of seconds during peri
+        sleeps for a set amount of seconds after receiving the input
         afterwards the inputs gets set as output
     """
 
     def __init__(self, uuid, name: str):
-        super(Model, self).__init__(uuid,name,["output"])
-        self.properties["sleep_amount"] = 1
+        super(Model, self).__init__(uuid,name)
+
+        self.inputs['input'] = Input({'name': 'Input', 'unit': '', 'dimensions': []})
+        
+        self.outputs['output'] = Output({'name': 'Output', 'unit': '', 'dimensions': []})
+
+        self.properties['sleep_amount'] = Property(1, {'name': 'Sleep Amount', 'unit': 's', 'dimensions': []})
     
     async def func_peri(self, prep_to_peri=None):
         inp = await self.get_input("input")
 
-        await asyncio.sleep(self.properties["sleep_amount"])
+        sleep_amount = self.get_property('sleep_amount')
+
+        await asyncio.sleep(sleep_amount)
 
         self.set_output("output", inp)

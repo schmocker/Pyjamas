@@ -1,18 +1,21 @@
 import asyncio
 import logging
+import collections
+from core.util import Input, Output, Property
 
 class Supermodel:
 
-    def __init__(self, uuid, name :str, output_names :list):
+    def __init__(self, uuid, name :str):
         self.id = uuid
         self.name = name
         self.agent = None
         self.inputs = {}
-        self.output_names = output_names
         self.outputs = {}
         self.properties = {}
         self.change_properties = {}
         self.alive = True
+
+#region logging
 
     def log_debug(self, msg: str):
         try:
@@ -26,45 +29,90 @@ class Supermodel:
         except AttributeError:
             pass
 
-    def clean_outputs(self):
-        for name in self.output_names:
-            self.outputs[name] = asyncio.Future()
-        self.log_debug("outputs cleaned")
+    def log_error(self, msg: str):
+        try:
+            self.agent.logger.error(f"[{self.id}][{__name__}][{self.name}] : {msg}")
+        except AttributeError:
+            pass
+
+#endregion logging
+
+#region input
 
     def link_input(self, output_model, output_name: str, input_name: str):
         try:
-            self.inputs[input_name] = (output_model,output_name)
+            self.inputs[input_name].add_link(output_model,output_name)
             return True
         except KeyError:
             return False
 
     def unlink_input(self, input_name: str):
         try:
-            del self.inputs[input_name]
+            self.inputs[input_name].remove_link()
             return True
         except KeyError:
             return False
 
     def get_input(self, input_name: str):
         try:
-            return self.inputs[input_name][0].outputs[self.inputs[input_name][1]]
+            return self.inputs[input_name].get_input()
         except KeyError:
-            self.log_warning(f'input {input_name} could not retrieve Future')
+            self.log_error(f'input {input_name} could not retrieve Future')
             return None
+
+#endregion input
+
+#region output
 
     def set_output(self, output_name: str, output):
         try:
-            self.outputs[output_name].set_result(output)      
+            self.outputs[output_name].set_output(output)    
             self.log_debug(f"set value for output {output_name}")
         except KeyError:
             self.log_warning(f'could not set output for output_name {output_name}')
 
+    def get_output(self, output_name: str):
+        return self.outputs[output_name]
+
+    def clean_outputs(self):
+        for key in self.outputs:
+            self.outputs[key].clean_output()
+        self.log_debug("outputs cleaned")
+
+#endregion output
+
+#region property
+
+    def get_property(self, property_name):
+        try:
+            return self.properties[property_name].get_property()
+        except KeyError:
+            self.log_error(f'could not retrieve property {property_name}')
+            return None
+
     def set_property(self, property_name: str, property_value):
         try:
-            self.change_properties[property_name] = property_value
+            self.properties[property_name].set_property(property_value)
             self.log_debug(f"set value for property {property_name}")
         except KeyError:
             self.log_warning(f'could not change property for property_name {property_name}')
+
+    def set_amend_property(self, property_name: str, property_value):
+        try:
+            self.properties[property_name].set_amend_property(property_value)
+            self.log_debug(f"set value for property {property_name}")
+        except KeyError:
+            self.log_warning(f'could not change property for property_name {property_name}')
+
+    async def _amend(self):
+        for key in self.properties:
+            self.properties[key].amend
+
+        self.log_debug("finished amend")
+
+#endregion property
+
+#region simulation loop
 
     async def sync(self):
         self.log_debug("waiting at first sync gate")
@@ -77,7 +125,6 @@ class Supermodel:
         self.log_debug("waiting at second sync gate")
         await self.agent.syncSecond()
         await self.agent.sync_gate_second.wait()
-
 
     async def internal_loop(self):
         self.log_debug("starting internal loop")
@@ -115,7 +162,6 @@ class Supermodel:
         self.log_debug("starting func_prep")
         return await self.func_prep()
 
-
     async def _internal_peri(self):
 
         # await prep
@@ -128,7 +174,6 @@ class Supermodel:
         # execute func_peri
         self.log_debug("starting func_peri")
         return await self.func_peri(prep_to_peri=prep_result)
-
 
     async def _internal_post(self):
 
@@ -143,16 +188,9 @@ class Supermodel:
         self.log_debug("starting func_post")
         return await self.func_post(peri_to_post=peri_result)
 
-    async def _amend(self):
+#endregion simulation loop
 
-        # apply property changes
-        for prop_name, prop_value in self.change_properties.items():
-            self.properties[prop_name] = prop_value
-
-        # clear change list
-        self.change_properties.clear()
-        self.log_debug("finished amend")
-
+#region abstract methods
 
     async def func_birth(self):
         pass
@@ -166,3 +204,5 @@ class Supermodel:
         pass
     async def func_death(self):
         pass
+
+#endregion abstract methods

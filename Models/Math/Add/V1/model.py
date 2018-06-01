@@ -1,17 +1,28 @@
 import asyncio
+from core.util import Input, Output, Property
 from core.supermodel import Supermodel
 
 class Model(Supermodel):
     """
-        sets the sum of all inputs as output
+        sets the sum of 3 inputs as output
     """
 
     def __init__(self, uuid, name :str):
-        super(Model, self).__init__(uuid,name,["sum"])
+        super(Model, self).__init__(uuid,name)
+
+        self.inputs['in1'] = Input({'name': 'Number', 'unit': 'num', 'dimensions': []})
+        self.inputs['in2'] = Input({'name': 'Number', 'unit': 'num', 'dimensions': []})
+        self.inputs['in3'] = Input({'name': 'Number', 'unit': 'num', 'dimensions': []})
+
+        self.outputs['sum'] = Output({'name': 'Sum', 'unit': 'num', 'dimensions': []})
+
 
     async def func_peri(self, prep_to_peri=None):
-        all_inputs = [await self.get_input(name) for name in self.inputs]
+
+        in1 = await self.get_input('in1')
+        in2 = await self.get_input('in2')
+        in3 = await self.get_input('in3')
         
-        res = sum([i for i in all_inputs])
+        res = in1 + in2 + in3
 
         self.set_output("sum",res)

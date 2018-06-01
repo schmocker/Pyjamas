@@ -1,4 +1,5 @@
 import asyncio
+from core.util import Input, Output, Property
 from core.supermodel import Supermodel
 
 class Model(Supermodel):
@@ -8,8 +9,11 @@ class Model(Supermodel):
 
 
     def __init__(self, uuid, name :str):
-        super(Model,self).__init__(uuid,name,["num"])
+        super(Model,self).__init__(uuid,name)
         self.number = -1
+
+        self.outputs['num'] = Output({'name': 'Number', 'unit': 'int', 'dimensions': []})
+
 
         ##########
        #self.input.add('auslastung','Auslastung',0,'%',dim=['Zeit','Kraftwerk'])
