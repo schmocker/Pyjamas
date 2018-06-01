@@ -16,7 +16,7 @@ def home():
 
 @app.route('/doc')
 def doc():
-    content = Markup(open('README.md', 'r').read())
+    content = Markup(open('README.md', 'r', encoding="utf8").read())
     return render_template("doc.html", content=content, loggedin=current_user.is_authenticated)
 
 
