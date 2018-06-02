@@ -157,7 +157,10 @@ class Agent(Process):
 
     def set_property(self, model_id, property_name, property_value):
         try:
-            self.models[model_id].set_property(property_name,property_value)
+            if self.running:
+                self.models[model_id].set_amend_property(property_name,property_value)
+            else:
+                self.models[model_id].set_property(property_name,property_value)
             return True
         except KeyError:
             return False

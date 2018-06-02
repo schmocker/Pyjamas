@@ -1,4 +1,5 @@
 import asyncio
+from core.util import Input, Output, Property
 from core.supermodel import Supermodel
 
 class Model(Supermodel):
@@ -7,9 +8,14 @@ class Model(Supermodel):
     """
 
     def __init__(self, uuid, name :str):
-        super(Model,self).__init__(uuid,name,["const"])
-        self.properties["number"] = 0
+        super(Model,self).__init__(uuid,name)
+        self.outputs['const'] = Output({'name': 'Number', 'unit': 'int', 'dimensions': []})
+        
+        self.properties['number'] = Property(0, {'name': 'Number', 'unit': 'int', 'dimensions': []})
 
 
     async def func_peri(self, prep_to_peri=None):
-        self.set_output("const",self.properties["number"])
+
+        num = self.get_property('number')
+
+        self.set_output("const",num)
