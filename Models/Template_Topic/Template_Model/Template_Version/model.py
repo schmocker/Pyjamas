@@ -1,49 +1,92 @@
 from core import Supermodel
 
+from flask import Markup
+import markdown2
+import os
+from pathlib import Path
+
+# define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
+    # model constructor
     def __init__(self, id, name: str):
+        # instantiate supermodel
         super(Model, self).__init__(id, name, ["sum"])
-        pass
 
-    ### THE 5 MODEL METHODS ###
-    # There are 5 methods / functions:
-    #
-    # - func_birth  - start
-    # - func_prep        🠜  🠜  🠜  🠜
-    # - func_peri       🠟 iteration  🠝
-    # - func_post        🠞  🠞  🠞  🠞
-    # - func_death⃒  - end
-    #
-    # These methods are already defined within the supermodel where thy are empty. One can overwrite a method by
-    # redefining it here. Like this the defining of each method is optional. Of course it is also allowed to define
-    # additional methods to use them within this model.
+        # define inputs
+        self.input = dict()
+        self.input['v'] = {'name': 'wind speed'}
+        self.input['dir'] = {'name': 'wind direction'}
 
-    # BIRTH
-    # - runs only once at the beginning
+        # define outputs
+        self.output = dict()
+        self.output['p_el'] = {'name': 'electrical power'}
+        self.output['f_rot'] = {'name': 'rotor frequency'}
+
+        # define parameters
+        self.parameter = dict()
+        self.parameter['h_hub'] = {'name': 'hub height'}
+
+
+        # define persistent variables
+        self.pers_variable_0 = 5
+
     async def func_birth(self):
         pass
 
-    # PREP
-    # - runs once every iteration
-    # - contains all the calculations, which can be done before cronjob is triggered
     async def func_prep(self):
-        pass
+        # calculate something
+        prep_result = 3 * 5
+        # pass values to peri function
+        return prep_result
 
-    # PERI
-    # - runs once every iteration
-    # - contains the main part of each iteration
-    # - will be triggered by the cronjob
-    # - has to be as fast as possible
     async def func_peri(self, prep_to_peri=None):
-        pass
+        prep_result = prep_to_peri
+        # get inputs
+        in1 = await self.get_input('input_1')
+        in2 = await self.get_input('input_2')
 
-    # POST
-    # - runs once every iteration
-    # - contains the end part of each iteration
+        # calculate something
+        # One can declare custom functions (eg: see end of file)
+        # If you declare them "async" you will have to "await" them (like "extremely_complex_calculation")
+        # Else one could declare "normal" (blocking) functions as well (like "complex_calculation")
+        out1 = prep_result * self.complex_calculation(in1)
+        out2 = await self.extremely_complex_calculation(in1, in2)
+
+        # set output
+        self.set_output("output_1", out1)
+        self.set_output("output_2", out2)
+
+        # pass values to post function
+        outputs = {'out1': out1, 'out2': out2}
+        return outputs
+
     async def func_post(self, peri_to_post=None):
-        pass
+        outputs = peri_to_post
+        # do something with the values (eg: overwrite persistent variable)
+        self.pers_variable_0 = outputs['out1']
 
-    # DEATH
-    # - runs only once at the end
     async def func_death(self):
-        pass
+        print("I am dying! Bye bye!")
+
+    # define additional methods (normal)
+    def complex_calculation(self, speed):
+        speed_cut = speed / self.pers_variable_0
+        return speed_cut
+
+    # define additional methods (async)
+    async def extremely_complex_calculation(self, speed, time):
+        distance = speed * time / self.pers_variable_0
+        return distance
+
+    ######### TODO:
+    @property
+    def description(self):
+        script_dir = os.path.dirname(__file__)
+        abs_file_path = Path(os.path.join(script_dir, 'README.md'))
+        if abs_file_path.exists():
+            txt = open(abs_file_path, 'r', encoding="utf8").read()
+            mkdwn = markdown2.markdown(txt, extras=['extra', 'fenced-code-blocks'])
+            return Markup(mkdwn)
+        else:
+            return ""
+

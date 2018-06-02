@@ -6,8 +6,8 @@ from flask_security import current_user, login_required
 import json
 import random
 from flask import Markup
-import os
 import  markdown2
+import os
 
 
 
@@ -26,16 +26,18 @@ def doc():
 
 
 @app.route("/agents", methods=['GET', 'POST'])
-@login_required
+#@login_required
 def agents():
     if request.method == 'GET':
-        agent_id = request.args.get('agent_id', None)
+        agent_id = request.args.get('agent', None)
         if agent_id == None:
             all_agents = Agent.query.order_by(Agent.name).all()
             return render_template("agents.html", agents=all_agents, loggedin=current_user.is_authenticated)
         else:
             currentAgent = Agent.query.filter_by(id=agent_id).first()
             return render_template("agentX.html", agent=currentAgent,  loggedin=current_user.is_authenticated)
+
+
 
     elif request.method == 'POST':
         try:
@@ -77,9 +79,14 @@ def websimgui():
 
         if fnc == 'get_model_selection':
             return json.dumps(Model.get_all())
-
+        if fnc == 'get_model_description':
+            data = json.loads(request.args['data'])
+            model_id = data['model']
+            db_model_used = Model_used.query.filter_by(id=model_id).first()
+            model_info = json.loads(db_model_used.model.info)
+            return model_info['description']
         else:
-            agent_id = request.args.get('agent_id', None)
+            agent_id = request.args.get('agent', None)
             db_agent = Agent.query.filter_by(id=agent_id).first()
             if db_agent != None:
                 return render_template("websimgui.html", agent=db_agent, loggedin=current_user.is_authenticated)
@@ -163,7 +170,7 @@ def websimgui():
 @app.route('/websimgui/data', methods=['GET', 'POST'])
 def websimgui_data():
     if request.method == 'GET':
-        agent_id = request.args.get('agent_id', None)
+        agent_id = request.args.get('agent', None)
         db_agent = Agent.query.filter_by(id=agent_id).first()
 
 

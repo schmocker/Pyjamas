@@ -55,14 +55,15 @@ class Models {
         models.append("rect")
             .classed("box", true)
             .call(await obj.onModelDrag())
-            .on("contextmenu", contextMenu.onContextMenu(obj.menu))
-            .on("dblclick",function(d){
-                alert("model "+d.id+" was double clicked");
-            });
+            .on("dblclick", null)
+            .on("contextmenu", contextMenu.onContextMenu(obj.menu));
         models.append("text")
             .classed("model_name", true)
             .attr("text-anchor", "middle")
-            .attr("alignment-baseline", "top");
+            .attr("alignment-baseline", "top")
+            .on("dblclick",function(d){
+                popup_model.popup(d.id);
+            });
         models.append("rect")
             .classed("sizer", true)
             .call(await obj.onModelResize());
@@ -410,7 +411,13 @@ class Models {
 
 
     get_port_arrow_form(orientation, direction, size) {
-        let form = [[-size/1.5,0],[size/1.5,0],[0,size],[0,size]]; // top , out
+        let form = [[-size/1.5,0],[size/1.5,0],[0,size],[0,size]]; // bottom , out
+
+        //    ________
+        //   |        |
+        //   |________|
+        //       \/
+        //
 
         if (direction === 'input') { // top, out
             for (let i = 0; i < form.length-1; i++) {
@@ -430,7 +437,7 @@ class Models {
                     form[i][0] = form[i][1];
                     form[i][1] = temp;
                     break;
-                case "bottom": // flip to bottom
+                case "top": // flip to bottom
                     form[i][0] = 0 - form[i][0];
                     form[i][1] = 0 - form[i][1];
                     break;
