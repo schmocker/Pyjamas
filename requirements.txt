@@ -2,6 +2,9 @@ Flask
 flask_security
 flask_sqlalchemy
 pymysql
+# Required for bcrypt on Linux:
+# sudo apt-get install build-essential libssl-dev libffi-dev python-dev
+# sudo pip install cryptography
 bcrypt
 markdown2
 pygments

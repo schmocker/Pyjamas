@@ -6,6 +6,7 @@ let menu;
 let connections;
 let models;
 let popup_addModel;
+let popup_model;
 let contextMenu;
 
 
@@ -29,6 +30,7 @@ window.onload = async function() {
 
 
     popup_addModel = new Popup_addModel(d3.select("#wsg"));
+    popup_model = new Popup_model(d3.select("#wsg"));
 
 
 
@@ -74,8 +76,8 @@ async function update_all(){
 
 async function get_data(){
     let url = new URL(document.URL);
-    let agent_id = url.searchParams.get("agent_id");
-    let data = await $.getJSON("/websimgui/data?agent_id=" + agent_id)
+    let agent_id = url.searchParams.get("agent");
+    let data = await $.getJSON("/websimgui/data?agent=" + agent_id)
         .done(function() {})
         .fail(function() {})
         .always(function() {});
