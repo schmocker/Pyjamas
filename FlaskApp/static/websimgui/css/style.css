@@ -107,7 +107,7 @@
 
 
 
-.context-menu {
+#wsg #context-menu {
 	position: absolute;
 	display: none;
 	background-color: #888888;
@@ -118,16 +118,16 @@
 	border: 1px solid #d4d4d4;
 	z-index:1200;
 }
-.context-menu ul {
+#wsg #context-menu ul {
 	list-style-type: none;
 	margin: 4px 0px;
 	padding: 0px;
 	cursor: default;
 }
-.context-menu ul li {
+#wsg #context-menu ul li {
 	padding: 4px 16px;
 }
-.context-menu ul li:hover {
+#wsg #context-menu ul li:hover {
 	background-color: #4677f8;
 	color: #fefefe;
 }

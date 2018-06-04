@@ -19,6 +19,7 @@ class Menu {
             });
 
         this.menu.append("img")
+            .attr("alt", "play")
             .attr("id", "btn_play")
             .attr("src","static/images/icons/Play.png")
             .attr("width", 30)

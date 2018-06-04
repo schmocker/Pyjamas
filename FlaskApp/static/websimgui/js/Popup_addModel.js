@@ -1,6 +1,11 @@
 class Popup_addModel {
     constructor(parent) {
-        let obj = parent.append("div").attr("id", "myModal").classed("modal",true);
+        let obj = parent.append("div")
+            .attr("id", "myModal")
+            .classed("modal",true)
+            .on("click", function() {
+                this.style.display = "none"
+            });
         obj = obj.append("div").classed("modal-content",true);
         obj.append("span").classed("close",true).html('&#215;');
         obj = obj.append("from").attr("name","addBoxForm");

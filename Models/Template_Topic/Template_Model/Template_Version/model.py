@@ -10,7 +10,7 @@ class Model(Supermodel):
     # model constructor
     def __init__(self, id, name: str):
         # instantiate supermodel
-        super(Model, self).__init__(id, name, ["sum"])
+        super(Model, self).__init__(id, name)
 
         # define inputs
         self.input = dict()

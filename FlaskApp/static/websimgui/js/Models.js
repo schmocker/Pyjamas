@@ -3,7 +3,7 @@ class Models {
         let obj = this;
         this.menu = [
             {title: "Informationen",
-                action: async function(elm, d, i) {alert("Model infos not yet available");}}, // Todo: Modelinfos anzeigen
+                action: async function(elm, d, i) {popup_model.popup(d.id);}},
             {title: "Remove",
                 action: async function(elm, d, i) {await obj.remove(elm, d, i)}}];
 
@@ -51,19 +51,16 @@ class Models {
             .classed("model", true)
             .attr("id", function (d) {
                 return d.id_html;
-            });
+            })
+            .on("contextmenu", contextMenu.onContextMenu(obj.menu));
         models.append("rect")
             .classed("box", true)
             .call(await obj.onModelDrag())
-            .on("dblclick", null)
             .on("contextmenu", contextMenu.onContextMenu(obj.menu));
         models.append("text")
             .classed("model_name", true)
             .attr("text-anchor", "middle")
             .attr("alignment-baseline", "top")
-            .on("dblclick",function(d){
-                popup_model.popup(d.id);
-            });
         models.append("rect")
             .classed("sizer", true)
             .call(await obj.onModelResize());
@@ -258,14 +255,17 @@ class Models {
             }, true);
     }
 
+    modelToFront(model){
+        d3.selectAll(".connection").each(function(d,i){
+            model.parentNode.appendChild(model);
+        });
+        model.parentNode.parentNode.appendChild(model.parentNode);
+    }
+
     async onModelDrag() {
         return d3.drag()
             .on("start", await async function (d) {
                 d3.select(this).classed("box_dragging", true);
-                d3.selectAll(".connection").each(function(d,i){
-                    this.parentNode.appendChild(this);
-                });
-                this.parentNode.parentNode.appendChild(this.parentNode);
             })
             .on("drag", await async function (d) {
                 d.x += d3.event.dx;

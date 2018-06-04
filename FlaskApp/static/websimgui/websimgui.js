@@ -29,30 +29,18 @@ window.onload = async function() {
     menu = new Menu(d3.select("#wsg"));
 
 
-    popup_addModel = new Popup_addModel(d3.select("#wsg"));
-    popup_model = new Popup_model(d3.select("#wsg"));
-
-
-
     main = d3.select("#wsg_drawing").append("g")
         .classed("main",true);
 
 
 
-    contextMenu = new ContextMenu(d3.select('body'));
 
+    // Extras
+    popup_addModel = new Popup_addModel(d3.select("#wsg"));
+    popup_model = new Popup_model(d3.select("#wsg"));
+    contextMenu = new ContextMenu(d3.select("#wsg"));
 
     await build_all();
-
-
-
-// When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-        let modal = document.getElementById('myModal');
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
 };
 
 function log(d) { console.log(d); }
