@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+from Models.Technology.European_power_plant.V001.db.config import db_url
 Base = declarative_base()
 
 
@@ -93,7 +93,7 @@ class Co2Preis(Base):
 
 
 if __name__ == "__main__":
-    engine = create_engine("")
+    engine = create_engine(db_url)
 
     try:
         for tbl in Base.metadata.sorted_tables:

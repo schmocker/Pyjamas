@@ -1,4 +1,4 @@
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis
+from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis, db_url
 
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
@@ -6,7 +6,7 @@ import datetime, random
 
 
 if __name__ == "__main__":
-    engine = create_engine("")
+    engine = create_engine(db_url)
     Base.metadata.bind = engine
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
 
     ################### Brennstofftyp #############################
-    session.query(Brennstofftyp).delete()
+    #session.query(Brennstofftyp).delete()
     session.commit()
 
     for bst_info in [["Erdgas",1.58],["None",0]]:
@@ -62,8 +62,7 @@ if __name__ == "__main__":
                        fk_kraftwerkstyp=kwt.id,
                        long=random.random()*200,
                        lat=random.random()*150,
-                       power_inst=random.random()*1500,
-                       wt_nabenhoehe=125)
+                       power_inst=random.random()*1500)
         session.add(kw)
         try:
             session.commit()
