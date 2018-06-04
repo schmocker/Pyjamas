@@ -1,5 +1,6 @@
 .idea
 instance
+config.py
 venv
 data
 chaos

@@ -78,6 +78,7 @@ class Model(Supermodel):
         distance = speed * time / self.pers_variable_0
         return distance
 
+
     ######### TODO:
     @property
     def description(self):
