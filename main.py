@@ -1,4 +1,5 @@
 from core.controller import Controller
+import json
 import time
 
 def main():
@@ -40,6 +41,8 @@ def main():
         c.link_models(2,mods2[link[0]],link[1],mods2[link[2]],link[3])
 
     #c.link_models(1,mods["Incrementer"],"blorgl",mods["Printer"],"asdfasdf")
+    agent_1_info = c.get_agent_info(1)
+    print(json.dumps(agent_1_info, indent=4))
 
     print(c.get_agents())
     print(c.get_agents_running())
