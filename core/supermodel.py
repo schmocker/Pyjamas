@@ -62,12 +62,14 @@ class Supermodel:
         except KeyError:
             return False
 
-    def get_input(self, input_name: str):
+    async def get_input(self, input_name: str):
         try:
-            return self.inputs[input_name].get_input()
+            return await self.inputs[input_name].get_input()
         except KeyError:
             self.log_error(f'input {input_name} could not retrieve Future')
-            return None
+            self.log_error(f'stopping simulation')
+            for task in asyncio.Task.all_tasks():
+                task.cancel()
 
 #endregion input
 

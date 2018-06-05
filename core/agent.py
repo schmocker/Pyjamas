@@ -3,7 +3,7 @@ from multiprocessing import Process
 import logging
 import concurrent
 
-class Agent(Process):
+class Agent():
 
     def __init__(self, agent_id, name: str, controller_queue, agent_queue, DEBUG):
         super(Agent,self).__init__()
@@ -78,6 +78,7 @@ class Agent(Process):
         self.start_simulation()
         self.log_debug("finished simulation")
 
+        self.running = False
         self.send_dead_order()
         self.log_debug("sent dead order")
 

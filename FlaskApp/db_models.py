@@ -7,7 +7,7 @@ import json
 from Models import get_models
 from core import Controller
 
-controller = Controller()
+controller = Controller(DEBUG=True)
 
 db = SQLAlchemy(app)
 
@@ -44,6 +44,14 @@ class Agent(db.Model):
 
 
     def start(self):
+
+        if not self.active:
+            self.add_full_agent()
+
+        controller.start_agent(self.id)
+        self.active = True
+
+        '''
         try:
 
             # controller.add_agent(self) TODO: implement method
@@ -86,6 +94,7 @@ class Agent(db.Model):
             self.active = False
 
         db.session.commit()
+        '''
 
 
 
@@ -99,6 +108,32 @@ class Agent(db.Model):
         self.active = False
         db.session.commit()
 
+    def add_full_agent(self):
+
+        agent_id = self.id
+
+        controller.add_agent(agent_id, self.name)
+
+        for model in self.dict['model_used']:
+            
+            to = model['model']['topic']
+            na = model['model']['name']
+            ve = model['model']['version']
+
+            model_path = f"{to}.{na}.{ve}.model"
+            model_id = model['id']
+            model_name = model['name']
+
+            controller.add_model(agent_id, model_path, model_id, model_name)
+
+        for conn in self.dict['connection']:
+
+            output_model_id = conn['fk_model_used_from']
+            output_name = conn['port_id_from'].split('_', 1)[-1]
+            input_model_id = conn['fk_model_used_to']
+            input_name = conn['port_id_to'].split('_', 1)[-1]
+            
+            controller.link_models(agent_id, output_model_id, output_name, input_model_id, input_name)
 
     @property
     def dict(self):

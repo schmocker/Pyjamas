@@ -10,7 +10,7 @@ class Controller():
 
     def __init__(self, DEBUG=False):
         self.agents = {}
-        self.agents_running = []
+        self.agents_running = {}
         self.agents_paused = []
         self.controller_queue = multiprocessing.Queue()
         self.agent_queues = {}
@@ -161,8 +161,9 @@ class Controller():
                     self.log_debug(f'agent {agent_id} unpaused')
                     return True
             elif not self.is_agent_running(agent_id):
-                self.agents_running.append(agent_id)
-                self.agents[agent_id].start()
+                p = multiprocessing.Process(target=self.agents[agent_id].run)
+                self.agents_running[agent_id] = p
+                p.start()
                 self.log_debug(f'agent {agent_id} started')
                 return True
         return False
@@ -207,10 +208,10 @@ class Controller():
         self.log_debug(f'starting kill_agent')
         if self.is_existing_agent(agent_id):
             if self.is_agent_running(agent_id):
-                self.agents[agent_id].terminate()
+                self.agents_running[agent_id].terminate()
                 if self.is_agent_paused(agent_id):
                     self.agents_paused.remove(agent_id)
-                self.agents_running.remove(agent_id)
+                del self.agents_running[agent_id]
                 return True
             else:
                 self.log_debug(f'agent {agent_id} is not running')
@@ -267,7 +268,9 @@ class Controller():
             if msg["order"] == "dead":
                 agent_id = msg['agent']
                 if self.is_agent_running(agent_id):
-                    self.agents_running.remove(agent_id)
+                    self.agents_running[agent_id].terminate()
+                    self.log_debug(f'agent {agent_id} terminated')
+                    del self.agents_running[agent_id]
                 if self.is_agent_paused(agent_id):
                     self.agents_paused.remove(agent_id)
                 self.log_debug(f'agent {agent_id} removed from running list')
