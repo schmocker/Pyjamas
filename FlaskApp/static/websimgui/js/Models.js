@@ -2,8 +2,10 @@ class Models {
     constructor() {
         let obj = this;
         this.menu = [
-            {title: "Informationen",
-                action: async function(elm, d, i) {popup_model.popup(d.id);}},
+            {title: "Documentation",
+                action: async function(elm, d, i) { await popup_model_docu.up(d.id); }},
+            {title: "Details",
+                action: async function(elm, d, i) { await popup_model_view.up(d.id); }},
             {title: "Remove",
                 action: async function(elm, d, i) {await obj.remove(elm, d, i)}}];
 

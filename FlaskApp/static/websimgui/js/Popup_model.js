@@ -1,39 +1,15 @@
-class Popup_model {
+class Popup_model extends Popup{
     constructor(parent) {
-        let obj = parent.append("div")
-            .attr("id", "popup_model")
-            .classed("modal",true)
-            .on("click", function() {
-                this.style.display = "none"
-            });
-        obj = obj.append("div").classed("modal-content",true);
-        obj.append("span").classed("close",true)
-            .html('&#215;')
-            .on("click",function(){
-                document.getElementById("popup_model").style.display = "none"
-            });
-        obj.append("span").attr("id","model_content");
-
-
+        super(parent, "model_documentation");
     }
 
-    async popup(id){
-        d3.select("#model_name").property("value","");
-        d3.select("#varsion_selection").selectAll("option").remove();
-
-        let description = await $.get("/websimgui", {
+    async setContent(model_id){
+        this.content =  await $.get("/websimgui", {
             'agent': agent_data.id,
             'fnc': 'get_model_description',
             'data': JSON.stringify({
-                        'model': id
+                'model': model_id
             })});
-        d3.select("#model_content").html(description);
-
-
-
-
-
-        document.getElementById("popup_model").style.display = "block";
     }
 
 }

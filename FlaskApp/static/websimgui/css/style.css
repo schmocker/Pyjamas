@@ -137,7 +137,7 @@
 
 
 /* The Modal (background) */
-.modal {
+.popup {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
@@ -152,7 +152,7 @@
 }
 
 /* Modal Content */
-.modal-content {
+.popup .frame {
     background-color: #fefefe;
     margin: auto;
     padding: 20px;
@@ -161,15 +161,15 @@
 }
 
 /* The Close Button */
-.close {
+.popup .close {
     color: #aaaaaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
 }
 
-.close:hover,
-.close:focus {
+.popup .close:hover,
+.popup .close:focus {
     color: #000;
     text-decoration: none;
     cursor: pointer;
