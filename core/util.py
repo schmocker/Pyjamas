@@ -40,7 +40,7 @@ class Output(Port):
 class Property(Port):
 
     def __init__(self, initial_value, info: dict):
-        super(Property, self).__init__(dict)
+        super(Property, self).__init__(info)
         self.set_property(initial_value)
         self.amend_value = None
 

@@ -81,6 +81,15 @@ class Agent(Process):
         self.send_dead_order()
         self.log_debug("sent dead order")
 
+    def get_info(self):
+        info = {}
+        info['id'] = self.id
+        info['name'] = self.name
+        info['models'] = {}
+        for key, mod in self.models.items():
+            info['models'][mod.id] = mod.get_info()
+        return info
+
     def prepare_models(self):
         # execute func_birth for all models
         self.log_debug("started preparing models")

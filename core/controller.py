@@ -58,7 +58,7 @@ class Controller():
             self.log_debug(f'agent {agent_id} could not be added')
         return False
 
-    def remove_agent(self, agent_id: str):
+    def remove_agent(self, agent_id):
         self.log_debug('starting remove_agent')
         try:
             if self.is_agent_running(agent_id):
@@ -76,6 +76,11 @@ class Controller():
         except Exception:
             self.log_debug(f'agent {agent_id} could not be removed')
         return False
+
+    def get_agent_info(self, agent_id):
+        if self.is_existing_agent(agent_id):
+            return self.agents[agent_id].get_info()
+        return None
     
     def add_model(self, agent_id, model_path: str, model_id, model_name: str):
         self.log_debug('starting add_model')
@@ -83,6 +88,7 @@ class Controller():
             if not self.is_agent_running(agent_id):
                 mod = importlib.import_module(f"Models.{model_path}").Model(model_id,model_name)
                 self.log_debug(f'created model (model_id = {model_id} model_name = {model_name})')
+                
                 if self.agents[agent_id].add_model(mod):
                     self.log_debug(f'added model (model_id = {model_id} model_name = {model_name}) to agent {agent_id}')
                     return True
