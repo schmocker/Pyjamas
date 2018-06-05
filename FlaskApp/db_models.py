@@ -246,6 +246,20 @@ class Model_used(db.Model):
 
         return d
 
+    @classmethod
+    def set_position(cls, id, x, y):
+        m = cls.query.filter_by(id=id).first()
+        m.x = x
+        m.y = y
+        db.session.commit()
+
+    @classmethod
+    def set_size(cls, id, width, height):
+        m = cls.query.filter_by(id=id).first()
+        m.width = width
+        m.height = height
+        db.session.commit()
+
 class Connection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fk_model_used_from = db.Column(db.Integer, db.ForeignKey('model_used.id', ondelete="CASCADE"), nullable=False)

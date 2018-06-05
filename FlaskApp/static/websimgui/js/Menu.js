@@ -65,7 +65,7 @@ class Menu {
             .attr("width", 30)
             .attr("height", 30)
             .on("click", async function() {
-                await popup_addModel.popup();
+                await popup_addModel.up();
                 obj.update();
             });
 

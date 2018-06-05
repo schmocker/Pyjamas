@@ -35,7 +35,10 @@ def agents():
             return render_template("agents.html", agents=all_agents, loggedin=current_user.is_authenticated)
         else:
             currentAgent = Agent.query.filter_by(id=agent_id).first()
-            return render_template("agentX.html", agent=currentAgent,  loggedin=current_user.is_authenticated)
+            if currentAgent != None:
+                return render_template("agentX.html", agent=currentAgent, loggedin=current_user.is_authenticated)
+            else:
+                return "no valid Agent is chosen"
 
 
 
@@ -76,22 +79,22 @@ def websimgui():
 
     if request.method == 'GET':
         fnc = request.args.get('fnc', None)
+        data = json.loads(request.args['data'])
 
         if fnc == 'get_model_selection':
             return json.dumps(Model.get_all())
-        if fnc == 'get_model_description':
-            data = json.loads(request.args['data'])
-            model_id = data['model']
-            db_model_used = Model_used.query.filter_by(id=model_id).first()
+
+        elif fnc == 'get_model_description':
+            db_model_used = Model_used.query.filter_by(id=data['model']).first()
             model_info = json.loads(db_model_used.model.info)
             return model_info['description']
+
+        elif fnc == 'get_model_view':
+            ## Todo: get view from model
+            return "model view from routes.py"
+
         else:
-            agent_id = request.args.get('agent', None)
-            db_agent = Agent.query.filter_by(id=agent_id).first()
-            if db_agent != None:
-                return render_template("websimgui.html", agent=db_agent, loggedin=current_user.is_authenticated)
-            else:
-                return "no valid Agent chosen"
+            return "no valid get request"
 
     elif request.method == 'POST':
 
@@ -110,53 +113,45 @@ def websimgui():
         if db_agent == None:
             return json.dumps(False)
 
-
-
         if request.form['fnc'] == 'set_model_pos':
-            model_used = Model_used.query.filter(Model_used.id==data['model']).first()
-            model_used.x = data['x']
-            model_used.y = data['y']
-            db.session.commit()
+            Model_used.set_position(data['model'], data['x'], data['y'])
 
-        if request.form['fnc'] == 'set_model_size':
-            model_used = Model_used.query.filter(Model_used.id==data['model']).first()
-            model_used.width = data['width']
-            model_used.height = data['height']
-            db.session.commit()
+        elif request.form['fnc'] == 'set_model_size':
+            Model_used.set_size(data['model'], data['width'], data['height'])
 
-        if request.form['fnc'] == 'add_connection':
+        elif request.form['fnc'] == 'add_connection':
             db.session.add(Connection(data['fk_model_used_from'],
                                       data['port_id_from'],
                                       data['fk_model_used_to'],
                                       data['port_id_to']))
             db.session.commit()
 
-        if request.form['fnc'] == 'add_model_used':
+        elif request.form['fnc'] == 'add_model_used':
             db.session.add(Model_used(data['name'],
                                       data['fk_model'],
                                       data['agent']))
             db.session.commit()
 
-        if request.form['fnc'] == 'remove_connection':
+        elif request.form['fnc'] == 'remove_connection':
             con = Connection.query.filter_by(id=data['connection']).first()
             db.session.delete(con)
             db.session.commit()
 
-        if request.form['fnc'] == 'remove_model':
+        elif request.form['fnc'] == 'remove_model':
             model_used = Model_used.query.filter_by(id=data['model']).first()
             db.session.delete(model_used)
             db.session.commit()
 
-        if request.form['fnc'] == 'start':
+        elif request.form['fnc'] == 'start':
             db_agent.start()
 
-        if request.form['fnc'] == 'pause':
+        elif request.form['fnc'] == 'pause':
             db_agent.pause()
 
-        if request.form['fnc'] == 'stop':
+        elif request.form['fnc'] == 'stop':
             db_agent.stop()
 
-        if request.form['fnc'] == 'update':
+        elif request.form['fnc'] == 'update':
             print("updateing...")
             Model.update_all()
 
@@ -183,7 +178,7 @@ def websimgui_data():
 
 @app.route('/test')
 def test():
-    return render_template("test.html")
+    return render_template("../Models/Technology/European_power_plant/V001/view/test.html")
 
 @app.route('/model')
 def model():

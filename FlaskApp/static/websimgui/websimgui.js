@@ -6,9 +6,9 @@ let menu;
 let connections;
 let models;
 let popup_addModel;
-let popup_model;
+let popup_model_docu;
 let contextMenu;
-
+let popup_model_view;
 
 window.onload = async function() {
     await get_data();
@@ -37,7 +37,8 @@ window.onload = async function() {
 
     // Extras
     popup_addModel = new Popup_addModel(d3.select("#wsg"));
-    popup_model = new Popup_model(d3.select("#wsg"));
+    popup_model_docu = new Popup_model_docu(d3.select("#wsg"));
+    popup_model_view = new Popup_model_view(d3.select("#wsg"));
     contextMenu = new ContextMenu(d3.select("#wsg"));
 
     await build_all();
@@ -90,6 +91,4 @@ async function post(fnc_str, data_dict, rebuild){
         }
     }
 }
-
-
 
