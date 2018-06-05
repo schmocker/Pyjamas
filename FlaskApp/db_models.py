@@ -189,7 +189,7 @@ class Model_used(db.Model):
     height = db.Column(db.Integer)
     ###
     model = db.relationship("Model", foreign_keys=[fk_model],
-                            backref=db.backref("models_used", cascade="all, delete-orphan", lazy=True))
+                            backref=db.backref("models_used",cascade="all, delete-orphan", lazy=True))
     agent = db.relationship("Agent", foreign_keys=[fk_agent],
                             backref=db.backref("models_used", cascade="all, delete-orphan", lazy=True))
 

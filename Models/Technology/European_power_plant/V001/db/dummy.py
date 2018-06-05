@@ -1,4 +1,5 @@
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis, db_url
+from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
+    Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, db_url
 
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
@@ -14,16 +15,33 @@ if __name__ == "__main__":
 
 
 
-
-
     ################### Brennstofftyp #############################
-    #session.query(Brennstofftyp).delete()
+    session.query(Brennstofftyp).delete()
     session.commit()
 
     for bst_info in [["Erdgas",1.58],["None",0]]:
         bst = Brennstofftyp(bezeichnung=bst_info[0],
                             co2emissFakt=bst_info[1])
         session.add(bst)
+        try:
+            session.commit()
+        except exc.IntegrityError as e:
+            print(e)
+            session.rollback()
+
+    ################### Brennstoffpreis #############################
+    session.query(Brennstoffpreis).delete()
+    session.commit()
+
+    bsts = session.query(Brennstofftyp).all()
+    for i in range(50):
+        bst = random.choice(bsts)
+        bsp = Brennstoffpreis(fk_brennstofftyp=bst.id,
+                              long=random.random()*200,
+                              lat=random.random()*150,
+                              datetime=datetime.datetime.now(),
+                              preis=1500)
+        session.add(bsp)
         try:
             session.commit()
         except exc.IntegrityError as e:
@@ -70,24 +88,56 @@ if __name__ == "__main__":
             print(e)
             session.rollback()
 
-
-    ################### Brennstoffpreis #############################
-    session.query(Brennstoffpreis).delete()
+    ################### Verguetungen #############################
+    session.query(Verguetung).delete()
     session.commit()
 
-    bsts = session.query(Brennstofftyp).all()
+    kwts = session.query(Kraftwerkstyp).all()
     for i in range(50):
-        bst = random.choice(bsts)
-        kw = Brennstoffpreis(fk_brennstofftyp=bst.id,
-                             long=random.random()*200,
-                             lat=random.random()*150,
-                             datetime=datetime.datetime.now(),
-                             preis=1500)
-        session.add(kw)
+        kwt = random.choice(kwts)
+        verg = Verguetung(fk_kraftwerkstyp=kwt.id,
+                          long=random.random()*200,
+                          lat=random.random()*150,
+                          datetime=datetime.datetime.now(),
+                          breitrag=random.random()*150)
+        session.add(verg)
         try:
             session.commit()
         except exc.IntegrityError as e:
             print(e)
             session.rollback()
 
+    ################### Entsorgungspreis #############################
+    session.query(Entsorgungspreis).delete()
+    session.commit()
 
+    kwts = session.query(Kraftwerkstyp).all()
+    for i in range(50):
+        kwt = random.choice(kwts)
+        entp = Entsorgungspreis(fk_kraftwerkstyp=kwt.id,
+                                long=random.random()*200,
+                                lat=random.random()*150,
+                                datetime=datetime.datetime.now(),
+                                preis=random.random()*150)
+        session.add(entp)
+        try:
+            session.commit()
+        except exc.IntegrityError as e:
+            print(e)
+            session.rollback()
+
+    ################### Co2Preis #############################
+    session.query(Co2Preis).delete()
+    session.commit()
+
+    for i in range(50):
+        co2p = Co2Preis(long=random.random()*200,
+                       lat=random.random()*150,
+                       datetime=datetime.datetime.now(),
+                       preis=random.random()*150)
+        session.add(co2p)
+        try:
+            session.commit()
+        except exc.IntegrityError as e:
+            print(e)
+            session.rollback()

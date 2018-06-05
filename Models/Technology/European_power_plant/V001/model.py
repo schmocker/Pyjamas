@@ -11,12 +11,6 @@ if __name__ == "__main__":
 
 
     kw = session.query(Kraftwerk).first()
-    bsp = session.query(Brennstoffpreis).filter_by(fk_brennstofftyp=kw.kraftwerkstyp.brennstofftyp.id).all()
-
-    lat = [b.lat for b in bsp]
-    long = [b.long for b in bsp]
-    datetime = [b.datetime for b in bsp]
-    preis = [b.preis for b in bsp]
 
     r=5
     
