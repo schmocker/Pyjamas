@@ -1,6 +1,17 @@
 from core import Supermodel
 from core.util import Input, Output, Property
 
+from flask import Markup
+import markdown2
+import os
+from pathlib import Path
+
+from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
+    Brennstoffpreis, Verguetung, Entsorgungspreis, db_url
+from sqlalchemy import create_engine, exc
+from sqlalchemy.orm import sessionmaker
+import datetime, random
+
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -25,7 +36,13 @@ class Model(Supermodel):
         self.pers_variable_0 = 5
 
     async def func_birth(self):
-        pass
+        if __name__ == "__main__":
+            engine = create_engine(db_url)
+            Base.metadata.bind = engine
+            DBSession = sessionmaker(bind=engine)
+            session = DBSession()
+
+            kw = session.query(Kraftwerk).first()
 
     async def func_prep(self):
         # calculate something
@@ -73,4 +90,15 @@ class Model(Supermodel):
         return distance
 
 
+    ######### TODO:
+    @property
+    def description(self):
+        script_dir = os.path.dirname(__file__)
+        abs_file_path = Path(os.path.join(script_dir, 'README.md'))
+        if abs_file_path.exists():
+            txt = open(abs_file_path, 'r', encoding="utf8").read()
+            mkdwn = markdown2.markdown(txt, extras=['extra', 'fenced-code-blocks'])
+            return Markup(mkdwn)
+        else:
+            return ""
 
