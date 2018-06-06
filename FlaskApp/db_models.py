@@ -4,8 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore
 import random
 import json
-from Models import get_models
-from core import Controller
+from core import Controller, get_models
 
 controller = Controller(DEBUG=True)
 

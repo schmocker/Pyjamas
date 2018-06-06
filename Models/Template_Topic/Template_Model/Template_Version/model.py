@@ -69,7 +69,7 @@ class Model(Supermodel):
 
     # define additional methods (async)
     async def extremely_complex_calculation(self, speed, time):
-        distance = speed * time / self.pers_variable_0
+        distance = speed * time / self.get_property("h_hub")
         return distance
 
 
