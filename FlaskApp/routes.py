@@ -61,9 +61,11 @@ def agents():
             return render_template("agents.html", agents=all_agents, loggedin=current_user.is_authenticated)
 
         if fnc == 'add_agent':
-            db.session.add(Agent(name=data['agent_name'], db_id=1337)) # TODO: give agent PK as id
+            db.session.add(Agent(name=data['agent_name'])) # TODO: give agent PK as id
             db.session.commit()
             return json.dumps(True)
+
+
 
 
 
@@ -90,7 +92,7 @@ def websimgui():
             return model_info['description']
 
         elif fnc == 'get_model_view':
-            ## Todo: get view from model
+            ## Todo: @Simon get view from model
             return "model view from routes.py"
 
         else:
@@ -180,10 +182,4 @@ def websimgui_data():
 def test():
     return render_template("../Models/Technology/European_power_plant/V001/view/test.html")
 
-@app.route('/model')
-def model():
-    used_model_id = Model_used.query.first().id # Todo: ersetzten mit id von request
 
-    used_model = Model_used.query.filter_by(id=used_model_id).first()
-
-    return "Model"

@@ -18,29 +18,29 @@ def get_models():
             for version in _get_folders(path + '/' + topic + '/' + model):
                 model_dict[topic][model][version] = dict()
 
-                if model == "Template_Model":
-                    try:
-                        mod = importlib.import_module(f"Models.{topic}.{model}.{version}.model").Model(1, '')
-                    except Exception as e:
-                        print(e)
-                    input = mod.input
-                    output = mod.output
-                    docks = {'input': input, 'output': output}
-                    ################ so bekommen wir die daten
-                    docklist = list()
-                    for direction, dock in docks.items():
-                        for port_key, port in dock.items():
-                            port['key'] = port_key
-                        orientation = "bottom" if direction == "input" else "top"
-                        ports = [port for key, port in dock.items()]
-                        dock = {'direction': direction, 'orientation': orientation, 'ports': ports}
-                        docklist.append(dock)
-                    description = mod.description
-                    info = {'docks': docklist, 'description': description}
-                else:
-                    info = get_info()
-                model_dict[topic][model][version]['info'] = info
+
+                try:
+                    mod = importlib.import_module(f"Models.{topic}.{model}.{version}.model").Model(1, '')
+                except Exception as e:
+                    print(e)
+                info = mod.get_info()
+                input = info["inputs"]
+                output = info["outputs"]
+                docks = {'input': input, 'output': output}
+                ################ so bekommen wir die daten
+                docklist = list()
+                for direction, dock in docks.items():
+                    for port_key, port in dock.items():
+                        port['key'] = port_key
+                    orientation = "left" if direction == "input" else "right"
+                    ports = [port for key, port in dock.items()]
+                    dock = {'direction': direction, 'orientation': orientation, 'ports': ports}
+                    docklist.append(dock)
+                model_dict[topic][model][version] = {'docks': docklist, 'properties': info["properties"]}
     return model_dict
+
+
+'''
 
 def get_info():
     input = dict()
@@ -73,3 +73,4 @@ def get_info():
 
     info = {'docks': docklist,'description': description}
     return info
+'''

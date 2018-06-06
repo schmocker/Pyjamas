@@ -2,6 +2,11 @@ import asyncio
 import logging
 import collections
 from core.util import Input, Output, Property
+import os
+from pathlib import Path
+from flask import Markup
+from markdown2 import markdown
+
 
 class Supermodel:
 
@@ -217,3 +222,14 @@ class Supermodel:
         pass
 
 #endregion abstract methods
+
+    @property
+    def readme(self):
+        script_dir = os.path.dirname(__file__)
+        abs_file_path = Path(os.path.join(script_dir, 'README.md'))
+        if abs_file_path.exists():
+            txt = open(abs_file_path, 'r', encoding="utf8").read()
+            mkdwn = markdown(txt, extras=['extra', 'fenced-code-blocks'])
+            return Markup(mkdwn)
+        else:
+            return ""

@@ -37,10 +37,9 @@ class Agent(db.Model):
     name = db.Column(db.String(80), unique=True, nullable=False)
     active = db.Column(db.Boolean, nullable=False)
 
-    def __init__(self, db_id, name):
+    def __init__(self, name):
         self.name = name
         self.active = False
-        self.id = db_id
 
 
     def start(self):
@@ -176,14 +175,17 @@ class Model(db.Model):
         for topic in models:
             for model in models[topic]:
                 for version in models[topic][model]:
-                    info = json.dumps(models[topic][model][version]["info"])
+                    info = json.dumps(models[topic][model][version])
                     db_model = cls.query.filter_by(name=model).filter_by(topic=topic).filter_by(version=version).first()
+
+                    # TODO: add orientation form DB to Info
                     if db_model is None:
                         db.session.add(cls(model, topic, version, info=info))
                     else:
                         db_model.info = info
         db.session.commit()
 
+        # delete deleted models out of db
         db_model_ids = list()
         for topic in models:
             for model in models[topic]:
@@ -222,6 +224,8 @@ class Model_used(db.Model):
     y = db.Column(db.Integer)
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)
+    input_orientation = db.Column(db.String(80))  # top, left, bottom, right
+    output_orientation = db.Column(db.String(80))
     ###
     model = db.relationship("Model", foreign_keys=[fk_model],
                             backref=db.backref("models_used",cascade="all, delete-orphan", lazy=True))

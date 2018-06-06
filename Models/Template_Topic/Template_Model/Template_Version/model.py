@@ -1,9 +1,5 @@
 from core import Supermodel
 
-from flask import Markup
-import markdown2
-import os
-from pathlib import Path
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -79,15 +75,4 @@ class Model(Supermodel):
         return distance
 
 
-    ######### TODO:
-    @property
-    def description(self):
-        script_dir = os.path.dirname(__file__)
-        abs_file_path = Path(os.path.join(script_dir, 'README.md'))
-        if abs_file_path.exists():
-            txt = open(abs_file_path, 'r', encoding="utf8").read()
-            mkdwn = markdown2.markdown(txt, extras=['extra', 'fenced-code-blocks'])
-            return Markup(mkdwn)
-        else:
-            return ""
 

@@ -20,7 +20,6 @@ Pyjamas is a web-based simulation environment. The word Pyjamas stands for:
 ... more documentation will follow ...
 
 ## 3. Models
-... more documentation will follow ...
 
 ### 3.1 Defining a model
 Each model is defined in a file named *model.py*. The file lies within a hierarchical folder structure.
