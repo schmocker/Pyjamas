@@ -1,4 +1,5 @@
 from core import Supermodel
+from core.util import Input, Output, Property
 
 from flask import Markup
 import markdown2
@@ -13,18 +14,15 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.input = dict()
-        self.input['v'] = {'name': 'wind speed'}
-        self.input['dir'] = {'name': 'wind direction'}
+        self.inputs['v'] = Input({'name': 'wind speed'})
+        self.inputs['dir'] = Input({'name': 'wind direction'})
 
         # define outputs
-        self.output = dict()
-        self.output['p_el'] = {'name': 'electrical power'}
-        self.output['f_rot'] = {'name': 'rotor frequency'}
+        self.outputs['p_el'] = Output({'name': 'electrical power'})
+        self.outputs['f_rot'] = Output({'name': 'rotor frequency'})
 
-        # define parameters
-        self.parameter = dict()
-        self.parameter['h_hub'] = {'name': 'hub height'}
+        # define properties
+        self.properties['h_hub'] = Property(10, {'name': 'hub height'})
 
 
         # define persistent variables
@@ -42,8 +40,8 @@ class Model(Supermodel):
     async def func_peri(self, prep_to_peri=None):
         prep_result = prep_to_peri
         # get inputs
-        in1 = await self.get_input('input_1')
-        in2 = await self.get_input('input_2')
+        in1 = await self.get_input('v')
+        in2 = await self.get_input('dir')
 
         # calculate something
         # One can declare custom functions (eg: see end of file)
@@ -53,8 +51,8 @@ class Model(Supermodel):
         out2 = await self.extremely_complex_calculation(in1, in2)
 
         # set output
-        self.set_output("output_1", out1)
-        self.set_output("output_2", out2)
+        self.set_output("p_el", out1)
+        self.set_output("f_rot", out2)
 
         # pass values to post function
         outputs = {'out1': out1, 'out2': out2}
