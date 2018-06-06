@@ -5,6 +5,10 @@ from flask_security import Security, SQLAlchemyUserDatastore
 import random
 import json
 from core import Controller, get_models
+import os
+from pathlib import Path
+from markdown2 import markdown
+from flask import Markup
 
 controller = Controller(DEBUG=True)
 
@@ -167,6 +171,28 @@ class Model(db.Model):
         d['info'] = json.loads(d['info'])
         return d
 
+    @property
+    def readme(self):
+        path = os.path.join(self.path, 'README.md')
+        if os.path.isfile(path):
+            with open(path, 'r') as f:
+                mkdwn = markdown(f.read(), extras=['extra', 'fenced-code-blocks'])
+                return Markup(mkdwn)
+        else:
+            return "no documentation available"
+
+    @property
+    def properties_view(self):
+        return "Props from " + self.path
+
+    @property
+    def results_view(self):
+        return "Results from " + self.path
+
+    @property
+    def path(self):
+        return os.path.join('Models', self.topic, self.name, self.version)
+
     @classmethod
     def update_all(cls):
         models = get_models()
@@ -248,6 +274,21 @@ class Model_used(db.Model):
         d['model'] = self.model.dict
 
         return d
+
+    @classmethod
+    def get_readme(cls, id):
+        m = cls.query.filter_by(id=id).first()
+        return m.model.readme
+
+    @classmethod
+    def get_properties_view(cls, id):
+        m = cls.query.filter_by(id=id).first()
+        return m.model.properties_view
+
+    @classmethod
+    def get_results_view(cls, id):
+        m = cls.query.filter_by(id=id).first()
+        return m.model.results_view
 
     @classmethod
     def set_position(cls, id, x, y):

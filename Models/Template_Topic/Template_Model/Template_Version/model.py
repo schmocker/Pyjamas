@@ -19,6 +19,7 @@ class Model(Supermodel):
 
         # define properties
         self.properties['h_hub'] = Property(10, {'name': 'hub height'})
+        self.properties['d'] = Property(10, {'name': 'diameter'})
 
 
         # define persistent variables

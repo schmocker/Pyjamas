@@ -49,28 +49,69 @@ class Popup_model_docu extends Popup{
     }
 
     async up(model_id){
-        this.content =  await $.get("/websimgui", {
-            'agent': agent_data.id,
-            'fnc': 'get_model_description',
-            'data': JSON.stringify({
-                'model': model_id
-            })});
+        this.content =  await get('get_model_readme',{'model': model_id});
         this.show()
     }
 }
 
-class Popup_model_view extends Popup{
+class Popup_model_properties_view extends Popup{
+    constructor(parent) {
+        super(parent, "model_view");
+    }
+
+    async up(d){
+        let props = await get('get_model_properties_view',{'model': d.id});
+
+        // TODO: Check if props is html, else make standart html for props
+        this.content =  "";
+        if (true) {
+            let content = this.popup_content;
+            let data = d3.entries(d.model.info.properties)
+
+            let form = content.append("from")
+                .classed("propertiesForm", true)
+                .attr("name","propertiesForm");
+            form.append("h2").text("Properties");
+            let properties = form.selectAll(".property").data(data);
+            properties = properties.enter().append("g")
+                .classed("property", true);
+            properties.append("span").html(function (d) {
+                return '<br>' + d.value.name + ':<br>';
+            });
+            properties.append("input")
+                .attr("id",function (d) {
+                    return d.key;
+                })
+                .attr("name",function (d) {
+                    return d.key;
+                })
+                .attr("type","text")
+                .attr("value","")
+                .on("input", function(d) {
+                    log(d);
+                    log(this.value)
+                })
+                .on('keyup', function (d) {
+                    if (d3.event.keyCode == 13) {
+                        log("FINAL VALUE: " + this.value)
+                    }
+                });
+        } else {
+            this.content =  props;
+        }
+        this.show()
+    }
+}
+
+class Popup_model_results_view extends Popup{
     constructor(parent) {
         super(parent, "model_view");
     }
 
     async up(model_id){
-        this.content =  await $.get("/websimgui", {
-            'agent': agent_data.id,
-            'fnc': 'get_model_view',
-            'data': JSON.stringify({
-                'model': model_id
-            })});
+        let results_html = await get('get_model_results_view',{'model': model_id});
+
+        this.content =  results_html;
         this.show()
     }
 }

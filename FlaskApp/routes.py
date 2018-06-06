@@ -8,7 +8,7 @@ import random
 from flask import Markup
 import  markdown2
 import os
-
+from pathlib import Path
 
 
 @app.route('/')
@@ -86,14 +86,14 @@ def websimgui():
         if fnc == 'get_model_selection':
             return json.dumps(Model.get_all())
 
-        elif fnc == 'get_model_description':
-            db_model_used = Model_used.query.filter_by(id=data['model']).first()
-            model_info = json.loads(db_model_used.model.info)
-            return model_info['description']
+        elif fnc == 'get_model_readme':
+            return Model_used.get_readme(data['model'])
 
-        elif fnc == 'get_model_view':
-            ## Todo: @Simon get view from model
-            return "model view from routes.py"
+        elif fnc == 'get_model_properties_view':
+            return Model_used.get_properties_view(data['model'])
+
+        elif fnc == 'get_model_results_view':
+            return Model_used.get_results_view(data['model'])
 
         else:
             return "no valid get request"

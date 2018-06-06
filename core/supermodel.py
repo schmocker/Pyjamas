@@ -46,9 +46,9 @@ class Supermodel:
         info = {}
         info['id'] = self.id
         info['name'] = self.name
-        info['inputs'] = [inp.get_port_info() for key,inp in self.inputs.items()]
-        info['outputs'] = [out.get_port_info() for key,out in self.outputs.items()]
-        info['properties'] = [prop.get_port_info() for key,prop in self.properties.items()]
+        info['inputs'] = {key: inp.get_port_info() for key,inp in self.inputs.items()}
+        info['outputs'] = {key: out.get_port_info() for key,out in self.outputs.items()}
+        info['properties'] = {key: prop.get_port_info() for key,prop in self.properties.items()}
         return info
 
 #region input
@@ -223,13 +223,3 @@ class Supermodel:
 
 #endregion abstract methods
 
-    @property
-    def readme(self):
-        script_dir = os.path.dirname(__file__)
-        abs_file_path = Path(os.path.join(script_dir, 'README.md'))
-        if abs_file_path.exists():
-            txt = open(abs_file_path, 'r', encoding="utf8").read()
-            mkdwn = markdown(txt, extras=['extra', 'fenced-code-blocks'])
-            return Markup(mkdwn)
-        else:
-            return ""

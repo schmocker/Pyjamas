@@ -4,8 +4,10 @@ class Models {
         this.menu = [
             {title: "Documentation",
                 action: async function(elm, d, i) { await popup_model_docu.up(d.id); }},
-            {title: "Details",
-                action: async function(elm, d, i) { await popup_model_view.up(d.id); }},
+            {title: "Properties",
+                action: async function(elm, d, i) { await popup_model_properties_view.up(d); }},
+            {title: "Results",
+                action: async function(elm, d, i) { await popup_model_results_view.up(d.id); }},
             {title: "Remove",
                 action: async function(elm, d, i) {await obj.remove(elm, d, i)}}];
 
