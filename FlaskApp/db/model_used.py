@@ -1,4 +1,4 @@
-from .db_models import db
+from .db_main import db
 import json
 class Model_used(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -35,6 +35,19 @@ class Model_used(db.Model):
         d['model'] = self.model.dict
 
         return d
+
+
+    @classmethod
+    def add(cls, name, fk_model, fk_agent):
+        obj = cls(name=name, fk_model=fk_model,  fk_agent=fk_agent)
+        db.session.add(obj)
+        db.session.commit()
+
+    @classmethod
+    def remove(cls, id):
+        obj = cls.query.filter_by(id=id).first()
+        db.session.delete(obj)
+        db.session.commit()
 
     @classmethod
     def get_readme(cls, id):

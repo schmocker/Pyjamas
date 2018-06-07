@@ -1,4 +1,4 @@
-from .db_models import db, controller
+from .db_main import db, controller
 
 class Agent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -8,6 +8,18 @@ class Agent(db.Model):
     def __init__(self, name):
         self.name = name
         self.active = False
+
+    @classmethod
+    def remove(cls, id):
+        obj = cls.query.filter_by(id=id).first()
+        db.session.delete(obj)
+        db.session.commit()
+
+    @classmethod
+    def add(cls, name):
+        agent = cls(name=name)
+        db.session.add(agent) # TODO: give agent PK as id
+        db.session.commit()
 
     def start(self):
 

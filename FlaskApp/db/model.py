@@ -1,4 +1,4 @@
-from .db_models import db
+from .db_main import db
 import os
 from markdown2 import markdown
 from flask import Markup

@@ -68,7 +68,12 @@ async function update_all(){
 async function get_data(){
     let url = new URL(document.URL);
     let agent_id = url.searchParams.get("agent");
-    let data = await $.getJSON("/websimgui/data?agent=" + agent_id);
+    //let data = await $.getJSON("/websimgui/data?agent=" + agent_id);
+
+    let data = await $.get("/websimgui", {
+        'agent': agent_id,
+        'fnc': 'get_agent'});
+    data = JSON.parse(data);
 
 
     await setData(data);

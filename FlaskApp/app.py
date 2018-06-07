@@ -28,5 +28,5 @@ db_uri = ("mysql+pymysql://{}:{}@{}:{}/{}").format(*db_values)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 print('\n')
 
-from FlaskApp.db.db_models import *
+
 from . import routes

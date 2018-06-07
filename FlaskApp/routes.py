@@ -1,9 +1,10 @@
-from FlaskApp.db.db_models import *
+from .db import *
 from flask import render_template, request
-from flask_security import current_user
+from flask_security import current_user, login_required
 import json
 from flask import Markup
 import markdown2
+from .app import app
 
 
 @app.route('/')
@@ -48,16 +49,13 @@ def agents():
         fnc = request.form['fnc']
 
         if fnc == 'remove_agent':
-            db_agent = Agent.query.filter_by(id=data['agent']).first()
-            db.session.delete(db_agent)
-            db.session.commit()
+            Agent.remove(data['agent'])
 
             all_agents = Agent.query.all()
             return render_template("agents.html", agents=all_agents, loggedin=current_user.is_authenticated)
 
         if fnc == 'add_agent':
-            db.session.add(Agent(name=data['agent_name'])) # TODO: give agent PK as id
-            db.session.commit()
+            Agent.add(data['agent_name'])
             return json.dumps(True)
 
 
@@ -71,26 +69,32 @@ def agents():
 
 #@login_required
 @app.route('/websimgui', methods=['GET', 'POST'])
-def websimgui():
-
-
+def websimgui_GET():
     if request.method == 'GET':
-        fnc = request.args.get('fnc', None)
-        data = json.loads(request.args['data'])
+        try:
+            fnc = request.args.get('fnc', None)
 
-        if fnc == 'get_model_selection':
-            return json.dumps(Model.get_all())
+            data = json.loads(request.args['data'])
 
-        elif fnc == 'get_model_readme':
-            return Model_used.get_readme(data['model'])
+            if fnc == 'get_agent':
+                agent_id = request.args.get('agent', None)
+                db_agent = Agent.query.filter_by(id=agent_id).first()
+                return json.dumps(db_agent.dict)
 
-        elif fnc == 'get_model_properties_view':
-            return Model_used.get_properties_view(data['model'])
+            if fnc == 'get_model_selection':
+                return json.dumps(Model.get_all())
 
-        elif fnc == 'get_model_results_view':
-            return Model_used.get_results_view(data['model'])
+            elif fnc == 'get_model_readme':
+                return Model_used.get_readme(data['model'])
 
-        else:
+            elif fnc == 'get_model_properties_view':
+                return Model_used.get_properties_view(data['model'])
+
+            elif fnc == 'get_model_results_view':
+                return Model_used.get_results_view(data['model'])
+
+        except Exception as e:
+            print(e)
             return "no valid get request"
 
     elif request.method == 'POST':
@@ -123,27 +127,17 @@ def websimgui():
 
 
         elif request.form['fnc'] == 'add_connection':
-            db.session.add(Connection(data['fk_model_used_from'],
-                                      data['port_id_from'],
-                                      data['fk_model_used_to'],
-                                      data['port_id_to']))
-            db.session.commit()
+            Connection.add(data['fk_model_used_from'], data['port_id_from'],
+                           data['fk_model_used_to'], data['port_id_to'])
 
         elif request.form['fnc'] == 'add_model_used':
-            db.session.add(Model_used(data['name'],
-                                      data['fk_model'],
-                                      data['agent']))
-            db.session.commit()
+            Model_used.add(data['name'], data['fk_model'], data['agent'])
 
         elif request.form['fnc'] == 'remove_connection':
-            con = Connection.query.filter_by(id=data['connection']).first()
-            db.session.delete(con)
-            db.session.commit()
+            Connection.remove(data['connection'])
 
         elif request.form['fnc'] == 'remove_model':
-            model_used = Model_used.query.filter_by(id=data['model']).first()
-            db.session.delete(model_used)
-            db.session.commit()
+            Model_used.remove(data['model'])
 
         elif request.form['fnc'] == 'start':
             db_agent.start()
@@ -159,28 +153,3 @@ def websimgui():
             Model.update_all()
 
         return json.dumps(db_agent.dict)
-
-
-
-
-
-
-@app.route('/websimgui/data', methods=['GET', 'POST'])
-def websimgui_data():
-    if request.method == 'GET':
-        agent_id = request.args.get('agent', None)
-        db_agent = Agent.query.filter_by(id=agent_id).first()
-
-
-        if db_agent != None:
-            return json.dumps(db_agent.dict)
-
-        else:
-            return json.dumps(False)
-
-
-@app.route('/test')
-def test():
-    return render_template("../Models/Technology/European_power_plant/V001/view/test.html")
-
-

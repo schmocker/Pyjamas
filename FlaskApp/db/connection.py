@@ -1,4 +1,4 @@
-from .db_models import db
+from .db_main import db
 
 class Connection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,3 +22,20 @@ class Connection(db.Model):
     def list(self):
         atrs = self.__class__.__table__.columns.keys()
         return {atr: getattr(self, atr) for atr in atrs}
+
+
+
+    @classmethod
+    def add(cls, fk_model_used_from, port_id_from, fk_model_used_to, port_id_to):
+        obj = cls(fk_model_used_from=fk_model_used_from,
+                  port_id_from=port_id_from,
+                  fk_model_used_to=fk_model_used_to,
+                  port_id_to=port_id_to)
+        db.session.add(obj)
+        db.session.commit()
+
+    @classmethod
+    def remove(cls, id):
+        obj = cls.query.filter_by(id=id).first()
+        db.session.delete(obj)
+        db.session.commit()
