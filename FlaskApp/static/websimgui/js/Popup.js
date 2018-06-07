@@ -60,7 +60,9 @@ class Popup_model_properties_view extends Popup{
     }
 
     async up(d){
-        let props = await get('get_model_properties_view',{'model': d.id});
+        let prop_view = await get('get_model_properties_view',{'model': d.id});
+        let prop_data = await get('get_model_properties',{'model': d.id});
+        prop_data = JSON.parse(prop_data);
 
         // TODO: Check if props is html, else make standart html for props
         this.content =  "";
@@ -89,10 +91,12 @@ class Popup_model_properties_view extends Popup{
                     return d.key;
                 })
                 .attr("type","text")
-                .attr("value","")
+                .attr("value",function (d) {
+                    return prop_data[d.key]
+                })
                 .on("input", function(d) {
-                    obj.submit(d.key, this.value);
                     this.value = this.value.replace(/[^\d.-]/g, '');
+                    obj.submit(d.key, this.value);
                 })
                 .on('keyup', function (d) {
                     if (d3.event.keyCode === 13) {

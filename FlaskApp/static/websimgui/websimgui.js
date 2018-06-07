@@ -72,7 +72,8 @@ async function get_data(){
 
     let data = await $.get("/websimgui", {
         'agent': agent_id,
-        'fnc': 'get_agent'});
+        'fnc': 'get_agent',
+        'data': JSON.stringify({})});
     data = JSON.parse(data);
 
 
