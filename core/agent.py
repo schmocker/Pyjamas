@@ -37,10 +37,11 @@ class Agent():
         self.running = True
 
         self.logger = logging.getLogger(__name__)
+        
         if self.DEBUG:
             self.logger.setLevel(logging.DEBUG)
         else:
-            self.logger.setLevel(logging.WARNING)
+            self.logger.setLevel(logging.INFO)
         con = logging.FileHandler("pyjama_log_" + str(self.id) + "_" + str(self.name) + ".txt")
         con.setLevel(logging.DEBUG)
         formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')

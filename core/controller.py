@@ -22,7 +22,7 @@ class Controller():
         if self.DEBUG:
             self.logger.setLevel(logging.DEBUG)
         else:
-            self.logger.setLevel(logging.WARNING)
+            self.logger.setLevel(logging.INFO)
         con = logging.FileHandler("pyjama_log_Controller.txt")
         con.setLevel(logging.DEBUG)
         formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')
@@ -166,6 +166,8 @@ class Controller():
                 p.start()
                 self.log_debug(f'agent {agent_id} started')
                 return True
+            else:
+                self.log_debug(f'agent {agent_id} is already running')
         return False
 
     def pause_agent(self, agent_id):
@@ -202,6 +204,8 @@ class Controller():
             if self.is_agent_running(agent_id):
                 if self.send_stop_order(agent_id):
                     return True
+            else:
+                self.log_debug(f'agent {agent_id} is not running')
         return False
 
     def kill_agent(self, agent_id):
