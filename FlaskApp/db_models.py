@@ -53,53 +53,7 @@ class Agent(db.Model):
         controller.start_agent(self.id)
         self.active = True
 
-        '''
-        try:
-
-            # controller.add_agent(self) TODO: implement method
-            controller.add_agent(self.id, self.name)
-
-            boxes = []
-            links = []
-
-            boxes.append(("Math.Constant.V1.model", "constant number"))
-            boxes.append(("Math.Incrementer.V1.model", "Incrementer"))
-            boxes.append(("Math.Add.V1.model", "Adder"))
-            boxes.append(("InOutput.ConsolePrint.V1.model", "Printer"))
-            # boxes.append(("Control.Sleep.V1.model", "Sleeper"))
-            boxes.append(("Control.Storage.V1.model", "Storage"))
-            boxes.append(("Scheduler.Regular.V1.model", "cron_job"))
-
-            links.append(("constant number", "const", "Adder", "in1"))
-            links.append(("Incrementer", "num", "Adder", "in2"))
-            links.append(("Storage", "stored", "Adder", "in3"))
-            links.append(("Adder", "sum", "Printer", "to_print"))
-            # links.append(("Sleeper", "output", "Printer", "to_print"))
-            links.append(("Adder", "sum", "Storage", "to_store"))
-
-            mods = {}
-
-            for i, box in enumerate(boxes):
-                controller.add_model(self.id, box[0], i, box[1])
-                mods[box[1]] = i
-
-            for link in links:
-                controller.link_models(self.id, mods[link[0]], link[1], mods[link[2]], link[3])
-
-            controller.start_agent(self.id)
-
-
-            # controller.start_agent(self.id)
-            self.active = True
-        except Exception as e:
-            print(e)
-            self.active = False
-
         db.session.commit()
-        '''
-
-
-
 
     def pause(self):
         controller.pause_agent(self.id)
@@ -114,7 +68,7 @@ class Agent(db.Model):
 
         agent_id = self.id
 
-        controller.add_agent(agent_id, self.name)
+        controller.force_add_agent(agent_id, self.name)
 
         for model in self.dict['model_used']:
             

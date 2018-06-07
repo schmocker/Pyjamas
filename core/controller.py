@@ -58,6 +58,13 @@ class Controller():
             self.log_debug(f'agent {agent_id} could not be added')
         return False
 
+    def force_add_agent(self, agent_id, agent_name):
+        self.log_debug('starting force_add_agent')
+        if self.is_existing_agent(agent_id):
+            if not self.remove_agent(agent_id):
+                return False
+        return self.add_agent(agent_id, agent_name)
+
     def remove_agent(self, agent_id):
         self.log_debug('starting remove_agent')
         try:
@@ -225,7 +232,7 @@ class Controller():
     def is_existing_agent(self, agent_id):
         if agent_id in self.agents:
             return True
-        self.log_warning(f'agent {agent_id} is not existing')
+        self.log_debug(f'agent {agent_id} is not existing')
         return False
 
     def is_agent_running(self, agent_id):
@@ -234,9 +241,8 @@ class Controller():
         return False
 
     def is_agent_paused(self, agent_id):
-        if self.is_agent_running(agent_id):
-            if agent_id in self.agents_paused:
-                return True
+        if agent_id in self.agents_paused:
+            return True
         return False
 
     def get_agents_running(self):
