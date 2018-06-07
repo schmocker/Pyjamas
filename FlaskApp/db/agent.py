@@ -18,7 +18,7 @@ class Agent(db.Model):
     @classmethod
     def add(cls, name):
         agent = cls(name=name)
-        db.session.add(agent) # TODO: give agent PK as id
+        db.session.add(agent)
         db.session.commit()
 
     def start(self):

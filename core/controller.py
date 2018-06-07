@@ -21,6 +21,8 @@ class Controller():
         self.logging_path = logging_path
         self.DEBUG = DEBUG
 
+        self.result_data = {}
+
         self.create_logger(logging_path, DEBUG)
 
     def create_logger(self, logging_path, DEBUG):
@@ -86,6 +88,7 @@ class Controller():
                 self.kill_agent(agent_id)
             del self.agent_queues[agent_id]
             del self.agents[agent_id]
+            del self.result_data[agent_id]
             if self.is_agent_paused(agent_id):
                 self.agents_paused.remove(agent_id)
             self.log_debug(f'agent {agent_id} removed')
@@ -123,6 +126,7 @@ class Controller():
         if self.is_existing_agent(agent_id):
             if not self.is_agent_running(agent_id):
                 if self.agents[agent_id].remove_model(model_id):
+                    del self.result_data[agent_id][model_id]
                     self.log_debug(f'removed model {model_id} from agent {agent_id}')
                     return True
                 else:
@@ -242,6 +246,14 @@ class Controller():
                 return True
         return False
 
+    def get_model_result(self, agent_id, model_id):
+        self.log_debug(f'starting get_model_result')
+        try:
+            return self.result_data[agent_id][model_id]
+        except KeyError:
+            self.log_warning(f'no result data found for model {model_id} in agent {agent_id}')
+            return None
+
     def is_existing_agent(self, agent_id):
         if agent_id in self.agents:
             return True
@@ -289,17 +301,33 @@ class Controller():
         try:
             self.log_debug(f'recieved order {msg["order"]} from agent {msg["agent"]}')
             if msg["order"] == "dead":
-                agent_id = msg['agent']
-                if self.is_agent_running(agent_id):
-                    self.agents_running[agent_id].terminate()
-                    self.log_debug(f'agent {agent_id} terminated')
-                    del self.agents_running[agent_id]
-                if self.is_agent_paused(agent_id):
-                    self.agents_paused.remove(agent_id)
-                self.log_debug(f'agent {agent_id} removed from running list')
+                self.handle_dead_order(msg)
+            elif msg['order'] == 'data':
+                self.handle_data_order(msg)
         except KeyError:
             self.log_warning(f'message could not be handled correctly')
             self.log_warning(f'message = {msg}')
+
+    def handle_dead_order(self, msg):
+        agent_id = msg['agent']
+        if self.is_agent_running(agent_id):
+            self.agents_running[agent_id].terminate()
+            self.log_debug(f'agent {agent_id} terminated')
+            del self.agents_running[agent_id]
+        if self.is_agent_paused(agent_id):
+            self.agents_paused.remove(agent_id)
+        self.log_debug(f'agent {agent_id} removed from running list')
+
+    def handle_data_order(self, msg):
+        agent_id = msg['agent']
+        model_id = msg['model']
+        data = msg['text']
+        if not agent_id in self.result_data:
+            self.result_data[agent_id] = {}
+        if not model_id in self.result_data[agent_id]:
+            self.result_data[agent_id][model_id] = {}
+        for name, result in data:
+            self.result_data[agent_id][model_id][name] = result
 
     # orders
 

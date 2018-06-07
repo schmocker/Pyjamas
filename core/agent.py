@@ -243,8 +243,8 @@ class Agent():
                 property_name = msg["text"]["property_name"]
                 property_value = msg["text"]["property_value"]
                 self.models[model_id].set_property(property_name, property_value)
-            elif order == "data":
-                # TODO: implement
+            elif order == "give":
+                # TODO: implement (maybe not needed)
                 # return data
                 pass
             else:
@@ -275,6 +275,14 @@ class Agent():
 
     def send_dead_order(self):
         order = {}
-        order["order"] = "dead"
-        order["agent"] = self.id
+        order['order'] = 'dead'
+        order['agent'] = self.id
+        self.controller_queue.put(order)
+
+    def send_data_order(self, model_id, data):
+        order = {}
+        order['order'] = 'data'
+        order['agent'] = self.id
+        order['model'] = model_id
+        order['text'] = data
         self.controller_queue.put(order)
