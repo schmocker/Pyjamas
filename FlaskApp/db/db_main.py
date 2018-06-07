@@ -23,6 +23,7 @@ security = Security(app, user_datastore)
 @app.before_first_request
 def create_all():
     db.create_all()
+    Model.update_all()
 
 # Create a default user
 @app.before_first_request

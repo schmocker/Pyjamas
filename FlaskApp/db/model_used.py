@@ -10,6 +10,7 @@ class Model_used(db.Model):
     y = db.Column(db.Integer)
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)
+    properties = db.Column(db.Text)
     input_orientation = db.Column(db.String(80))  # top, left, bottom, right
     output_orientation = db.Column(db.String(80))
     ###
@@ -60,6 +61,22 @@ class Model_used(db.Model):
         return m.model.properties_view
 
     @classmethod
+    def get_properties(cls, id):
+        obj = cls.query.filter_by(id=id).first()
+        return obj.properties
+
+    @classmethod
+    def set_property(cls, id, key, value):
+        obj = cls.query.filter_by(id=id).first()
+        if obj.properties is None:
+            props = dict()
+        else:
+            props = json.loads(obj.properties)
+        props[key] = value
+        obj.properties = json.dumps(props)
+        db.session.commit()
+
+    @classmethod
     def get_results_view(cls, id):
         m = cls.query.filter_by(id=id).first()
         return m.model.results_view
@@ -73,7 +90,8 @@ class Model_used(db.Model):
 
     @classmethod
     def set_size(cls, id, width, height):
-        m = cls.query.filter_by(id=id).first()
-        m.width = width
-        m.height = height
+        obj = cls.query.filter_by(id=id).first()
+        obj.width = width
+        obj.height = height
         db.session.commit()
+

@@ -70,8 +70,9 @@ def agents():
 #@login_required
 @app.route('/websimgui', methods=['GET', 'POST'])
 def websimgui_GET():
-    if request.method == 'GET':
-        try:
+    try:
+        if request.method == 'GET':
+
             fnc = request.args.get('fnc', None)
 
             data = json.loads(request.args['data'])
@@ -90,66 +91,57 @@ def websimgui_GET():
             elif fnc == 'get_model_properties_view':
                 return Model_used.get_properties_view(data['model'])
 
+            elif fnc == 'get_model_properties':
+                return Model_used.get_properties(data['model'])
+
             elif fnc == 'get_model_results_view':
                 return Model_used.get_results_view(data['model'])
 
-        except Exception as e:
-            print(e)
-            return "no valid get request"
-
-    elif request.method == 'POST':
-
-        try:
+        elif request.method == 'POST':
             data = json.loads(request.form['data'])
-        except:
-            print('! -> No field "data" in POST request')
-            return json.dumps(False)
 
+            db_agent = Agent.query.filter_by(id=data['agent']).first()
 
+            if db_agent == None:
+                return json.dumps(False)
 
-        print('Agent ' + str(data['agent']) + ' (POST): ' + request.form['fnc'])
+            if request.form['fnc'] == 'set_model_pos':
+                Model_used.set_position(data['model'], data['x'], data['y'])
 
-        db_agent = Agent.query.filter_by(id=data['agent']).first()
+            elif request.form['fnc'] == 'set_model_size':
+                Model_used.set_size(data['model'], data['width'], data['height'])
 
-        if db_agent == None:
-            return json.dumps(False)
+            elif request.form['fnc'] == 'set_model_property':
+                Model_used.set_property(data['model'], data['property'], data['value'])
 
-        if request.form['fnc'] == 'set_model_pos':
-            Model_used.set_position(data['model'], data['x'], data['y'])
+            elif request.form['fnc'] == 'add_connection':
+                Connection.add(data['fk_model_used_from'], data['port_id_from'],
+                               data['fk_model_used_to'], data['port_id_to'])
 
-        elif request.form['fnc'] == 'set_model_size':
-            Model_used.set_size(data['model'], data['width'], data['height'])
+            elif request.form['fnc'] == 'add_model_used':
+                Model_used.add(data['name'], data['fk_model'], data['agent'])
 
-        elif request.form['fnc'] == 'set_model_property':
-            print(data['model'])
-            print(data['property'])
-            print(data['value'])
+            elif request.form['fnc'] == 'remove_connection':
+                Connection.remove(data['connection'])
 
+            elif request.form['fnc'] == 'remove_model':
+                Model_used.remove(data['model'])
 
-        elif request.form['fnc'] == 'add_connection':
-            Connection.add(data['fk_model_used_from'], data['port_id_from'],
-                           data['fk_model_used_to'], data['port_id_to'])
+            elif request.form['fnc'] == 'start':
+                db_agent.start()
 
-        elif request.form['fnc'] == 'add_model_used':
-            Model_used.add(data['name'], data['fk_model'], data['agent'])
+            elif request.form['fnc'] == 'pause':
+                db_agent.pause()
 
-        elif request.form['fnc'] == 'remove_connection':
-            Connection.remove(data['connection'])
+            elif request.form['fnc'] == 'stop':
+                db_agent.stop()
 
-        elif request.form['fnc'] == 'remove_model':
-            Model_used.remove(data['model'])
+            elif request.form['fnc'] == 'update':
+                print("updateing...")
+                Model.update_all()
 
-        elif request.form['fnc'] == 'start':
-            db_agent.start()
+            return json.dumps(db_agent.dict)
 
-        elif request.form['fnc'] == 'pause':
-            db_agent.pause()
-
-        elif request.form['fnc'] == 'stop':
-            db_agent.stop()
-
-        elif request.form['fnc'] == 'update':
-            print("updateing...")
-            Model.update_all()
-
-        return json.dumps(db_agent.dict)
+    except Exception as e:
+        print(e)
+        return "no valid get request"
