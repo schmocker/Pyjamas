@@ -1,4 +1,6 @@
 import asyncio
+import os
+import importlib
 
 class Port():
     def __init__(self, info: dict):
@@ -57,3 +59,38 @@ class Property(Port):
         if self.amend_value:
             self.items['value'] = self.amend_value
             self.amend_value = None
+
+
+
+
+
+def get_models():
+    def _get_folders(path):
+        dirs = os.listdir(path)
+        dirs = filter(lambda x: os.path.isdir(path + '/' + x), dirs)
+        dirs = filter(lambda x: x[0] != '_', dirs)
+        return list(dirs)
+
+    path = "Models"
+    model_dict = dict()
+    for topic in _get_folders(path):
+        model_dict[topic] = dict()
+        for model in _get_folders(path + '/' + topic):
+            model_dict[topic][model] = dict()
+            for version in _get_folders(path + '/' + topic + '/' + model):
+
+
+                try:
+                    mod = importlib.import_module(f"Models.{topic}.{model}.{version}.model").Model(1, '')
+                    info = mod.get_info()
+                    docks = list()
+                    for direction in ['input', 'output']:
+                        for port_key, port in info[direction + "s"].items():
+                            port['key'] = port_key
+                        ports = [port for key, port in info[direction + "s"].items()]
+                        orientation = "left" if direction == "input" else "right"
+                        docks.append({'direction': direction, 'orientation': orientation, 'ports': ports})
+                    model_dict[topic][model][version] = {'docks': docks, 'properties': info["properties"]}
+                except Exception as e:
+                    print(f"Error in Models.{topic}.{model}.{version}.model ({e})")
+    return model_dict

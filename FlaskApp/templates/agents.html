@@ -14,7 +14,6 @@
 
 
         async function remove_agent(id) {
-            console.log("add");
             let data = await $.post("/agents", {
                 'fnc': 'remove_agent',
                 'data': JSON.stringify({'agent': id})

@@ -2,6 +2,11 @@ import asyncio
 import logging
 import collections
 from core.util import Input, Output, Property
+import os
+from pathlib import Path
+from flask import Markup
+from markdown2 import markdown
+
 
 class Supermodel:
 
@@ -41,9 +46,9 @@ class Supermodel:
         info = {}
         info['id'] = self.id
         info['name'] = self.name
-        info['inputs'] = [inp.get_port_info() for key,inp in self.inputs.items()]
-        info['outputs'] = [out.get_port_info() for key,out in self.outputs.items()]
-        info['properties'] = [prop.get_port_info() for key,prop in self.properties.items()]
+        info['inputs'] = {key: inp.get_port_info() for key,inp in self.inputs.items()}
+        info['outputs'] = {key: out.get_port_info() for key,out in self.outputs.items()}
+        info['properties'] = {key: prop.get_port_info() for key,prop in self.properties.items()}
         return info
 
 #region input
@@ -217,3 +222,4 @@ class Supermodel:
         pass
 
 #endregion abstract methods
+
