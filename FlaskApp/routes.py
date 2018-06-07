@@ -5,7 +5,7 @@ import json
 from flask import Markup
 import markdown2
 from .app import app
-
+import os
 
 @app.route('/')
 def home():
@@ -92,7 +92,7 @@ def websimgui_GET():
                 return Model_used.get_properties_view(data['model'])
 
             elif fnc == 'get_model_properties':
-                return Model_used.get_properties(data['model'])
+                return json.dumps(Model_used.get_properties(data['model']))
 
             elif fnc == 'get_model_results_view':
                 return Model_used.get_results_view(data['model'])
@@ -146,3 +146,14 @@ def websimgui_GET():
         print(e)
         print(f"no valid {request.method} request")
         return json.dumps(False)
+
+
+@app.route('/test')
+def test():
+    tf = app.template_folder
+    path = os.path.abspath("Models")
+    print(os.path.exists(path))
+    app.template_folder = path
+    r = render_template("Template_Topic/Template_Model/Template_Version/view_properties/index.html")
+
+    return r

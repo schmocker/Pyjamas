@@ -37,7 +37,13 @@ class Model(db.Model):
 
     @property
     def properties_view(self):
-        return "Props from " + self.path
+        file = os.path.join("Models", self.topic, self.name, self.version, "view_properties", "index.html")
+        if os.path.isfile(file):
+            with open(file, 'r') as f:
+                html = f.read()
+            return html
+        else:
+            return ''
 
     @property
     def results_view(self):

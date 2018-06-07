@@ -1,7 +1,7 @@
 from flask import Flask
 from os import environ as env
 
-app = Flask(__name__, template_folder="templates", instance_relative_config=True)
+app = Flask(__name__, instance_relative_config=True) # , template_folder="templates"
 
 app.config.from_pyfile('config.cfg')
 print('\nConfigs were loaded from config file.')

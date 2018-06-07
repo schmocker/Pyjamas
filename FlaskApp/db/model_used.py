@@ -1,5 +1,8 @@
 from .db_main import db
 import json
+import os
+
+
 class Model_used(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fk_model = db.Column(db.Integer, db.ForeignKey('model.id', ondelete="CASCADE"), nullable=False)
@@ -57,14 +60,15 @@ class Model_used(db.Model):
 
     @classmethod
     def get_properties_view(cls, id):
-        m = cls.query.filter_by(id=id).first()
-        return m.model.properties_view
+        obj = cls.query.filter_by(id=id).first()
+        return obj.model.properties_view
 
     @classmethod
     def get_properties(cls, id):
         obj = cls.query.filter_by(id=id).first()
         props = obj.properties
-        return '{}' if props is None else props
+        props = '{}' if props is None else props
+        return json.loads(props)
 
     @classmethod
     def set_property(cls, id, key, value):

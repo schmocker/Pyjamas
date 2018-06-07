@@ -68,7 +68,7 @@ class Popup_model_properties_view extends Popup{
         let prop_view = await get('get_model_properties_view',{'model': d.id});
         // TODO: Check if props is html, else make standart html for props
         this.content =  "";
-        if (true) {
+        if (prop_view === '') {
             let content = this.popup_content;
 
             content.append("h2").text("Properties");
@@ -110,9 +110,9 @@ class Popup_model_properties_view extends Popup{
                 });
             props.append("br");
         } else {
-            this.content =  props;
+            this.content =  prop_view;
         }
-        this.show()
+        this.show();
     }
 
     submit(key, value){
