@@ -196,6 +196,11 @@ class Supermodel:
         # await peri
         peri_result = await self._internal_peri()
 
+        # send result data to controller
+        if self.outputs:
+            self.log_debug("sending result data to controller")
+            await self.send_result_data()
+
         # wait for post_gate
         self.log_debug("waiting at post gate")
         await self.agent.post_gate.wait()
@@ -203,6 +208,26 @@ class Supermodel:
         # execute func_post
         self.log_debug("starting func_post")
         return await self.func_post(peri_to_post=peri_result)
+
+    async def send_result_data(self):
+        data = []
+
+        for key, output in self.outputs.items():
+            try:
+                name = output.get_port_info()['name']
+            except KeyError:
+                name = key
+
+            try:
+                res = await output.get_output()
+            except Exception:
+                self.log_warning(f"could not retrieve result from output {key}")
+                res = None
+
+            data_point = (name,res)
+            data.append(data_point)
+        
+        self.agent.send_data_order(self.id, data)
 
 #endregion simulation loop
 

@@ -5,6 +5,3 @@ venv
 data
 chaos
 __pycache__/
-
-
-Power_demand/NN_UCTE_woT/V001/model_parameter_LK_UCTE.txt

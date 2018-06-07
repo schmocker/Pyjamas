@@ -15,6 +15,7 @@ def main():
     boxes.append(("Math.Constant.V1.model","constant_number"))
     boxes.append(("Math.Incrementer.V1.model","Incrementer"))
     boxes.append(("Math.Add.V1.model","Adder"))
+    boxes.append(("Math.Divide.V1.model","Divider"))
     boxes.append(("InOutput.ConsolePrint.V1.model","Printer"))
     boxes.append(("Control.Sleep.V1.model","Sleeper"))
     boxes.append(("Control.Storage.V1.model","Storage"))
@@ -26,6 +27,8 @@ def main():
     links.append(("Adder", "sum", "Sleeper", "input"))
     links.append(("Sleeper", "output", "Printer", "to_print"))
     links.append(("Adder", "sum", "Storage", "to_store"))
+    links.append(("Adder", "sum", "Divider", "dividend"))
+    links.append(("Storage", "stored", "Divider", "divisor"))
 
     mods = {}
     mods2 = {}
@@ -62,6 +65,8 @@ def main():
     time.sleep(1)
     c.pause_agent(1)
     input("press enter to continue")
+    #print(f"============ {c.get_model_result(1,mods['Divider'])}")
+    print(json.dumps(c.result_data, indent=4))
     c.unpause_agent(1)
 
     time.sleep(2)
