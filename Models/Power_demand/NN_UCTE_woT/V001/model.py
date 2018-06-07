@@ -26,7 +26,7 @@ class Model(Supermodel):
         self.outputs['p_dem'] = Output({'name': 'power demand'})
 
         # define properties
-        #self.properties['h_hub'] = Property(10, {'name': 'hub height'})
+        self.properties['h_hub'] = Property(10, {'name': 'hub height'})
 
 
         # define persistent variables
