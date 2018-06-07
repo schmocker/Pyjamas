@@ -63,7 +63,8 @@ class Model_used(db.Model):
     @classmethod
     def get_properties(cls, id):
         obj = cls.query.filter_by(id=id).first()
-        return obj.properties
+        props = obj.properties
+        return '{}' if props is None else props
 
     @classmethod
     def set_property(cls, id, key, value):

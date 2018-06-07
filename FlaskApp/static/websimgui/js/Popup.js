@@ -60,10 +60,12 @@ class Popup_model_properties_view extends Popup{
     }
 
     async up(d){
-        let prop_view = await get('get_model_properties_view',{'model': d.id});
         let prop_data = await get('get_model_properties',{'model': d.id});
         prop_data = JSON.parse(prop_data);
 
+
+
+        let prop_view = await get('get_model_properties_view',{'model': d.id});
         // TODO: Check if props is html, else make standart html for props
         this.content =  "";
         if (true) {
