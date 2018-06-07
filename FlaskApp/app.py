@@ -3,7 +3,6 @@ from os import environ as env
 
 app = Flask(__name__, template_folder="templates", instance_relative_config=True)
 
-
 app.config.from_pyfile('config.cfg')
 print('\nConfigs were loaded from config file.')
 keys = ['FLASK_HOST',
@@ -29,5 +28,5 @@ db_uri = ("mysql+pymysql://{}:{}@{}:{}/{}").format(*db_values)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 print('\n')
 
-from .db_models import *
+from FlaskApp.db.db_models import *
 from . import routes

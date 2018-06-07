@@ -66,19 +66,22 @@ class Popup_model_properties_view extends Popup{
         this.content =  "";
         if (true) {
             let content = this.popup_content;
-            let data = d3.entries(d.model.info.properties)
 
-            let form = content.append("from")
-                .classed("propertiesForm", true)
-                .attr("name","propertiesForm");
-            form.append("h2").text("Properties");
-            let properties = form.selectAll(".property").data(data);
-            properties = properties.enter().append("g")
+            content.append("h2").text("Properties");
+            let form = content.selectAll(".propertiesForm").data([d]);
+            form = form.enter().append("g")
+                .classed("properties", true)
+                .attr("name","properties");
+
+            let props = form.selectAll(".property").data(function (d) {return d3.entries(d.model.info.properties)});
+            props = props.enter().append("g")
                 .classed("property", true);
-            properties.append("span").html(function (d) {
-                return '<br>' + d.value.name + ':<br>';
+            props.append("span").html(function (d, i) {
+                let brake = (i===0 ? '' : '<br>');
+                return brake + d.value.name + ':<br>';
             });
-            properties.append("input")
+            let obj = this;
+            props.append("input")
                 .attr("id",function (d) {
                     return d.key;
                 })
@@ -88,18 +91,27 @@ class Popup_model_properties_view extends Popup{
                 .attr("type","text")
                 .attr("value","")
                 .on("input", function(d) {
-                    log(d);
-                    log(this.value)
+                    obj.submit(d.key, this.value);
+                    this.value = this.value.replace(/[^\d.-]/g, '');
                 })
                 .on('keyup', function (d) {
-                    if (d3.event.keyCode == 13) {
-                        log("FINAL VALUE: " + this.value)
+                    if (d3.event.keyCode === 13) {
+                        obj.submit(d.key, this.value)
                     }
+                })
+                .on('blur', function (d) {
+                    obj.submit(d.key, this.value)
                 });
+            props.append("br");
         } else {
             this.content =  props;
         }
         this.show()
+    }
+
+    submit(key, value){
+        let id_model_used = d3.select('.properties').data()[0].id;
+        post('set_model_property', {'model': id_model_used, 'property': key, 'value': value})
     }
 }
 

@@ -1,14 +1,9 @@
-from .app import app
-from .db_models import *
-from .functions import get_agent
-from flask import render_template, request, send_from_directory
-from flask_security import current_user, login_required
+from FlaskApp.db.db_models import *
+from flask import render_template, request
+from flask_security import current_user
 import json
-import random
 from flask import Markup
-import  markdown2
-import os
-from pathlib import Path
+import markdown2
 
 
 @app.route('/')
@@ -120,6 +115,12 @@ def websimgui():
 
         elif request.form['fnc'] == 'set_model_size':
             Model_used.set_size(data['model'], data['width'], data['height'])
+
+        elif request.form['fnc'] == 'set_model_property':
+            print(data['model'])
+            print(data['property'])
+            print(data['value'])
+
 
         elif request.form['fnc'] == 'add_connection':
             db.session.add(Connection(data['fk_model_used_from'],

@@ -1,6 +1,6 @@
 import json
 import random
-
+'''
 def get_agent():
     agent = dict()
 
@@ -56,3 +56,5 @@ def get_agent():
 
 
     return json.dumps(agent)
+
+'''
