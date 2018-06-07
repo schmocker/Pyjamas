@@ -5,10 +5,12 @@ import json
 import time
 from threading import Thread
 import logging
+import datetime
+from core.util import CreateDirFileHandler
 
 class Controller():
 
-    def __init__(self, DEBUG=False):
+    def __init__(self, logging_path=None, DEBUG=False):
         self.agents = {}
         self.agents_running = {}
         self.agents_paused = []
@@ -16,19 +18,30 @@ class Controller():
         self.agent_queues = {}
         self.thread_running = False
 
+        self.logging_path = logging_path
         self.DEBUG = DEBUG
 
-        self.logger = logging.getLogger(__name__)
-        if self.DEBUG:
-            self.logger.setLevel(logging.DEBUG)
+        self.create_logger(logging_path, DEBUG)
+
+    def create_logger(self, logging_path, DEBUG):
+        if logging_path:
+            self.logger = logging.getLogger(__name__)
+            if self.DEBUG:
+                self.logger.setLevel(logging.DEBUG)
+            else:
+                self.logger.setLevel(logging.INFO)
+            try:
+                con = CreateDirFileHandler(f"{logging_path}/pyjama_log_Controller_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt")
+                con.setLevel(logging.DEBUG)
+                formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')
+                con.setFormatter(formatter)
+                self.logger.addHandler(con)
+                self.log_debug("initialized logger")
+            except Exception as e:
+                print("Failed to create file logger")
+                print(e)
         else:
-            self.logger.setLevel(logging.INFO)
-        con = logging.FileHandler("pyjama_log_Controller.txt")
-        con.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')
-        con.setFormatter(formatter)
-        self.logger.addHandler(con)
-        self.log_debug("initialized logger")
+            self.logger = None
 
     def log_debug(self, msg):
         if self.logger:
@@ -46,7 +59,7 @@ class Controller():
                 return False
             agent_queue = multiprocessing.Queue()
             self.agent_queues[agent_id] = agent_queue
-            a = importlib.import_module("core.agent").Agent(agent_id, agent_name, self.controller_queue, agent_queue, self.DEBUG)
+            a = importlib.import_module("core.agent").Agent(agent_id, agent_name, self.controller_queue, agent_queue, self.logging_path, self.DEBUG)
             self.log_debug(f'created agent (agent_id = {a.id} agent_name = {a.name})')
             self.agents[agent_id] = a
             self.log_debug(f'added agent (agent_id = {a.id} agent_name = {a.name})')
