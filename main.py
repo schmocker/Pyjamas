@@ -4,7 +4,7 @@ import time
 
 def main():
 
-    c = Controller(DEBUG=False)
+    c = Controller(logging_path="logs", DEBUG=True)
 
     c.add_agent(1,"smith")
     c.add_agent(2,"anderson")

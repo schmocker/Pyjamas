@@ -2,10 +2,12 @@ import asyncio
 from multiprocessing import Process
 import logging
 import concurrent
+import datetime
+from core.util import CreateDirFileHandler
 
 class Agent():
 
-    def __init__(self, agent_id, name: str, controller_queue, agent_queue, DEBUG):
+    def __init__(self, agent_id, name: str, controller_queue, agent_queue, logging_path=None, DEBUG=False):
         super(Agent,self).__init__()
 
         self.agent_queue = agent_queue
@@ -19,7 +21,29 @@ class Agent():
         self.paused = False
 
         self.logger = None
+        self.logging_path = logging_path
         self.DEBUG = DEBUG
+
+    def create_logger(self, logging_path, DEBUG):
+        if logging_path:
+            self.logger = logging.getLogger(__name__)
+            
+            if self.DEBUG:
+                self.logger.setLevel(logging.DEBUG)
+            else:
+                self.logger.setLevel(logging.INFO)
+            try:
+                con = CreateDirFileHandler(f"{logging_path}/pyjama_log_{self.id}_{self.name}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt")
+                con.setLevel(logging.DEBUG)
+                formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')
+                con.setFormatter(formatter)
+                self.logger.addHandler(con)
+                self.log_debug("initialized logger")
+            except Exception as e:
+                print("Failed to create logger")
+                print(e)
+        else:
+            self.logger = None
 
     def log_debug(self, msg):
         if self.logger:
@@ -36,18 +60,7 @@ class Agent():
 
         self.running = True
 
-        self.logger = logging.getLogger(__name__)
-        
-        if self.DEBUG:
-            self.logger.setLevel(logging.DEBUG)
-        else:
-            self.logger.setLevel(logging.INFO)
-        con = logging.FileHandler("pyjama_log_" + str(self.id) + "_" + str(self.name) + ".txt")
-        con.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(name)s][%(processName)s] : %(message)s')
-        con.setFormatter(formatter)
-        self.logger.addHandler(con)
-        self.log_debug("initialized logger")
+        self.create_logger(self.logging_path, self.DEBUG)
 
         self.sync_counter_first = 0
         self.sync_counter_second = 0

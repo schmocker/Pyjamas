@@ -1,6 +1,8 @@
 import asyncio
 import os
 import importlib
+import logging
+import errno
 
 class Port():
     def __init__(self, info: dict):
@@ -60,7 +62,21 @@ class Property(Port):
             self.items['value'] = self.amend_value
             self.amend_value = None
 
+class CreateDirFileHandler(logging.FileHandler):
+    def __init__(self, filename, mode='a', encoding=None, delay=0):
+        self.create_dir(os.path.dirname(filename))
+        super(CreateDirFileHandler,self).__init__(filename, mode, encoding, delay)
 
+    def create_dir(self, path):
+        try:
+            os.makedirs(path, exist_ok=True)
+        except TypeError:
+            try:
+                os.makedirs(path)
+            except OSError as exc:
+                if exc.errno == errno.EEXIST and os.path.isdir(path):
+                    pass
+                else: raise
 
 
 
