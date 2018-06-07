@@ -144,4 +144,5 @@ def websimgui_GET():
 
     except Exception as e:
         print(e)
-        return "no valid get request"
+        print(f"no valid {request.method} request")
+        return json.dumps(False)
