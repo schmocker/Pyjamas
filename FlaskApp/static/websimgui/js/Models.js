@@ -3,7 +3,7 @@ class Models {
         let obj = this;
         this.menu = [
             {title: "Documentation",
-                action: async function(elm, d, i) { await popup_model_docu.up(d.id); }},
+                action: async function(elm, d, i) { await popup_model_docu.up(d); }},
             {title: "Properties",
                 action: async function(elm, d, i) { await popup_model_properties_view.up(d); }},
             {title: "Results",

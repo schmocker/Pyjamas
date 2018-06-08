@@ -1,103 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Mercator projection</title>
-
-    <script src="https://d3js.org/d3.v3.min.js"></script>
-    <script src="https://d3js.org/topojson.v1.min.js"></script>
-
-    <style type="text/css">
+let UCTE_ISO3 =  ["BEL","BIH","BGR","DNK","DEU","FRA","GRC","ITA","HRV","LUX","FYR","MNE","NLD","AUT","POL","PRT","ROU","CHE","SCG","SVK","SVN","ESP","CZE","HUN","MKD","SRB","XKX"];
 
 
-        svg {
-            background-color: rgb(0,0,50);
+let KWP = [];
+KWP.push({'Kraftwerkstyp': 'Windturbine', 'lonlat':[0,40]});
+KWP.push({'Kraftwerkstyp': 'PV-Anlage', 'lonlat':[13,52]});
+KWP.push({'Kraftwerkstyp': 'Gasturbine', 'lonlat':[-13,52]});
+
+
+//Width and height
+
+
+
+
+d3.selection.prototype.moveToFront = function() {
+    return this.each(function(){
+        this.parentNode.appendChild(this);
+    });
+};
+d3.selection.prototype.moveToBack = function() {
+    return this.each(function() {
+        var firstChild = this.parentNode.firstChild;
+        if (firstChild) {
+            this.parentNode.insertBefore(this, firstChild);
         }
-
-        #container {
-            width: 800px;
-            background-color: white;
-        }
-
-        .item{
-            stroke: white;
-            fill: rgba(255,255,255,0.05);
-        }
-
-        .item:hover{
-            fill: white;
-            cursor:pointer;
-        }
-
-        .country{
-            stroke: rgba(255,255,255,0.2);
-            fill: rgba(255,255,255,0.2);
-        }
-
-        .UCTE{
-            fill: rgba(255,255,255,0.4);
-        }
-
-        .UCTE:hover {
-            fill: rgba(255,255,255,0.6);
-            cursor:pointer;
-        }
+    });
+};
 
 
-
-    </style>
-</head>
-<body>
-<div id="container"></div>
-<div id="name"></div>
-
-
-<script type="text/javascript">
-    d3.selection.prototype.moveToFront = function() {
-        return this.each(function(){
-            this.parentNode.appendChild(this);
-        });
-    };
-    d3.selection.prototype.moveToBack = function() {
-        return this.each(function() {
-            var firstChild = this.parentNode.firstChild;
-            if (firstChild) {
-                this.parentNode.insertBefore(this, firstChild);
-            }
-        });
-    };
-
-
-
-    //Width and height
-    let w = 800;
-    let h = 600;
+window.onload = function(){
+    let w = parseInt($("#map").width());
+    let h = parseInt($("#map").height());
 
     //Define map projection
-
-
     let projection = d3.geo.mercator() //utiliser une projection standard pour aplatir les pôles, voir D3 projection plugin
         .center([ 11, 47.5 ]) //comment centrer la carte, longitude, latitude
         .translate([ w/2, h/2 ]) // centrer l'image obtenue dans le svg
         .scale([ w/0.85 ]); // zoom, plus la valeur est petit plus le zoom est gros
 
-    //Define path generator
+//Define path generator
     let path = d3.geo.path()
         .projection(projection);
 
 
     //Create SVG
-    let svg = d3.select("#container")
+    let svg = d3.select("#map")
         .append("svg")
         .attr("width", w)
         .attr("height", h);
-
-    let UCTE_ISO3 =  ["BEL","BIH","BGR","DNK","DEU","FRA","GRC","ITA","HRV","LUX","FYR","MNE","NLD","AUT","POL","PRT","ROU","CHE","SCG","SVK","SVN","ESP","CZE","HUN","MKD","SRB","XKX"];
-
-
-
-    //Load in GeoJSON data
-    d3.json("static/data/countries2.json", function(json) {
+//Load in GeoJSON data
+    d3.json(data_url, function(json) {
 
         //Bind data and create one path per GeoJSON feature
         svg.selectAll(".country")
@@ -134,14 +85,6 @@
 
 
     });
-
-    let KWP = [];
-    KWP.push({'Kraftwerkstyp': 'Windturbine', 'lonlat':[0,40]});
-    KWP.push({'Kraftwerkstyp': 'PV-Anlage', 'lonlat':[13,52]});
-    KWP.push({'Kraftwerkstyp': 'Gasturbine', 'lonlat':[-13,52]});
-
-
-
     svg.selectAll("circle")
         .data(KWP).enter()
         .append("circle")
@@ -156,8 +99,25 @@
             d3.select("#name").html("");
         });
 
+};
 
 
-</script>
-</body>
-</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

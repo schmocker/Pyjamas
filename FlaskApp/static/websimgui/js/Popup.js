@@ -13,14 +13,22 @@ class Popup {
             .on("click", function() { d3.event.stopPropagation(); });
 
 
-        frame.append("span")
-            .classed("close",true)
+        this.popup_content = frame.append("div")
+            .attr("id", "popup_content");
+
+        this.header = this.popup_content.append('div')
+            .attr("id", "popup_header");
+
+        this.buttons = this.popup_content.append('div')
+            .attr("id", "popup_buttons");
+
+        this.popup_content.append('div')
+            .attr("id", "popup_close")
             .html('&#215;')
             .on("click",function(){ obj.hide() });
 
-        this.popup_content = frame.append("div")
-            .classed("popup_content",true);
-
+        this.body = this.popup_content.append('div')
+            .attr("id", "popup_body");
 
     }
 
@@ -34,10 +42,16 @@ class Popup {
 
     hide(){
         this.popup.style("display", "none");
+        this.clear();
+    }
+
+    clear(){
+        this.header.html("");
+        this.buttons.html("");
+        this.body.html("");
     }
 
     async up(){
-        this.content("default content");
         this.show()
     }
 
@@ -48,8 +62,13 @@ class Popup_model_docu extends Popup{
         super(parent, "model_docu");
     }
 
-    async up(model_id){
-        this.content =  await get('get_model_readme',{'model': model_id});
+    async up(d){
+        this.header.append('h2').text(function () {
+            return d.name + ": Documentation"
+        });
+        this.body.html(await async function () {
+            return await get('get_model_readme',{'model': d.id})
+        });
         this.show()
     }
 }
@@ -62,59 +81,89 @@ class Popup_model_properties_view extends Popup{
     async up(d){
         let prop_data = await get('get_model_properties',{'model': d.id});
         prop_data = JSON.parse(prop_data);
-
-
-
-        let prop_view = await get('get_model_properties_view',{'model': d.id});
-        // TODO: Check if props is html, else make standart html for props
-        this.content =  "";
-        if (prop_view === '') {
-            let content = this.popup_content;
-
-            content.append("h2").text("Properties");
-            let form = content.selectAll(".propertiesForm").data([d]);
-            form = form.enter().append("g")
-                .classed("properties", true)
-                .attr("name","properties");
-
-            let props = form.selectAll(".property").data(function (d) {return d3.entries(d.model.info.properties)});
-            props = props.enter().append("g")
-                .classed("property", true);
-            props.append("span").html(function (d, i) {
-                let brake = (i===0 ? '' : '<br>');
-                return brake + d.value.name + ':<br>';
-            });
-            let obj = this;
-            props.append("input")
-                .attr("id",function (d) {
-                    return d.key;
-                })
-                .attr("name",function (d) {
-                    return d.key;
-                })
-                .attr("type","text")
-                .attr("value",function (d) {
-                    return prop_data[d.key]
-                })
-                .on("input", function(d) {
-                    this.value = this.value.replace(/[^\d.-]/g, '');
-                    obj.submit(d.key, this.value);
-                })
-                .on('keyup', function (d) {
-                    if (d3.event.keyCode === 13) {
-                        obj.submit(d.key, this.value)
-                    }
-                })
-                .on('blur', function (d) {
-                    obj.submit(d.key, this.value)
-                });
-            props.append("br");
+        let has_custom_view = d.model.has_property_view;
+        if (has_custom_view) {
+            await this.set_custom_view(d, prop_data);
         } else {
-            let content = this.popup_content;
-            content.html('<iframe src="/view" width="100%" height="400px"></iframe>')
-            //this.content =  prop_view;
+            await this.set_default_view(d, prop_data, has_custom_view);
         }
         this.show();
+    }
+    async set_custom_view(d, prop_data){
+        let obj = this;
+        let src = '/model_view?MU_id='+d.id+'&view=properties';
+
+        this.buttons.append('a')
+            .text('default view')
+            .on('click', function () {
+                obj.clear();
+                obj.set_default_view(d, prop_data, true);
+            });
+
+        this.header.append('h2').text(function () {
+            return d.name + ": Properties custom view"
+        });
+        this.buttons.append("img")
+            .attr("src","static/images/icons/open.png")
+            .style("width", "15px")
+            .style("height", "15px")
+            .style("margin-left", "15px")
+            .on("click", function() { window.open(src); });
+        this.body.html('<iframe src="'+src+'" width="100%" height="100%" ></iframe>');
+        //this.content =  prop_view;
+    }
+
+    async set_default_view(d, prop_data, has_custom_view){
+        let obj = this;
+        this.header.append("h2").text(function () {
+            return d.name + ": Properties"
+        });
+
+        if (has_custom_view){
+            this.buttons.append('div')
+                .html('<a>custom view</a>')
+                .on('click', function () {
+                    obj.clear();
+                    obj.set_custom_view(d, prop_data);
+                });
+        }
+
+        let form = this.body.selectAll(".propertiesForm").data([d]);
+        form = form.enter().append("g")
+            .classed("properties", true)
+            .attr("name","properties");
+
+        let props = form.selectAll(".property").data(function (d) {return d3.entries(d.model.info.properties)});
+        props = props.enter().append("g")
+            .classed("property", true);
+        props.append("span").html(function (d, i) {
+            let brake = (i===0 ? '' : '<br>');
+            return brake + d.value.name + ':<br>';
+        });
+        props.append("input")
+            .attr("id",function (d) {
+                return d.key;
+            })
+            .attr("name",function (d) {
+                return d.key;
+            })
+            .attr("type","text")
+            .attr("value",function (d) {
+                return prop_data[d.key]
+            })
+            .on("input", function(d) {
+                this.value = this.value.replace(/[^\d.-]/g, '');
+                obj.submit(d.key, this.value);
+            })
+            .on('keyup', function (d) {
+                if (d3.event.keyCode === 13) {
+                    obj.submit(d.key, this.value)
+                }
+            })
+            .on('blur', function (d) {
+                obj.submit(d.key, this.value)
+            });
+        props.append("br");
     }
 
     submit(key, value){

@@ -9,8 +9,6 @@ class Menu {
         this.menu.append("img")
             .attr("id", "btn_fullscreen")
             .attr("src","static/images/icons/arrows_out.png")
-            .attr("width", 30)
-            .attr("height", 30)
             .on("click", async function() {
                 let isfullscreen = obj.parent.classed("full-screen");
                 let arrow = isfullscreen ? "out" : "in";

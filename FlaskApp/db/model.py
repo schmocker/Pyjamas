@@ -23,6 +23,8 @@ class Model(db.Model):
         atrs = self.__class__.__table__.columns.keys()
         d = {atr: getattr(self, atr) for atr in atrs}
         d['info'] = json.loads(d['info'])
+        d['has_property_view'] = self.has_property_view
+        d['has_result_view'] = self.has_result_view
         return d
 
     @property
@@ -44,6 +46,16 @@ class Model(db.Model):
             return html
         else:
             return ''
+
+    @property
+    def has_property_view(self):
+        file = os.path.join("Models", self.topic, self.name, self.version, "view_properties", "index.html")
+        return os.path.isfile(file)
+
+    @property
+    def has_result_view(self):
+        file = os.path.join("Models", self.topic, self.name, self.version, "view_result", "index.html")
+        return os.path.isfile(file)
 
     @property
     def results_view(self):
@@ -94,3 +106,14 @@ class Model(db.Model):
             d[model.topic][model.name][model.version]['info'] = json.loads(model.info)
 
         return d
+
+    @classmethod
+    def get_path_folders(cls, id):
+        return cls.query.filter_by(id=id).first().path_folders
+
+    @property
+    def path_folders(self):
+        return {'topic': self.topic,
+                'model': self.name,
+                'version': self.version}
+

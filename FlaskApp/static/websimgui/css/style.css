@@ -149,7 +149,7 @@
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
-    padding-top: 100px; /* Location of the box */
+    padding-top: 5vw; /* Location of the box */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -161,21 +161,56 @@
 #wsg  .popup .frame {
     background-color: #fefefe;
     margin: auto;
-    padding: 20px;
+    padding: 10px;
     border: 1px solid #888;
-    width: 80%;
+    width: 90%;
+    height: 90%;
 }
 
-#wsg  .popup .close {
+#wsg  .popup #popup_content{
+    height: 100%;
+    width: 100%;
+    display: grid;
+    align-content: stretch;
+    justify-content: stretch;
+    grid-template-rows: 35px auto;
+    grid-template-columns: auto auto 20px;
+}
+
+
+
+#wsg .popup #popup_content>#popup_header{
+    align-self: center;
+    justify-self: start;
+}
+#wsg .popup #popup_content>#popup_buttons{
+    align-self: center;
+    justify-self: end;
+}
+#wsg .popup #popup_content>#popup_close{
+    align-self: center;
+    justify-self: end;
     color: #aaaaaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
+    margin-left: 15px;
 }
 
-#wsg  .popup .close:hover,
-#wsg  .popup .close:focus {
+#wsg .popup #popup_content>#popup_close:hover,
+#wsg .popup #popup_content>#popup_close:focus{
     color: #000;
     text-decoration: none;
     cursor: pointer;
+}
+
+
+#wsg .popup #popup_content>#popup_body{
+    grid-column: 1 / span 3;
+    align-self: stretch;
+    justify-self: stretch;
+}
+#wsg .popup #popup_content>#popup_body>iframe{
+    border: solid 1px #eee;
+    border-bottom: solid 1px #ccc;
 }

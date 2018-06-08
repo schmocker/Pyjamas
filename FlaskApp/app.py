@@ -1,7 +1,13 @@
 from flask import Flask
 from os import environ as env
-
+import jinja2
 app = Flask(__name__, instance_relative_config=True) # , template_folder="templates"
+
+app.jinja_loader = jinja2.ChoiceLoader([
+    app.jinja_loader,
+    jinja2.FileSystemLoader('Models'),
+])
+
 
 app.config.from_pyfile('config.cfg')
 print('\nConfigs were loaded from config file.')

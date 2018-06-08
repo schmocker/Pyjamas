@@ -1,5 +1,5 @@
 from .db import *
-from flask import render_template, request, send_from_directory
+from flask import render_template, request, send_from_directory, url_for
 from flask_security import current_user, login_required
 import json
 from flask import Markup
@@ -148,7 +148,21 @@ def websimgui_GET():
         return json.dumps(False)
 
 
-@app.route('/view')
-def test():
-    path = "../Models/Template_Topic/Template_Model/Template_Version/view_properties"
-    return send_from_directory(path, 'index.html')
+@app.route('/model_view')
+def model_view():
+    mu_id = request.args.get('MU_id')
+    view = request.args.get('view')
+
+    p = Model_used.get_path_folders(mu_id)
+    return render_template(f"{p['topic']}/{p['model']}/{p['version']}/view_{view}/index.html",
+                           MU_id=mu_id,
+                           view=view)
+
+@app.route('/model_view_static')
+def serve_model_view():
+    mu_id = request.args.get('MU_id')
+    view = request.args.get('view')
+    fn = request.args.get('fn')
+
+    p = Model_used.get_path_folders(mu_id)
+    return send_from_directory(f"../Models/{p['topic']}/{p['model']}/{p['version']}/view_{view}", fn)

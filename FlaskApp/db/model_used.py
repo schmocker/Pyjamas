@@ -100,3 +100,11 @@ class Model_used(db.Model):
         obj.height = height
         db.session.commit()
 
+    @classmethod
+    def get_path_folders(cls, id):
+        return cls.query.filter_by(id=id).first().path_folders
+
+    @property
+    def path_folders(self):
+        return self.model.path_folders
+
