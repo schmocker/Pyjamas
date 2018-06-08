@@ -1,20 +1,21 @@
-<div id="header" class="grid-item grid-container">
-    <div id="title" class="grid-item, grid-container">
-        <a id="title-logo" class="grid-item" href="/"><img src="/static/images/favicon.png"></a>
-        <a id="title-text" class="grid-item" href="/">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/header.css')}}">
+<div id="header">
+    <div id="title">
+        <a id="title-logo" href="/"><img src="/static/images/favicon.png"></a>
+        <a id="title-text" href="/">
             <h1>Pyjamas</h1>
         </a>
     </div>
-    <div id="menu" class="grid-item grid-container">
-        <a class="menu_item grid-item" href="/">Home</a>
+    <div id="menu">
+        <a class="menu_item" href="/">Home</a>
         {% if loggedin %}
-        <a class="menu_item grid-item" href="/agents">Agents</a>
+        <a class="menu_item" href="/agents">Agents</a>
         {% endif %}
-        <a class="menu_item grid-item" href="/doc">Documentation</a>
+        <a class="menu_item" href="/doc">Documentation</a>
         {% if loggedin %}
-        <a class="menu_item grid-item" href="/logout">Logout</a>
+        <a class="menu_item" href="/logout">Logout</a>
         {% else %}
-        <a class="menu_item grid-item" href="/login">Login</a>
+        <a class="menu_item" href="/login">Login</a>
         {% endif %}
     </div>
 </div>

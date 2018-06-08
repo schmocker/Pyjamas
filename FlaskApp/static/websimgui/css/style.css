@@ -3,15 +3,12 @@
 }
 
 
-
+/* wsg grid*/
 #wsg{
     display: grid;
-    width: 100%;
-    height: 100%;
-    grid-template-columns: 100%;
-    grid-template-rows: minmax(500px,1fr) 60px;
-
-    background-color: darkturquoise;
+    align-content: stretch;
+    grid-template-columns: 1fr;
+    grid-template-rows: 400px 40px auto;
 }
 #wsg.full-screen{
     position: absolute;
@@ -19,19 +16,38 @@
     left: 0;
     width: 100%;
     height: 100%;
+    grid-template-rows: auto 40px 0;
 }
-#wsg_drawing{
+#wsg #wsg_drawing{
     grid-row: 1;
     position: relative;
     width: 100%;
-    height: 100%;
+    align-self: stretch;
 
     background-color: cadetblue;
     border-style: solid;
-    border-color: grey;
+    border-color: black;
     border-width: 1px;
 }
 
+#wsg #wsg_menu{
+    grid-row: 2;
+    margin: 5px;
+}
+#wsg #wsg_menu img{
+    max-height: 100%;
+    margin-left: 5px;
+}
+
+#wsg #view{
+    grid-row: 3;
+    background-color: #4677f8;
+}
+
+
+
+/******* drawing ********/
+/* models */
 #wsg .main>.model{
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -39,7 +55,7 @@
 #wsg .box{
     fill: rgba(128,128,128,1);
     stroke: gray;
-    stroke-width: 3;
+    stroke-width: 3px;
     cursor: move;
 }
 
@@ -53,11 +69,6 @@
     stroke: var(--hover-color);
 }
 
-
-
-
-
-
 #wsg .main>.model>.sizer{
     fill: black;
     cursor: nw-resize;
@@ -68,14 +79,12 @@
 #wsg .main>.model>.sizer:hover{
     fill: var(--hover-color);
 }
+
+/* ports */
 #wsg .port_name{
     font-size: x-small;
     cursor: move;
 }
-#wsg .port_name:hover ~ .box{
-    fill: red;
-}
-
 
 #wsg .main>.model .port>.arrow{
     cursor: crosshair;
@@ -92,21 +101,20 @@
 #wsg .main>.model .port_selectable:hover{
     fill: var(--hover-color);
 }
-#wsg .main>.connection>.line{
+
+/* connections */
+#wsg .connection .line{
     stroke: black;
-    stroke-width: 2;
+    stroke-width: 2px;
 }
-#wsg .main>.connection>.line_hover{
+#wsg .connection .line_hover{
     stroke: var(--hover-color);
-    stroke-width: 4;
+    stroke-width: 4px;
 }
 
 
 
-
-
-
-
+/* context menu */
 #wsg #context-menu {
 	position: absolute;
 	display: none;
@@ -136,8 +144,8 @@
 
 
 
-/* The Modal (background) */
-.popup {
+/* Popups */
+#wsg  .popup {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
@@ -150,9 +158,7 @@
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
-
-/* Modal Content */
-.popup .frame {
+#wsg  .popup .frame {
     background-color: #fefefe;
     margin: auto;
     padding: 20px;
@@ -160,16 +166,15 @@
     width: 80%;
 }
 
-/* The Close Button */
-.popup .close {
+#wsg  .popup .close {
     color: #aaaaaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
 }
 
-.popup .close:hover,
-.popup .close:focus {
+#wsg  .popup .close:hover,
+#wsg  .popup .close:focus {
     color: #000;
     text-decoration: none;
     cursor: pointer;

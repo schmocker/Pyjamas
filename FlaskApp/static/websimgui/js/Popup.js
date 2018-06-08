@@ -110,7 +110,9 @@ class Popup_model_properties_view extends Popup{
                 });
             props.append("br");
         } else {
-            this.content =  prop_view;
+            let content = this.popup_content;
+            content.html('<iframe src="/view" width="100%" height="400px"></iframe>')
+            //this.content =  prop_view;
         }
         this.show();
     }

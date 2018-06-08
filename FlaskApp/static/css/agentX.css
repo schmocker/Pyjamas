@@ -1,0 +1,13 @@
+#content{
+    display: grid;
+    align-content: stretch;
+    grid-template-rows: 50px auto;
+}
+
+#content #title{
+    margin: 10px;
+}
+
+#content #wsg{
+    align-self: stretch;
+}

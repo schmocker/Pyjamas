@@ -1,5 +1,5 @@
 from .db import *
-from flask import render_template, request
+from flask import render_template, request, send_from_directory
 from flask_security import current_user, login_required
 import json
 from flask import Markup
@@ -148,12 +148,7 @@ def websimgui_GET():
         return json.dumps(False)
 
 
-@app.route('/test')
+@app.route('/view')
 def test():
-    tf = app.template_folder
-    path = os.path.abspath("Models")
-    print(os.path.exists(path))
-    app.template_folder = path
-    r = render_template("Template_Topic/Template_Model/Template_Version/view_properties/index.html")
-
-    return r
+    path = "../Models/Template_Topic/Template_Model/Template_Version/view_properties"
+    return send_from_directory(path, 'index.html')

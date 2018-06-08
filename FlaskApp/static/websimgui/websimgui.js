@@ -35,6 +35,8 @@ window.onload = async function() {
 
 
 
+    d3.select("#wsg").append('div')
+        .attr('id', 'view');
 
     // Extras
     popup_addModel =                new Popup_addModel(d3.select("#wsg"));
