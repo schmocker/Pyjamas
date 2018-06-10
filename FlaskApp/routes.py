@@ -86,7 +86,7 @@ def websimgui_GET():
                 return json.dumps(Model.get_all())
 
             elif fnc == 'get_model_readme':
-                return Model_used.get_readme(data['model'])
+                return Model_used.get_readme(data['mu_id'])
 
             elif fnc == 'get_model_properties_view':
                 return Model_used.get_properties_view(data['model'])
@@ -100,10 +100,8 @@ def websimgui_GET():
         elif request.method == 'POST':
             data = json.loads(request.form['data'])
 
-            db_agent = Agent.query.filter_by(id=data['agent']).first()
-
-            if db_agent == None:
-                return json.dumps(False)
+            if 'agent' in data.keys():
+                db_agent = Agent.query.filter_by(id=data['agent']).first()
 
             if request.form['fnc'] == 'set_model_pos':
                 Model_used.set_position(data['model'], data['x'], data['y'])
@@ -140,7 +138,10 @@ def websimgui_GET():
                 print("updateing...")
                 Model.update_all()
 
-            return json.dumps(db_agent.dict)
+            if 'agent' in data.keys():
+                return json.dumps(db_agent.dict)
+            else:
+                return json.dumps(True)
 
     except Exception as e:
         print(e)

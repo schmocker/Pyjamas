@@ -175,6 +175,7 @@
     justify-content: stretch;
     grid-template-rows: 35px auto;
     grid-template-columns: auto auto 20px;
+    grid-column-gap: 10px;
 }
 
 
@@ -189,14 +190,11 @@
 }
 #wsg .popup #popup_content>#popup_close{
     align-self: center;
-    justify-self: end;
-    color: #aaaaaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    margin-left: 15px;
+    justify-self: right;
 }
 
+#wsg .popup #popup_content>#popup_buttons>img:hover,
+#wsg .popup #popup_content>#popup_buttons>a:hover,
 #wsg .popup #popup_content>#popup_close:hover,
 #wsg .popup #popup_content>#popup_close:focus{
     color: #000;
@@ -209,8 +207,9 @@
     grid-column: 1 / span 3;
     align-self: stretch;
     justify-self: stretch;
+    border-top: solid 1.5px #ccc;
+    padding-top: 5px;
 }
 #wsg .popup #popup_content>#popup_body>iframe{
     border: solid 1px #eee;
-    border-bottom: solid 1px #ccc;
 }

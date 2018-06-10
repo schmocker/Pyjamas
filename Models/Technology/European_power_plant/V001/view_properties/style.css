@@ -9,6 +9,21 @@ html {
     align-content: stretch;
     justify-content: stretch;
     grid-template-rows: 80% auto;
+    grid-template-columns: auto 200px;
+}
+
+#settings{
+    margin: 5%;
+}
+#btn_add_pp{
+    width: 30px;
+}
+.input{
+    width: 90%;
+}
+.input#lon,
+.input#lat{
+    text-align: right;
 }
 
 svg {
@@ -23,6 +38,7 @@ svg {
 
 .item{
     stroke: white;
+    stroke-width: 1px;
     fill: rgba(255,255,255,0.05);
 }
 

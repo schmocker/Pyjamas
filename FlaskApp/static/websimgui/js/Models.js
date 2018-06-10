@@ -7,7 +7,7 @@ class Models {
             {title: "Properties",
                 action: async function(elm, d, i) { await popup_model_properties_view.up(d); }},
             {title: "Results",
-                action: async function(elm, d, i) { await popup_model_results_view.up(d.id); }},
+                action: async function(elm, d, i) { await popup_model_results_view.up(d); }},
             {title: "Remove",
                 action: async function(elm, d, i) {await obj.remove(elm, d, i)}}];
 

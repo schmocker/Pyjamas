@@ -24,16 +24,15 @@ class Popup {
 
         this.popup_content.append('div')
             .attr("id", "popup_close")
-            .html('&#215;')
+            .append("img")
+            .attr("src","static/images/icons/close.png")
+            .style("width", "15px")
+            .style("height", "15px")
             .on("click",function(){ obj.hide() });
 
         this.body = this.popup_content.append('div')
             .attr("id", "popup_body");
 
-    }
-
-    set content(content){
-        this.popup_content.html(content);
     }
 
     show(){
@@ -62,13 +61,11 @@ class Popup_model_docu extends Popup{
         super(parent, "model_docu");
     }
 
-    async up(d){
-        this.header.append('h2').text(function () {
-            return d.name + ": Documentation"
-        });
-        this.body.html(await async function () {
-            return await get('get_model_readme',{'model': d.id})
-        });
+    async up(mu){
+        let html = await get('get_model_readme',{'mu_id': mu.id});
+
+        this.header.append('h2').text( mu.name + ": Documentation" );
+        await this.body.html( html );
         this.show()
     }
 }
@@ -110,7 +107,6 @@ class Popup_model_properties_view extends Popup{
             .style("margin-left", "15px")
             .on("click", function() { window.open(src); });
         this.body.html('<iframe src="'+src+'" width="100%" height="100%" ></iframe>');
-        //this.content =  prop_view;
     }
 
     async set_default_view(d, prop_data, has_custom_view){
@@ -120,8 +116,8 @@ class Popup_model_properties_view extends Popup{
         });
 
         if (has_custom_view){
-            this.buttons.append('div')
-                .html('<a>custom view</a>')
+            this.buttons.append('a')
+                .text('custom view')
                 .on('click', function () {
                     obj.clear();
                     obj.set_custom_view(d, prop_data);
@@ -177,10 +173,31 @@ class Popup_model_results_view extends Popup{
         super(parent, "model_view");
     }
 
-    async up(model_id){
-        let results_html = await get('get_model_results_view',{'model': model_id});
+    async up(mu){
 
-        this.content =  results_html;
+        this.header.append('h2').text(function () {
+            return mu.name + ": Results"
+        });
+
+
+        let has_result_view = mu.model.has_result_view;
+        if (has_result_view) {
+            let src = '/model_view?MU_id='+mu.id+'&view=result';
+            this.buttons.append("img")
+                .attr("src","static/images/icons/open.png")
+                .style("width", "15px")
+                .style("height", "15px")
+                .style("margin-left", "15px")
+                .on("click", function() { window.open(src); });
+
+            this.body.html('<iframe src="'+src+'" width="100%" height="100%" ></iframe>');
+        } else {
+            this.body.html('no result view available');
+        }
+
+
+
+
         this.show()
     }
 }
@@ -189,7 +206,10 @@ class Popup_model_results_view extends Popup{
 class Popup_addModel extends Popup{
     constructor(parent) {
         super(parent, "add_model");
-        let obj = this.popup_content;
+
+        this.header.append("h2").text("Add Model");
+
+        let obj = this.body;
         obj = obj.append("from").attr("name","addBoxForm");
         obj.append("span").html('Model Name:<br>');
         obj.append("input")
