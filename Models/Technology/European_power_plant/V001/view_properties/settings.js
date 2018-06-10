@@ -23,7 +23,12 @@ class Settings {
             .attr("id",'name')
             .classed("input", true)
             .attr("name",'name')
-            .attr("type","text");
+            .attr("type","text")
+            .on('blur', async function (d) {
+                obj.PP.name = this.value;
+                await powerplants.sendPP();
+                await obj.update();
+            });
         this.body.append("br");
 
 
