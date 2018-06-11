@@ -110,7 +110,6 @@ def websimgui_GET():
                 Model_used.set_size(data['model'], data['width'], data['height'])
 
             elif request.form['fnc'] == 'set_model_property':
-                db_agent.set_property(data['agent'], data['model'], data['property'], data['value'])
                 Model_used.set_property(data['model'], data['property'], data['value'])
 
             elif request.form['fnc'] == 'add_connection':
