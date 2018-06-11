@@ -242,7 +242,7 @@ class Agent():
                 model_id = msg["model"]
                 property_name = msg["text"]["property_name"]
                 property_value = msg["text"]["property_value"]
-                self.models[model_id].set_property(property_name, property_value)
+                self.set_property(model_id, property_name, property_value)
             elif order == "give":
                 # TODO: implement (maybe not needed)
                 # return data

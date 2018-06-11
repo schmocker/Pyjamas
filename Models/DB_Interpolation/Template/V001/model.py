@@ -29,7 +29,7 @@ class Model(Supermodel):
         self.outputs['f_rot'] = Output({'name': 'rotor frequency'})
 
         # define properties
-        self.properties['h_hub'] = Property(10, {'name': 'hub height'})
+        self.properties['h_hub'] = Property(10,float, {'name': 'hub height'})
 
 
         # define persistent variables

@@ -1,4 +1,5 @@
 from .db_main import db, controller
+import json
 
 class Agent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -40,6 +41,9 @@ class Agent(db.Model):
         self.active = False
         db.session.commit()
 
+    def set_property(self, agent_id, model_id, key, value):
+        controller.set_property(agent_id, model_id, key, value)
+
     def add_full_agent(self):
 
         agent_id = self.id
@@ -56,6 +60,11 @@ class Agent(db.Model):
             model_name = model['name']
 
             controller.add_model(agent_id, model_path, model_id, model_name)
+
+            if model['properties']:
+                props = json.loads(model['properties'])
+                for property_name, property_value in props.items():
+                    controller.set_property(agent_id, model_id, property_name, property_value)
 
         for conn in self.dict['connection']:
             output_model_id = conn['fk_model_used_from']

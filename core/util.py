@@ -43,23 +43,32 @@ class Output(Port):
 
 class Property(Port):
 
-    def __init__(self, initial_value, info: dict):
+    def __init__(self, initial_value, property_type, info: dict):
         super(Property, self).__init__(info)
-        self.set_property(initial_value)
+        self.property_type = property_type
         self.amend_value = None
+
+        self.set_property(initial_value)
 
     def get_property(self):
         return self.items['value']
 
     def set_property(self, property_value):
-        self.items['value'] = property_value
+        if type(property_value) != self.property_type:
+            try:
+                property_value = self.property_type(property_value)
+                self.items['value'] = property_value
+            except ValueError:
+                raise
+        else:
+            self.items['value'] = property_value
 
     def set_amend_property(self, property_value):
         self.amend_value = property_value
 
     def amend(self):
         if self.amend_value:
-            self.items['value'] = self.amend_value
+            self.set_property(self.amend_value)
             self.amend_value = None
 
 class CreateDirFileHandler(logging.FileHandler):
