@@ -73,6 +73,7 @@ class Model_used(db.Model):
     @classmethod
     def set_property(cls, id, key, value):
         obj = cls.query.filter_by(id=id).first()
+        obj.agent.set_property(obj.id, key, value)
         if obj.properties is None:
             props = dict()
         else:
