@@ -1,11 +1,13 @@
+# imports for core
 from core import Supermodel
 from core.util import Input, Output, Property
 
-# used for db querys
+# imports for db querys
 from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
     Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, db_url
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
+
 import datetime, random
 
 # used for interpolating
@@ -13,7 +15,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 from scipy.interpolate import griddata
-
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -23,16 +24,14 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['t'] = Input({'name': 'time'})
-        self.inputs['lat'] = Input({'name': 'latitude'})
-        self.inputs['lon'] = Input({'name': 'longitude'})
+        self.inputs['t'] = Input({'name': 'Time'})
 
+        # TODO how to comunicate with KWP?
         # define outputs
         self.outputs['kw_park'] = Output({'name': 'Kraftwerkspark'})
 
         # define properties
-        self.properties['h_hub'] = Property(10, {'name': 'hub height'})
-        self.properties['d'] = Property(10, {'name': 'diameter'})
+        self.properties['prop1'] = Property(10, {'name': 'property1'})
 
         # define persistent variables
         self.pers_variable_0 = 5
@@ -40,22 +39,24 @@ class Model(Supermodel):
         self.session = None
 
     async def func_birth(self):
-
-        if __name__ == "__main__":
-            engine = create_engine(db_url)
-            Base.metadata.bind = engine
-            DBSession = sessionmaker(bind=engine)
-            session = DBSession()
+        # create DBsession
+        engine = create_engine(db_url)
+        Base.metadata.bind = engine
+        DBSession = sessionmaker(bind=engine)
+        self.session = DBSession()
 
 
     async def func_prep(self):
-        # calculate something
-        prep_result = 3 * 5
-        # pass values to peri function
-        return prep_result
+
+        pass
+        # # calculate something
+        # prep_result = 3 * 5
+        # # pass values to peri function
+        # return prep_result
 
     async def func_peri(self, prep_to_peri=None):
         prep_result = prep_to_peri
+
         # get inputs
         in1 = await self.get_input('t')
 
@@ -209,7 +210,7 @@ class Model(Supermodel):
 
     # define additional methods (async)
     async def extremely_complex_calculation(self, speed, time):
-        distance = speed * time / self.get_property("h_hub")
+        distance = speed * time / self.get_property("prop1")
         return distance
 
 
