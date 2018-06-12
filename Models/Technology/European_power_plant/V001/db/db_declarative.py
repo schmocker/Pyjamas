@@ -57,6 +57,8 @@ class Kraftwerk(Base):
     kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp],
                             backref=backref("kraftwerke",cascade="all, delete-orphan", lazy=True))
 
+    
+
 class Verguetung(Base):
     __tablename__ = 'verguetung'
     # declare columns
