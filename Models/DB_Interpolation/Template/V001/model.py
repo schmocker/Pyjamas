@@ -3,7 +3,7 @@ from core.util import Input, Output, Property
 
 # used for db querys
 from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
-    Brennstoffpreis, Verguetung, Entsorgungspreis, db_url
+    Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, db_url
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 import datetime, random
@@ -37,6 +37,8 @@ class Model(Supermodel):
         # define persistent variables
         self.pers_variable_0 = 5
 
+        self.session = None
+
     async def func_birth(self):
 
         if __name__ == "__main__":
@@ -45,7 +47,6 @@ class Model(Supermodel):
             DBSession = sessionmaker(bind=engine)
             session = DBSession()
 
-        return session
 
     async def func_prep(self):
         # calculate something
@@ -53,18 +54,17 @@ class Model(Supermodel):
         # pass values to peri function
         return prep_result
 
-    async def func_peri(self, session, prep_to_peri=None):
+    async def func_peri(self, prep_to_peri=None):
         prep_result = prep_to_peri
         # get inputs
         in1 = await self.get_input('t')
-        in2 = await self.get_input('lat')
-        in3 = await self.get_input('lon')
 
-        t = session.query(Kraftwerk).first()
-        lat = session.query(Kraftwerk).all()
+        db_kw_t = self.session.query(Kraftwerk).all()
+        lat = self.session.query(Kraftwerk).all()
 
         # TODO Zeit muss noch skaliert werden, zB in Sekunden absolut(?).
         # TODO Sonst ist Interpolation über Mitternacht nicht möglich.
+
 
         break1 = 0
 
@@ -95,7 +95,7 @@ class Model(Supermodel):
     def interpol(self, t, lat, lon):
         rand_data = True
         rand_test = True
-        plot_date = True
+        plot_data = True
         """
         INPUTS:
             lat: Latitude [decimal degrees, (45,3452)]; ndarray, nx1, float
