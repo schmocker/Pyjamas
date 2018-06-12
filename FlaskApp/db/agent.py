@@ -41,8 +41,8 @@ class Agent(db.Model):
         self.active = False
         db.session.commit()
 
-    def set_property(self, agent_id, model_id, key, value):
-        controller.set_property(agent_id, model_id, key, value)
+    def set_property(self, mu_id, key, value):
+        controller.set_property(self.id, mu_id, key, value)
 
     def add_full_agent(self):
 
