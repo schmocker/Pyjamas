@@ -51,7 +51,7 @@ class Model(Supermodel):
         NN_input = prep_date()
 
         # calculations
-        demand = func_NeuralNetwork(NN_input)
+        demand_GW = func_NeuralNetwork(NN_input)
 
         # set output
-        self.set_output("p_dem", demand)
+        self.set_output("p_dem", demand_GW)

@@ -13,3 +13,4 @@ pygments
 numpy
 scipy
 matplotlib
+pytz

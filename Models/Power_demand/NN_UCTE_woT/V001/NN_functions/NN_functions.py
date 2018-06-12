@@ -1,4 +1,3 @@
-import json
 import numpy as np
 
 def func_NeuralNetwork(self, data, model_para):
