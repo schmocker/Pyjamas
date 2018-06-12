@@ -35,19 +35,16 @@ class Model(Supermodel):
 
             # TODO: change wait time to be relative to start time to remove cumulative error
 
-            if self.get_property('prep_lead') != 0:
-                self.log_debug("opening prep gate")
-                self.agent.prep_gate.set()
+            self.log_debug("opening prep gate")
+            self.agent.prep_gate.set()
 
             await asyncio.sleep(self.get_property('prep_lead'))
-            if self.get_property('peri_interval') != 0:
-                self.log_debug("opening peri gate")
-                self.agent.peri_gate.set()
+            self.log_debug("opening peri gate")
+            self.agent.peri_gate.set()
 
             await asyncio.sleep(self.get_property('post_delay'))
-            if self.get_property('post_delay') != 0:
-                self.log_debug("opening post gate")
-                self.agent.post_gate.set()
+            self.log_debug("opening post gate")
+            self.agent.post_gate.set()
             
             sleeptime = self.get_property('peri_interval') - self.get_property('prep_lead') - self.get_property('post_delay')
             await asyncio.sleep(sleeptime)
