@@ -1,5 +1,5 @@
 from core import Supermodel
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp,Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis, db_url
+from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp,Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis, db_url, Co2Preis
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 import datetime, random
