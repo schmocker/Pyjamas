@@ -25,6 +25,8 @@ class Controller():
 
         self.create_logger(logging_path, DEBUG)
 
+#region logging
+
     def create_logger(self, logging_path, DEBUG):
         if logging_path:
             self.logger = logging.getLogger(__name__)
@@ -52,6 +54,10 @@ class Controller():
     def log_warning(self, msg):
         if self.logger:
             self.logger.warning(f"[CONTROLLER][{__name__}] : {msg}")
+
+#endregion logging
+
+#region agend
 
     def add_agent(self, agent_id, agent_name: str):
         self.log_debug('starting add_agent')
@@ -105,6 +111,10 @@ class Controller():
             return self.agents[agent_id].get_info()
         return None
     
+#endregion agent
+
+#region model
+
     def add_model(self, agent_id, model_path: str, model_id, model_name: str):
         self.log_debug('starting add_model')
         if self.is_existing_agent(agent_id):
@@ -175,6 +185,10 @@ class Controller():
                 else:
                     self.log_warning(f'property {property_name} of model {model_id} in agent {agent_id} could not be set')
         return False
+
+#endregion model
+
+#region simulation
 
     def start_agent(self, agent_id):
         self.log_debug('starting start_agent')
@@ -254,6 +268,10 @@ class Controller():
             self.log_warning(f'no result data found for model {model_id} in agent {agent_id}')
             return None
 
+#endregion simulation
+
+#region util
+
     def is_existing_agent(self, agent_id):
         if agent_id in self.agents:
             return True
@@ -275,6 +293,10 @@ class Controller():
 
     def get_agents(self):
         return list(self.agents.keys())
+
+#endregion util
+
+#region messaging
 
     # queue reader
 
@@ -373,3 +395,5 @@ class Controller():
         except KeyError:
             self.log_warning(f'no queue found for agent_id {agent_id}')
         return False
+
+#endregion messaging

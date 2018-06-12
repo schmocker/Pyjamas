@@ -5,9 +5,9 @@ from core.util import Input, Output, Property
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
     # model constructor
-    def __init__(self, id, name: str):
+    def __init__(self, model_id, name: str):
         # instantiate supermodel
-        super(Model, self).__init__(id, name)
+        super(Model, self).__init__(model_id, name)
 
         # define inputs
         self.inputs['v'] = Input({'name': 'wind speed'})
