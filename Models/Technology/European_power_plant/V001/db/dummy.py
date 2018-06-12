@@ -80,7 +80,8 @@ if __name__ == "__main__":
                        fk_kraftwerkstyp=kwt.id,
                        long=random.random()*200,
                        lat=random.random()*150,
-                       power_inst=random.random()*1500)
+                       power_inst=random.random()*1500,
+                       datetime=datetime.datetime.now())
         session.add(kw)
         try:
             session.commit()

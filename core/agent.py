@@ -24,6 +24,8 @@ class Agent():
         self.logging_path = logging_path
         self.DEBUG = DEBUG
 
+#region logging
+
     def create_logger(self, logging_path, DEBUG):
         if logging_path:
             self.logger = logging.getLogger(__name__)
@@ -52,6 +54,10 @@ class Agent():
     def log_warning(self, msg):
         if self.logger:
             self.logger.warning(f"[AGENT][{__name__}][{self.name}] : {msg}")
+
+#endregion logging
+
+#region simulation
 
     def run(self):
 
@@ -96,15 +102,6 @@ class Agent():
         self.send_dead_order()
         self.log_debug("sent dead order")
 
-    def get_info(self):
-        info = {}
-        info['id'] = self.id
-        info['name'] = self.name
-        info['models'] = {}
-        for key, mod in self.models.items():
-            info['models'][mod.id] = mod.get_info()
-        return info
-
     def prepare_models(self):
         # execute func_birth for all models
         self.log_debug("started preparing models")
@@ -134,6 +131,31 @@ class Agent():
 
         self.running = False
 
+    async def syncFirst(self):
+        # first sync gate ensures that all models have finished post
+        self.sync_counter_first = self.sync_counter_first + 1
+        self.log_debug(f"first sync gate counter: {self.sync_counter_first}/{len(self.models)}")
+        if self.sync_counter_first >= len(self.models):
+            self.sync_gate_second.clear()
+            self.sync_gate_first.set()
+            self.sync_counter_first = 0
+            self.log_debug("first sync gate opened")
+
+    async def syncSecond(self):
+        # second sync gate ensures that all models have finished func_in_sync and cleared their outputs
+        self.sync_counter_second = self.sync_counter_second + 1
+        self.log_debug(f"second sync gate counter: {self.sync_counter_second}/{len(self.models)}")
+        if self.sync_counter_second >= len(self.models):
+            await self.pause_gate.wait()
+            self.sync_gate_first.clear()
+            self.sync_gate_second.set()
+            self.sync_counter_second = 0
+            self.log_debug("second sync gate opened")
+
+#endregion simulation
+
+#region controlling
+
     def add_model(self, model_to_add):
         try:
             self.models[model_to_add.id] = model_to_add
@@ -153,7 +175,6 @@ class Agent():
             return True
         except KeyError:
             return False
-
 
     def link_models(self, output_model_id, output_name, input_model_id, input_name):
         try:
@@ -178,7 +199,6 @@ class Agent():
         except KeyError:
             return False
 
-
     def set_property(self, model_id, property_name, property_value):
         try:
             if self.running:
@@ -189,27 +209,18 @@ class Agent():
         except KeyError:
             return False
 
-    async def syncFirst(self):
-        # first sync gate ensures that all models have finished post
-        self.sync_counter_first = self.sync_counter_first + 1
-        self.log_debug(f"first sync gate counter: {self.sync_counter_first}/{len(self.models)}")
-        if self.sync_counter_first >= len(self.models):
-            self.sync_gate_second.clear()
-            self.sync_gate_first.set()
-            self.sync_counter_first = 0
-            self.log_debug("first sync gate opened")
+    def get_info(self):
+        info = {}
+        info['id'] = self.id
+        info['name'] = self.name
+        info['models'] = {}
+        for key, mod in self.models.items():
+            info['models'][mod.id] = mod.get_info()
+        return info
 
-    async def syncSecond(self):
-        # second sync gate ensures that all models have finished func_in_sync and cleared their outputs
-        self.sync_counter_second = self.sync_counter_second + 1
-        self.log_debug(f"second sync gate counter: {self.sync_counter_second}/{len(self.models)}")
-        if self.sync_counter_second >= len(self.models):
-            await self.pause_gate.wait()
-            self.sync_gate_first.clear()
-            self.sync_gate_second.set()
-            self.sync_counter_second = 0
-            self.log_debug("second sync gate opened")
+#endregion controlling
 
+#region messaging
 
     # reading queue and handling messages
         
@@ -286,3 +297,5 @@ class Agent():
         order['model'] = model_id
         order['text'] = data
         self.controller_queue.put(order)
+
+#endregion messaging

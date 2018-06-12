@@ -42,15 +42,6 @@ class Supermodel:
 
 #endregion logging
 
-    def get_info(self):
-        info = {}
-        info['id'] = self.id
-        info['name'] = self.name
-        info['inputs'] = {key: inp.get_port_info() for key,inp in self.inputs.items()}
-        info['outputs'] = {key: out.get_port_info() for key,out in self.outputs.items()}
-        info['properties'] = {key: prop.get_port_info() for key,prop in self.properties.items()}
-        return info
-
 #region input
 
     def link_input(self, output_model, output_name: str, input_name: str):
@@ -132,6 +123,15 @@ class Supermodel:
         self.log_debug("finished amend")
 
 #endregion property
+
+    def get_info(self):
+        info = {}
+        info['id'] = self.id
+        info['name'] = self.name
+        info['inputs'] = {key: inp.get_port_info() for key,inp in self.inputs.items()}
+        info['outputs'] = {key: out.get_port_info() for key,out in self.outputs.items()}
+        info['properties'] = {key: prop.get_port_info() for key,prop in self.properties.items()}
+        return info
 
 #region simulation loop
 
