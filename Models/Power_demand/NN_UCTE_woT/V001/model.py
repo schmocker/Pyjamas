@@ -24,7 +24,7 @@ class Model(Supermodel):
         self.outputs['p_dem'] = Output({'name': 'power demand'})
 
         # define properties
-        self.properties['offset'] = Property(10, {'name': 'demand offset'})
+        self.properties['offset'] = Property(10,float, {'name': 'demand offset'})
 
         # define persistent variables
         self.model_pars = None

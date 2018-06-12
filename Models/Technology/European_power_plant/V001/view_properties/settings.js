@@ -75,9 +75,7 @@ class Settings {
             .classed("button", true)
             .text("delete item")
             .on('click', async function (d) {
-                if (this.index > -1) {
-                    await this.PP.delete_active();
-                }
+                await obj.PP.delete_active();
             });
 
         await this.update();

@@ -11,7 +11,7 @@ class Model(Supermodel):
         super(Model,self).__init__(uuid,name)
         self.outputs['const'] = Output({'name': 'Number', 'unit': 'int', 'dimensions': []})
         
-        self.properties['number'] = Property(0, {'name': 'Number', 'unit': 'int', 'dimensions': []})
+        self.properties['number'] = Property(0,float, {'name': 'Number', 'unit': 'int', 'dimensions': []})
 
 
     async def func_peri(self, prep_to_peri=None):

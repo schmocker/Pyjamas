@@ -15,7 +15,7 @@ class Model(Supermodel):
 
         self.outputs['output'] = Output({'name': 'Output', 'unit': '', 'dimensions': []})
 
-        self.properties['sleep_amount'] = Property(1, {'name': 'Sleep Amount', 'unit': 's', 'dimensions': []})
+        self.properties['sleep_amount'] = Property(1,float, {'name': 'Sleep Amount', 'unit': 's', 'dimensions': []})
 
     async def func_peri(self, prep_to_peri=None):
         inp = await self.get_input("input")

@@ -111,7 +111,9 @@ class Supermodel:
             self.properties[property_name].set_property(property_value)
             self.log_debug(f"set value for property {property_name}")
         except KeyError:
-            self.log_warning(f'could not change property for property_name {property_name}')
+            self.log_warning(f'could not change property for property_name {property_name} : property_name not found')
+        except ValueError:
+            self.log_warning(f'could not change property for property_name {property_name} : property_type does not fit')
 
     def set_amend_property(self, property_name: str, property_value):
         try:
@@ -122,7 +124,10 @@ class Supermodel:
 
     async def _amend(self):
         for key in self.properties:
-            self.properties[key].amend
+            try:
+                self.properties[key].amend()
+            except ValueError:
+                self.log_warning(f'could not amend property for property_name {key} : property_type does not fit')
 
         self.log_debug("finished amend")
 
