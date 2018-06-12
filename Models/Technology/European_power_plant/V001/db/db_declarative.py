@@ -52,6 +52,7 @@ class Kraftwerk(Base):
     long = Column(Float, nullable=False)
     lat = Column(Float, nullable=False)
     power_inst = Column(Float, nullable=False)
+    datetime = Column(DateTime, nullable=False)
     spez_info = Column(Text)
     # declare relations
     kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp],

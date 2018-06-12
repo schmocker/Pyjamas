@@ -66,6 +66,7 @@ class Model(Supermodel):
         # TODO Zeit muss noch skaliert werden, zB in Sekunden absolut(?).
         # TODO Sonst ist Interpolation über Mitternacht nicht möglich.
 
+        break1 = 0
 
         # calculate something
         # One can declare custom functions (eg: see end of file)
