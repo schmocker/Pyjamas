@@ -252,7 +252,7 @@ class Supermodel:
         pass
     async def func_death(self):
         pass
-    async def func_amend(self, keys=[]):¨
+    async def func_amend(self, keys=[]):
         pass
 
 #endregion abstract methods
