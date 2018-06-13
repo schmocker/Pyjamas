@@ -45,8 +45,15 @@ class Menu {
             .attr("id", "btn_update")
             .attr("src","static/images/icons/update.png")
             .on("click", async function() {
+                let shadow = d3.select("#wsg_drawing").append("rect")
+                    .attr("id", "shadow")
+                    .style("width", "100%")
+                    .style("height", "100%")
+                    .style("fill", "white")
+                    .style("opacity", 0.5);
                 await post("update", {},true);
                 obj.update();
+                shadow.remove();
             });
 
        this.menu.append("img")

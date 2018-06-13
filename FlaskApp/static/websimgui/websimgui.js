@@ -10,6 +10,7 @@ let popup_model_docu;
 let contextMenu;
 let popup_model_properties_view;
 let popup_model_results_view;
+let view;
 
 window.onload = async function() {
     await get_data();
@@ -35,8 +36,7 @@ window.onload = async function() {
 
 
 
-    d3.select("#wsg").append('div')
-        .attr('id', 'view');
+    view = new View(d3.select("#wsg"));
 
     // Extras
     popup_addModel =                new Popup_addModel(d3.select("#wsg"));

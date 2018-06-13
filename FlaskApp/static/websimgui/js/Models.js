@@ -9,7 +9,7 @@ class Models {
             {title: "Results",
                 action: async function(elm, d, i) { await popup_model_results_view.up(d); }},
             {title: "Remove",
-                action: async function(elm, d, i) {await obj.remove(elm, d, i)}}];
+                action: async function(elm, d, i) {await obj.remove(d)}}];
 
         this.sizer = {};
         this.sizer.size = 10;
@@ -54,11 +54,12 @@ class Models {
         models = models.enter().append("g")
             .classed("model", true)
             .attr("id", function (d) {
-                return d.id_html;
+                return "mu_"+d.id;
             })
             .on("contextmenu", contextMenu.onContextMenu(obj.menu));
         models.append("rect")
             .classed("box", true)
+            .on("click", async function (mu) { await obj.activate(this, mu); })
             .call(await obj.onModelDrag())
             .on("contextmenu", contextMenu.onContextMenu(obj.menu));
         models.append("text")
@@ -251,12 +252,19 @@ class Models {
             }, true);
     }
 
-    async remove(elm, d, i){
+    async activate(rect, mu){
+        d3.selectAll(".box").classed("active", false);
+        d3.select(rect).classed("active", true);
+        view.set_mu(mu);
+    }
+
+    async remove(mu){
         await post("remove_model",
             {
                 'agent': agent_data.id,
-                'model': d.id
+                'model': mu.id
             }, true);
+        view.set_mu(null);
     }
 
     modelToFront(model){
@@ -267,8 +275,9 @@ class Models {
     }
 
     async onModelDrag() {
+        let obj = this;
         return d3.drag()
-            .on("start", await async function (d) {
+            .on("start", await async function (mu) {
                 d3.select(this).classed("box_dragging", true);
             })
             .on("drag", await async function (d) {
