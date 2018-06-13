@@ -1,6 +1,4 @@
 # imports for core
-from functools import K
-
 from core import Supermodel
 from core.util import Input, Output, Property
 
@@ -59,8 +57,10 @@ class Model(Supermodel):
         ## prep_result = prep_to_peri
 
         # get inputs
-        in1 = await self.get_input('t')
+        t_arr = await self.get_input('t')
+        t = t_arr[0]
 
+        # query Kraftwerk
         db_kw = self.session.query(Kraftwerk).all()
         db_kw_id = self.session.query(Kraftwerk.id).order_by(Kraftwerk.id).all()
         db_kw_bez = self.session.query(Kraftwerk.bezeichnung).order_by(Kraftwerk.id).all()
@@ -70,6 +70,24 @@ class Model(Supermodel):
         db_kw_pinst = self.session.query(Kraftwerk.power_inst).order_by(Kraftwerk.id).all()
         db_kw_datetime = self.session.query(Kraftwerk.datetime).order_by(Kraftwerk.id).all()
         db_kw_spezinfo = self.session.query(Kraftwerk.spez_info).order_by(Kraftwerk.id).all()
+
+        # query Brennstoffpreis
+        db_bsp_id = self...
+
+        # query Brennstofftyp
+        db_bst_id = self...
+
+        # query Co2Preis
+        db_co2_id = self...
+
+        # query Entsorgungspreis
+        db_ents_id = self...
+
+        # query Kraftwerkstyp
+        db_kwt_id = self...
+
+        # query Vergütung
+        db_verg_id = self...
 
         # alternative
         #  db_kw_id = [i.id for i in db_kw]
@@ -81,40 +99,36 @@ class Model(Supermodel):
         # db_kw_datetime = [i.datetime for i in db_kw]
         # db_kw_spezinfo = [i.spez_info for i in db_kw]
 
-        db_kw_t = self.session.query(Kraftwerk.datetime).all()
-        lat = self.session.query(Kraftwerk).all()
-
-        # TODO Zeit muss noch skaliert werden, zB in Sekunden absolut(?).
-        # TODO Sonst ist Interpolation über Mitternacht nicht möglich.
-
-
         break1 = 0
 
         # calculate something
         # One can declare custom functions (eg: see end of file)
         # If you declare them "async" you will have to "await" them (like "extremely_complex_calculation")
         # Else one could declare "normal" (blocking) functions as well (like "complex_calculation")
-        out1 = prep_result * self.complex_calculation(in1)
-        out2 = await self.extremely_complex_calculation(in1, in2)
+
+
+        kev = self.interpol3d(db_kev_t, db_kev_lat, db_kev_long, db_kev_preise, db_kw_lat, db_kw_long, t)
+
+        # TODO assemble kwp table
 
         # set output
-        self.set_output("p_el", out1)
-        self.set_output("f_rot", out2)
+        self.set_output("kw_park", kwp)
 
         # pass values to post function
-        outputs = {'out1': out1, 'out2': out2}
+        outputs = {'kw_park': kwp}
         return outputs
 
     async def func_post(self, peri_to_post=None):
-        outputs = peri_to_post
-        # do something with the values (eg: overwrite persistent variable)
-        self.pers_variable_0 = outputs['out1']
+        pass
+        # outputs = peri_to_post
+        # # do something with the values (eg: overwrite persistent variable)
+        # self.pers_variable_0 = outputs['out1']
 
     async def func_death(self):
-        print("I am dying! Bye bye!")
+        pass
 
     # define additional methods (normal)
-    def interpol(self, t, lat, lon):
+    def interpol3d(self, t, lat, lon, value, kw_lat, kw_long, kw_t):
         rand_data = True
         rand_test = True
         plot_data = True
@@ -227,7 +241,7 @@ class Model(Supermodel):
 
             plt.show()
 
-        return speed_cut
+        return interp_combined
 
     # define additional methods (async)
     async def extremely_complex_calculation(self, speed, time):
@@ -235,16 +249,14 @@ class Model(Supermodel):
         return distance
 
 if __name__ == "__main__":
-    v = 999
-    dir = 9
-    inputs = {'v': v, 'dir': dir}
+    dt = 900
+    t0 = datetime.datetime.now()
+    t = t0 + np.arange(96) * datetime.timedelta(seconds=dt)
+    inputs = {'t': t}
+
     h_hub = 12
     d = 26
     properties = {'h_hub': h_hub, 'd': d}
 
-
     outputs = Model.test(inputs, properties)
-
-
-
 
