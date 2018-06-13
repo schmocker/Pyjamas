@@ -8,6 +8,7 @@ pymysql
 bcrypt
 markdown2
 pygments
+sqlalchemy
 
 # not used by pyjamas, but by models
 numpy

@@ -20,13 +20,13 @@ class Model(Supermodel):
         self.properties["post_delay"] = Property(0,float, {'name': 'Post delay', 'unit': 'num', 'dimensions': []})
 
     def close_gates(self):
-        if self.get_property('prep_lead') != 0:
+        if self.get_property('prep_lead') > 0:
             self.log_debug("closing prep gate")
             self.agent.prep_gate.clear()
-        if self.get_property('peri_interval') != 0:
+        if self.get_property('peri_interval') > 0:
             self.log_debug("closing peri gate")
             self.agent.peri_gate.clear()
-        if self.get_property('post_delay') != 0:
+        if self.get_property('post_delay') > 0:
             self.log_debug("closing post gate")
             self.agent.post_gate.clear()
 
@@ -35,16 +35,19 @@ class Model(Supermodel):
 
             # TODO: change wait time to be relative to start time to remove cumulative error
 
-            self.log_debug("opening prep gate")
-            self.agent.prep_gate.set()
+            if not self.agent.prep_gate.is_set():
+                self.log_debug("opening prep gate")
+                self.agent.prep_gate.set()
 
             await asyncio.sleep(self.get_property('prep_lead'))
-            self.log_debug("opening peri gate")
-            self.agent.peri_gate.set()
+            if not self.agent.peri_gate.is_set():
+                self.log_debug("opening peri gate")
+                self.agent.peri_gate.set()
 
             await asyncio.sleep(self.get_property('post_delay'))
-            self.log_debug("opening post gate")
-            self.agent.post_gate.set()
+            if not self.agent.post_gate.is_set():
+                self.log_debug("opening post gate")
+                self.agent.post_gate.set()
             
             sleeptime = self.get_property('peri_interval') - self.get_property('prep_lead') - self.get_property('post_delay')
             await asyncio.sleep(sleeptime)

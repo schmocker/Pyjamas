@@ -19,6 +19,7 @@ class Supermodel:
         self.properties = {}
         self.change_properties = {}
         self.alive = True
+        self.model_run = 0
 
 #region logging
 
@@ -119,6 +120,7 @@ class Supermodel:
             try:
                 if self.properties[key].amend():
                     keys.append(key)
+                    self.log_debug(f'changed property {key}')
             except ValueError:
                 self.log_warning(f'could not amend property for property_name {key} : property_type does not fit')
         if keys:
@@ -153,6 +155,8 @@ class Supermodel:
     async def internal_loop(self):
         self.log_debug("starting internal loop")
 
+        self.model_run = 0
+
         while self.alive:
 
             # start a prep - peri - post loop
@@ -160,6 +164,9 @@ class Supermodel:
 
             # wait for all models to finish the loop
             await self.sync()
+
+            # increment model run value
+            self.model_run = self.model_run + 1
 
         self.log_debug("starting func_death")
         await self.func_death()
@@ -220,19 +227,16 @@ class Supermodel:
     async def send_result_data(self):
         data = []
 
-        for key, output in self.outputs.items():
-            try:
-                name = output.get_port_info()['name']
-            except KeyError:
-                name = key
+        data.append(self.model_run)
 
+        for key, output in self.outputs.items():
             try:
                 res = await output.get_output()
             except Exception:
                 self.log_warning(f"could not retrieve result from output {key}")
                 res = None
 
-            data_point = (name,res)
+            data_point = (key,res)
             data.append(data_point)
         
         self.agent.send_data_order(self.id, data)
