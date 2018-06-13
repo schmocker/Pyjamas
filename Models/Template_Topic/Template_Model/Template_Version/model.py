@@ -29,6 +29,9 @@ class Model(Supermodel):
     async def func_birth(self):
         pass
 
+    async def func_amend(self, keys=[]):
+        pass
+
     async def func_prep(self):
         # calculate something
         prep_result = 3 * 5
@@ -73,6 +76,18 @@ class Model(Supermodel):
     async def extremely_complex_calculation(self, speed, time):
         distance = speed * time / self.get_property("h_hub")
         return distance
+
+if __name__ == "__main__":
+    v = 999
+    dir = 9
+    inputs = {'v': v, 'dir': dir}
+    h_hub = 12
+    d = 26
+    properties = {'h_hub': h_hub, 'd': d}
+
+
+    outputs = Model.test(inputs, properties)
+
 
 
 
