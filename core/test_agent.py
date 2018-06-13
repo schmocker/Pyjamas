@@ -3,6 +3,8 @@ import logging
 
 class TestAgent():
 
+    # TODO: OVERHAUL
+
     def __init__(self):
         self.model = None
 

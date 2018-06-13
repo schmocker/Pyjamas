@@ -70,6 +70,8 @@ class Property(Port):
         if self.amend_value:
             self.set_property(self.amend_value)
             self.amend_value = None
+            return True
+        return False
 
 class CreateDirFileHandler(logging.FileHandler):
     def __init__(self, filename, mode='a', encoding=None, delay=0):
