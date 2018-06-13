@@ -67,10 +67,13 @@ class Property(Port):
         self.amend_value = property_value
 
     def amend(self):
-        if self.amend_value:
-            self.set_property(self.amend_value)
-            self.amend_value = None
-            return True
+        if self.amend_value != None:
+            try:
+                self.set_property(self.amend_value)
+                return True
+            except ValueError:
+                raise
+        self.amend_value = None
         return False
 
 class CreateDirFileHandler(logging.FileHandler):

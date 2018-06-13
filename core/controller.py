@@ -22,6 +22,8 @@ class Controller():
         self.DEBUG = DEBUG
 
         self.result_data = {}
+        self.property_data = {}
+        self.model_runs = {}
 
         self.create_logger(logging_path, DEBUG)
 
@@ -57,7 +59,7 @@ class Controller():
 
 #endregion logging
 
-#region agend
+#region agent
 
     def add_agent(self, agent_id, agent_name: str):
         self.log_debug('starting add_agent')
@@ -267,6 +269,14 @@ class Controller():
         except KeyError:
             self.log_warning(f'no result data found for model {model_id} in agent {agent_id}')
             return None
+    
+    def get_model_results_newer_than(self, agent_id, model_id, run):
+        try:
+            if run < self.model_runs[agent_id][model_id]:
+                return self.get_model_result(agent_id, model_id)
+        except KeyError:
+            self.log_warning(f'no model run found for {model_id} in {agent_id}')
+        return None
 
 #endregion simulation
 
@@ -348,7 +358,13 @@ class Controller():
             self.result_data[agent_id] = {}
         if not model_id in self.result_data[agent_id]:
             self.result_data[agent_id][model_id] = {}
-        for name, result in data:
+
+        if not agent_id in self.model_runs:
+            self.model_runs[agent_id] = {}
+        model_run = data[0]
+        self.model_runs[agent_id][model_id] = model_run
+        
+        for name, result in data[1:]:
             self.result_data[agent_id][model_id][name] = result
 
     # orders
