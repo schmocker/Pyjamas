@@ -55,6 +55,8 @@ def main():
     c.start_agent(1)
     c.start_agent(2)
 
+    print(c.get_model_results_newer_than(1,mods['cron_job'],113))
+
     print(c.get_agents())
     print(c.get_agents_running())
 
@@ -66,7 +68,8 @@ def main():
     c.pause_agent(1)
     input("press enter to continue")
     #print(f"============ {c.get_model_result(1,mods['Divider'])}")
-    print(json.dumps(c.result_data, indent=4))
+    #print(json.dumps(c.result_data, indent=4))
+    print(c.get_model_results_newer_than(1,mods['cron_job'],125))
     c.unpause_agent(1)
 
     time.sleep(2)
