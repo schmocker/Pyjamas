@@ -14,4 +14,3 @@ numpy
 scipy
 matplotlib
 pytz
-aiofiles

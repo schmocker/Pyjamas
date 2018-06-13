@@ -119,8 +119,7 @@ def websimgui_GET():
                 Model_used.remove(data['model'])
 
             elif request.form['fnc'] == 'start':
-                agent_id = request.args.get('agent', None)
-                Agent.start_agent(agent_id)
+                Agent.start_agent(data['agent'])
 
             elif request.form['fnc'] == 'pause':
                 db_agent.pause()
