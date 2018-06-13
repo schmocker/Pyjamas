@@ -10,8 +10,8 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input({'name': 'Wetterdaten'})
-        self.inputs['kwDaten'] = Input({'name': 'powerplants'})
+        self.inputs['weather'] = Input({'name': 'WetterDaten'})
+        self.inputs['kwDaten'] = Input({'name': 'KWDaten'})
 
         # define outputs
         self.outputs['load'] = Output({'name': 'load'})

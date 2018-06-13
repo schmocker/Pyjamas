@@ -9,19 +9,19 @@ class Model(Supermodel):
         # instantiate supermodel
         super(Model, self).__init__(id, name)
         # define outputs
-        self.outputs['kw_data'] = Output({'name': 'kw data'})
+        self.outputs['weather'] = Output({'name': 'WeatherData'})
 
 
         # define persistent variables
-        self.kw_data = None
+        self.weather = None
 
     async def func_birth(self):
-        self.kw_data = 10
+        self.weather = 10
 
     async def func_peri(self, prep_to_peri=None):
 
         # set output
-        self.set_output("kw_data", self.kw_data)
+        self.set_output("weather", self.weather)
 
 
 
