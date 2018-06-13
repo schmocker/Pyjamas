@@ -9,7 +9,7 @@ class Model(Supermodel):
         # instantiate supermodel
         super(Model, self).__init__(id, name)
         # define outputs
-        self.outputs['kw_data'] = Output({'name': 'KWData'})
+        self.outputs['kw_data'] = Output({'name': 'PowerPlantData'})
 
 
         # define persistent variables
