@@ -1,5 +1,5 @@
 from .db import *
-from flask import render_template, request, send_from_directory, url_for
+from flask import render_template, request, send_from_directory, url_for, redirect
 from flask_security import current_user, login_required
 import json
 from flask import Markup
@@ -39,24 +39,17 @@ def agents():
 
 
     elif request.method == 'POST':
-        try:
-            data = json.loads(request.form['data'])
-        except:
-            print('! -> No field "data" in POST request')
-            return json.dumps(False)
-
-
         fnc = request.form['fnc']
 
         if fnc == 'remove_agent':
-            Agent.remove(data['agent'])
-
-            all_agents = Agent.query.all()
-            return render_template("agents.html", agents=all_agents, loggedin=current_user.is_authenticated)
+            agent_id = request.form['agent_id']
+            Agent.remove(agent_id)
+            return redirect(url_for('.agents'))
 
         if fnc == 'add_agent':
-            Agent.add(data['agent_name'])
-            return json.dumps(True)
+            name = request.form['agent_name'];
+            Agent.add(name)
+            return redirect(url_for('.agents'))
 
 
 
@@ -126,7 +119,7 @@ def websimgui_GET():
                 Model_used.remove(data['model'])
 
             elif request.form['fnc'] == 'start':
-                db_agent.start()
+                Agent.start_agent(data['agent'])
 
             elif request.form['fnc'] == 'pause':
                 db_agent.pause()

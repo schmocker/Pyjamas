@@ -30,7 +30,7 @@ class Model(Supermodel):
         pass
 
     async def func_amend(self, keys=[]):
-        pass
+        print("amend")
 
     async def func_prep(self):
         # calculate something

@@ -6,36 +6,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css')}}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/agents.css')}}">
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script>
-        /*$("add_agent").addEventListener("submit", await myFunction());
-        async function myFunction() {
-            alert("The form was submitted");
-        }*/
-
-
-        async function remove_agent(id) {
-            let data = await $.post("/agents", {
-                'fnc': 'remove_agent',
-                'data': JSON.stringify({'agent': id})
-            });
-            location.reload();
-        }
-        async function add_agent() {
-            let name = $("#agent_name").val();
-            let data = await $.post("/agents", {
-                'fnc': 'add_agent',
-                'data': JSON.stringify({'agent_name': name})
-            });
-            location.reload();
-        }
-
-        function edit_agent(id) {
-            $(location).attr('href', '/agents?agent=' + id );
-        }
-
-
-
-    </script>
+    <script type="text/javascript" src="static/js/agents.js"></script>
 </head>
 <body>
 {% include 'imports/header.html' %}
@@ -51,8 +22,9 @@
         </div>
         {% endfor %}
         <div class="agent agents-grid-item">
-            <form method="post" action="" id="add_agent" onsubmit="add_agent()">
+            <form method="post" id="add_agent_form">
                 <label>Add Agent:</label>
+                <input type="hidden" name="fnc" value="add_agent" />
                 <input id="agent_name" name="agent_name" type="text" placeholder="agent_name" required/>
                 <input type="submit">
             </form>

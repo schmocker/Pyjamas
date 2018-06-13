@@ -10,22 +10,22 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['kw_data'] = Input({'name': 'Kraftwerksdaten'})
-        self.inputs['load_PV'] = Input({'name': 'Auslastung PV'})
-        self.inputs['load_WT'] = Input({'name': 'Auslastung WT'})
+        self.inputs['WTAuslastung'] = Input({'name': 'LoadWT'})
+        self.inputs['PVAuslastung'] = Input({'name': 'LoadPV'})
+        self.inputs['KWDaten'] = Input({'name': 'PowerPlantsData'})
 
         # define outputs
-        self.outputs['load'] = Output({'name': 'Auslastung'})
+        self.outputs['GemeinsameAuslastung'] = Output({'name': 'LoadMatrix'})
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
-        kw_data = await self.get_input('kw_data')
-        load_PV = await self.get_input('load_PV')
-        load_WT = await self.get_input('load_WT')
+        WTAuslastung = await self.get_input('WTAuslastung')
+        PVAuslastung = await self.get_input('PVAuslastung')
+        KWDaten = await self.get_input('KWDaten')
 
         #### calculate
 
         # set output
-        self.set_output("load", 6)
+        self.set_output("GemeinsameAuslastung", PVAuslastung)
 
 
