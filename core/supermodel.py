@@ -121,7 +121,8 @@ class Supermodel:
                     keys.append(key)
             except ValueError:
                 self.log_warning(f'could not amend property for property_name {key} : property_type does not fit')
-        await self.func_amend(keys)
+        if keys:
+            await self.func_amend(keys)
         self.log_debug("finished amend")
 
 #endregion property
