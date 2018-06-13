@@ -207,7 +207,13 @@ class Popup_addModel extends Popup{
     constructor(parent) {
         super(parent, "add_model");
 
-        this.header.append("h2").text("Add Model");
+
+    }
+
+
+
+    async up(){
+                this.header.append("h2").text("Add Model");
 
         let obj = this.body;
         obj = obj.append("from").attr("name","addBoxForm");
@@ -235,11 +241,8 @@ class Popup_addModel extends Popup{
             .attr("type","submit")
             .attr("value","Submit")
             .on("click",function(){kkk.validateForm()});
-    }
 
 
-
-    async up(){
         d3.select("#model_name").property("value","");
         d3.select("#varsion_selection").selectAll("option").remove();
 
