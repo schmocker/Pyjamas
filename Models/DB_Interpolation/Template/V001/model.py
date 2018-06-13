@@ -45,6 +45,8 @@ class Model(Supermodel):
         DBSession = sessionmaker(bind=engine)
         self.session = DBSession()
 
+    async def func_amend(self, keys=[]):
+        print("amend")
 
     async def func_prep(self):
 
@@ -212,6 +214,18 @@ class Model(Supermodel):
     async def extremely_complex_calculation(self, speed, time):
         distance = speed * time / self.get_property("prop1")
         return distance
+
+if __name__ == "__main__":
+    v = 999
+    dir = 9
+    inputs = {'v': v, 'dir': dir}
+    h_hub = 12
+    d = 26
+    properties = {'h_hub': h_hub, 'd': d}
+
+
+    outputs = Model.test(inputs, properties)
+
 
 
 
