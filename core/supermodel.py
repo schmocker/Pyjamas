@@ -114,12 +114,14 @@ class Supermodel:
             self.log_warning(f'could not change property for property_name {property_name}')
 
     async def _amend(self):
+        keys = []
         for key in self.properties:
             try:
-                self.properties[key].amend()
+                if self.properties[key].amend():
+                    keys.append(key)
             except ValueError:
                 self.log_warning(f'could not amend property for property_name {key} : property_type does not fit')
-
+        await self.func_amend(keys)
         self.log_debug("finished amend")
 
 #endregion property
@@ -249,6 +251,8 @@ class Supermodel:
     async def func_in_sync(self):
         pass
     async def func_death(self):
+        pass
+    async def func_amend(self, keys=[]):¨
         pass
 
 #endregion abstract methods
