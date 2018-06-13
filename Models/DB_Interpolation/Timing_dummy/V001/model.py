@@ -32,8 +32,6 @@ class Model(Supermodel):
         dt = self.get_property('dt')
         t0 = datetime.datetime.now()
         t = t0 + np.arange(96) * datetime.timedelta(seconds=dt)
-        # equivalent, unused
-        # t = np.array([t0 + datetime.timedelta(seconds=dt) * i for i in range(96)])
 
         return t
 

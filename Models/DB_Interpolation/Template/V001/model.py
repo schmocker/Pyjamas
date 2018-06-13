@@ -1,12 +1,14 @@
 # imports for core
+from functools import K
+
 from core import Supermodel
 from core.util import Input, Output, Property
 
 # imports for db querys
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
-    Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, db_url
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
+from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
+    Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, db_url
 
 import datetime, random
 
@@ -24,9 +26,8 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['t'] = Input({'name': 'Time'})
+        self.inputs['t'] = Input({'name': 'Zeitarray'})
 
-        # TODO how to comunicate with KWP?
         # define outputs
         self.outputs['kw_park'] = Output({'name': 'Kraftwerkspark'})
 
@@ -35,7 +36,6 @@ class Model(Supermodel):
 
         # define persistent variables
         self.pers_variable_0 = 5
-
         self.session = None
 
     async def func_birth(self):
@@ -46,23 +46,42 @@ class Model(Supermodel):
         self.session = DBSession()
 
     async def func_amend(self, keys=[]):
-        print("amend")
+        pass
 
     async def func_prep(self):
-
         pass
-        # # calculate something
-        # prep_result = 3 * 5
-        # # pass values to peri function
-        # return prep_result
+        ## # calculate something
+        ## prep_result = 3 * 5
+        ## # pass values to peri function
+        ## return prep_result
 
     async def func_peri(self, prep_to_peri=None):
-        prep_result = prep_to_peri
+        ## prep_result = prep_to_peri
 
         # get inputs
         in1 = await self.get_input('t')
 
-        db_kw_t = self.session.query(Kraftwerk).all()
+        db_kw = self.session.query(Kraftwerk).all()
+        db_kw_id = self.session.query(Kraftwerk.id).order_by(Kraftwerk.id).all()
+        db_kw_bez = self.session.query(Kraftwerk.bezeichnung).order_by(Kraftwerk.id).all()
+        db_kw_fk_kwt = self.session.query(Kraftwerk.fk_kraftwerkstyp).order_by(Kraftwerk.id).all()
+        db_kw_long = self.session.query(Kraftwerk.long).order_by(Kraftwerk.id).all()
+        db_kw_lat = self.session.query(Kraftwerk.lat).order_by(Kraftwerk.id).all()
+        db_kw_pinst = self.session.query(Kraftwerk.power_inst).order_by(Kraftwerk.id).all()
+        db_kw_datetime = self.session.query(Kraftwerk.datetime).order_by(Kraftwerk.id).all()
+        db_kw_spezinfo = self.session.query(Kraftwerk.spez_info).order_by(Kraftwerk.id).all()
+
+        # alternative
+        #  db_kw_id = [i.id for i in db_kw]
+        # db_kw_bez = [i.bezeichnung for i in db_kw]
+        # db_kw_fk_kwt = [i.fk_kraftwerkstyp for i in db_kw]
+        # db_kw_long = [i.long for i in db_kw]
+        # db_kw_lat = [i.lat for i in db_kw]
+        # db_kw_pinst = [i.power_inst for i in db_kw]
+        # db_kw_datetime = [i.datetime for i in db_kw]
+        # db_kw_spezinfo = [i.spez_info for i in db_kw]
+
+        db_kw_t = self.session.query(Kraftwerk.datetime).all()
         lat = self.session.query(Kraftwerk).all()
 
         # TODO Zeit muss noch skaliert werden, zB in Sekunden absolut(?).
@@ -208,7 +227,7 @@ class Model(Supermodel):
 
             plt.show()
 
-    return speed_cut
+        return speed_cut
 
     # define additional methods (async)
     async def extremely_complex_calculation(self, speed, time):
