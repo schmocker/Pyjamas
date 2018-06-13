@@ -3,7 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore
 from core import Controller
 
-controller = Controller(logging_path=None, DEBUG=False)
+
+controller = Controller(logging_path='logs', DEBUG=False)
 db = SQLAlchemy(app)
 
 

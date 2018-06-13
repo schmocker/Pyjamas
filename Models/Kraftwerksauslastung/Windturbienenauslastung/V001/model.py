@@ -10,25 +10,11 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input({'name': 'Wetterdaten'})
-        self.inputs['kwDaten'] = Input({'name': 'powerplants'})
+        self.inputs['weather'] = Input({'name': 'WeatherData'})
+        self.inputs['kwDaten'] = Input({'name': 'PowerPlantsData'})
 
         # define outputs
-        self.outputs['load'] = Output({'name': 'load'})
-
-        # define properties
-        # Property(<initial value>,<type>,<info dictionary>)
-        self.properties['cp'] = Property(10,float, {'name': 'cp'})
-
-
-        # define persistent variables
-        self.pers_variable_0 = 5
-
-    async def func_birth(self):
-        pass
-
-    async def func_prep(self):
-        pass
+        self.outputs['load'] = Output({'name': 'Load'})
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
