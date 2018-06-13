@@ -4,4 +4,5 @@ config.py
 venv
 data
 chaos
+logs
 __pycache__/

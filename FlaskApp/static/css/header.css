@@ -3,32 +3,37 @@
     background-color: deepskyblue;
     display: grid;
     grid-template-columns: auto auto;
-    justify-content: space-between;
+    justify-content: stretch;
     height: 100%;
 }
 #header #title{
+    align-self: stretch;
     display: grid;
+    justify-content: left;
     grid-template-columns: auto auto;
     grid-column-gap: 1em;
+    align-content: stretch;
     margin: 5px;
+}
+#header #title-logo{
+    align-self: stretch;
+    max-height: 100%;
+}
+#header #title-logo>img{
+    max-height: 100%;
 }
 #header #title-text{
     text-decoration: none;
     color: black;
     align-self: center;
 }
-#header #title-logo{
-}
-#header #title-logo>img{
-    max-height: 100%;
-}
 #header #menu{
+    align-self: center;
     display: grid;
     grid-template-rows: auto;
     grid-column-gap: 1em;
     margin-right: 1em;
     font-weight: bold;
-    align-self: center;
 
 }
 #header .menu_item{
