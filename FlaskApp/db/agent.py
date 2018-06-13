@@ -22,6 +22,10 @@ class Agent(db.Model):
         db.session.add(agent)
         db.session.commit()
 
+    @classmethod
+    def start_agent(cls,id):
+        Agent.query.filter_by(id=id).first().start()
+
     def start(self):
 
         if not self.active:

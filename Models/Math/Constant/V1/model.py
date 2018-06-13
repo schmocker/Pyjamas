@@ -13,9 +13,8 @@ class Model(Supermodel):
         
         self.properties['number'] = Property(0,float, {'name': 'Number', 'unit': 'int', 'dimensions': []})
 
-
     async def func_peri(self, prep_to_peri=None):
 
         num = self.get_property('number')
 
-        self.set_output("const",num)
+        self.set_output("const", num)
