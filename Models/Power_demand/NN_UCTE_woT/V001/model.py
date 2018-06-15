@@ -46,14 +46,6 @@ class Model(Supermodel):
     async def func_peri(self, prep_to_peri=None):
         # get inputs
         dates = await self.get_input('date')
-        print(dates)
-
-        # date_list = ['01.01.2006 01:00', '01.01.2006 02:00', '01.01.2006 03:00', '01.01.2006 04:00']
-        # date = datetime.strptime(date, '%d.%m.%Y %H:%M')
-        # dates = [datetime.strptime(x, '%d.%m.%Y %H:%M') for x in date_list]
-
-        # add country information to date
-        # date_country = Model.prep_prop_array(dates)
 
         # date preparation
         NN_input = Model.prep_date(dates)
@@ -74,6 +66,9 @@ class Model(Supermodel):
         # Date
         l_date = 1  #len(dates)
         date_UTC = dates
+        # print(1)
+        # print(date_UTC)
+        # print(1)
         date_local = date_UTC.astimezone(timezone('Europe/Brussels'))
         year = date_local.year
         weekend = int((date_local.isoweekday() == 6 | date_local.isoweekday() == 7) == True)
