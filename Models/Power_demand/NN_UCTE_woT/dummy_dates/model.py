@@ -24,7 +24,7 @@ class Model(Supermodel):
         step = await self.get_input('step')
         time_deltas = [timedelta(seconds=(x + step)*60*15) for x in [0, 1, 2, 3]]
         dates = [start_datetime + time_delta for time_delta in time_deltas]
-        print(dates)
+        # print(dates)
 
         # set output
         self.set_output("dates", dates)
