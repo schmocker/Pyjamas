@@ -16,3 +16,4 @@ scipy
 matplotlib
 pytz
 sqlalchemy
+datetime

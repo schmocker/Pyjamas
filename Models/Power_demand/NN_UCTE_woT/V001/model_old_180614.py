@@ -55,7 +55,7 @@ class Model(Supermodel):
         # date_country = Model.prep_prop_array(dates)
 
         # date preparation
-        NN_input = Model.prep_date(self, dates)
+        NN_input = Model.prep_date(dates)
 
         # calculations
         demand = self.calc_demand(NN_input)
@@ -63,17 +63,73 @@ class Model(Supermodel):
         # set output
         self.set_output("p_dem", demand)
 
+    # @staticmethod
+    # def prep_prop_array(date):
+    #     # Length of date array
+    #     l_date = len(date)
+#
+    #     # Create array with country indexes and its length
+    #     country_index = np.linspace(1, 24, 24)
+    #     l_country = len(country_index)
+    #
+    #     # Create array combining time and country array
+    #     country_pred = np.tile(country_index, (1, l_date))
+    #     date_pred = np.tile(date, (l_country, 1))
+    #     date_pred = np.sort(date_pred, axis=None)
+    #     date_pred = date_pred[np.newaxis]
+    #
+    #     prop_array = np.column_stack((date_pred, country_pred))
+    #
+    #     return prop_array
+    #
+    # @staticmethod
+    # def prep_date(date_country):
+    #
+    #     # date_i = datetime.strptime(date_i, '%d.%m.%Y %H:%M')
+    #     # date_local = date_UTC_to_local(date_i)
+    #     date_UTC = date_country[:, 0]
+    #     print('xyz')
+    #     print(date_UTC)
+    #     # date_UTC = date_UTC.tolist()
+    #     date_local = date_UTC.astimezone(timezone('UTC'))
+    #     weekend = date_local.isoweekday() == 6 | date_local.isoweekday() == 7
+    #     if weekend == True:
+    #         weekend = 1
+    #     else:
+    #         weekend = 0
+    #     seconds = date_local.hour * 3600 + date_local.minute * 60
+    #     holiday = Model.func_holiday(date_local)
+    #     country = date_country[:, 1]
+    #     nn_input = np.array([[date_local.year], [weekend], [seconds], [holiday], [country]])
+    #
+    #     return nn_input
+
     @staticmethod
-    def prep_date(self, dates):
+    def prep_date(dates):
+
+        #     l_date = len(date)
+        #
+        #     # Create array with country indexes and its length
+        #     country_index = np.linspace(1, 24, 24)
+        #     l_country = len(country_index)
+        #
+        #     # Create array combining time and country array
+        #     country_pred = np.tile(country_index, (1, l_date))
+        #     date_pred = np.tile(date, (l_country, 1))
+        #     date_pred = np.sort(date_pred, axis=None)
+        #     date_pred = date_pred[np.newaxis]
+        #
+        #     prop_array = np.column_stack((date_pred, country_pred))
+
+        # date_i = datetime.strptime(date_i, '%d.%m.%Y %H:%M')
+        # date_local = date_UTC_to_local(date_i)
 
         # Country
         country_index = np.linspace(1, 24, 24)
-        #l_country = len(country_index)
-        self.l_country = len(country_index)
+        l_country = len(country_index)
 
         # Date
-        #l_date = 1  #len(dates)
-        self.l_date = 1  # len(dates)
+        l_date = 1  #len(dates)
         date_UTC = dates
         date_local = date_UTC.astimezone(timezone('Europe/Brussels'))
         year = date_local.year
@@ -99,10 +155,7 @@ class Model(Supermodel):
 
         # summarize per date over countries
         num_country = np.unique(nn_input[:, 4])
-        # demand_GW = np.add.reduceat(demand_GW_i, np.arange(0, len(demand_GW_i), len(num_country)))
-        # demand_GW = np.add.reduceat(demand_GW_i, np.arange(0, demand_GW_i.size-1, num_country.size))
-        demand_reshape = demand_GW_i.reshape((self.l_date, self.l_country))
-        demand_GW = np.sum(demand_reshape, axis=1)
+        demand_GW = np.add.reduceat(demand_GW_i, np.arange(0, len(demand_GW_i), len(num_country)))
 
         # convert GW to W
         demand = np.multiply(demand_GW, 10e9)
@@ -237,11 +290,11 @@ class Model(Supermodel):
     def func_xmasday(date_x):
         test_month = date_x.month == 12
         test_days = date_x.day == 24 | date_x.day == 25 | date_x.day == 26
-        xmasday = int((test_month & test_days) == True)
-        # if xmasday == True:
-        #     xmasday = 1
-        # else:
-        #     xmasday = 0
+        xmasday = test_month & test_days
+        if xmasday == True:
+            xmasday = 1
+        else:
+            xmasday = 0
 
         return xmasday
 
