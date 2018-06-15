@@ -27,10 +27,9 @@ class Model(Supermodel):
         # define persistent variables
         self.model_pars = None
 
-
     async def func_birth(self):
         dir = path.dirname(path.realpath(__file__))
-        #file = "model_parameter_LK_UCTE_GW.txt"
+        # file = "model_parameter_LK_UCTE_GW.txt"
         file = "model_parameter_LK_UCTE_GW_20L_0_96.txt"
         filepath = path.join(dir, file)
         try:
@@ -42,7 +41,6 @@ class Model(Supermodel):
             print(e)
             data = None
         self.model_para = data
-
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -67,8 +65,8 @@ class Model(Supermodel):
         l_country = country_index.size
 
         # Date
-        l_date = 1 #dates.size
-        date_UTC = dates
+        l_date = 1
+        date_UTC = dates.replace(tzinfo=timezone('UTC'))
         date_local = date_UTC.astimezone(timezone('Europe/Brussels'))
         year = date_local.year
         weekend = int((date_local.isoweekday() == 6 | date_local.isoweekday() == 7) == True)
@@ -77,15 +75,13 @@ class Model(Supermodel):
 
         date_pred = np.array([[year, weekend, seconds, holiday]])
         date_pred = np.tile(date_pred, (l_country, 1))
-        # date_pred = np.sort(date_pred, axis=0])
         sort_index = np.lexsort((date_pred[:, 3], date_pred[:, 2], date_pred[:, 1], date_pred[:, 0],))
-        date_pred = date_pred[sort_index] # wenn mehrere Daten überprüfen !!!!!!!!!!!!!!
+        date_pred = date_pred[sort_index]
 
         country_pred = np.tile(country_index, (1, l_date))
         nn_input = np.append(date_pred, country_pred.transpose(), axis=1)
 
         return nn_input
-
 
     def calc_demand(self, nn_input):
 
@@ -101,7 +97,6 @@ class Model(Supermodel):
         demand = np.multiply(demand_GW, 10e9)
 
         return demand
-
 
     def func_NeuralNetwork(self, x1):
         model_para = self.model_para
@@ -143,7 +138,6 @@ class Model(Supermodel):
 
     @staticmethod
     def mapminmax_apply(a, x1_step1):
-        # atilde = np.transpose(a.values)
         atilde = np.transpose(a)
         y = np.add(atilde, -np.array(x1_step1['xoffset']))
         y = y * np.array(x1_step1['gain'])
@@ -222,14 +216,5 @@ class Model(Supermodel):
         test_month = date_x.month == 12
         test_days = date_x.day == 24 | date_x.day == 25 | date_x.day == 26
         xmasday = int((test_month & test_days) == True)
-        # if xmasday == True:
-        #     xmasday = 1
-        # else:
-        #     xmasday = 0
 
         return xmasday
-
-
-if __name__ == "__main__":
-    print('start')
-    model = Model(5,"hwfd")
