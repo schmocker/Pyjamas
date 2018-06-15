@@ -38,16 +38,6 @@ class Model(db.Model):
             return "no documentation available"
 
     @property
-    def properties_view(self):
-        file = os.path.join("Models", self.topic, self.name, self.version, "view_properties", "index.html")
-        if os.path.isfile(file):
-            with open(file, 'r') as f:
-                html = f.read()
-            return html
-        else:
-            return ''
-
-    @property
     def has_property_view(self):
         file = os.path.join("Models", self.topic, self.name, self.version, "view_properties", "index.html")
         return os.path.isfile(file)
@@ -56,10 +46,6 @@ class Model(db.Model):
     def has_result_view(self):
         file = os.path.join("Models", self.topic, self.name, self.version, "view_result", "index.html")
         return os.path.isfile(file)
-
-    @property
-    def results_view(self):
-        return "Results from " + self.path
 
     @property
     def path(self):

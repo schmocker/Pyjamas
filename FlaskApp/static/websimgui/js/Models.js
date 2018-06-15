@@ -1,15 +1,7 @@
 class Models {
     constructor() {
         let obj = this;
-        this.menu = [
-            {title: "Documentation",
-                action: async function(elm, d, i) { await popup_model_docu.up(d); }},
-            {title: "Properties",
-                action: async function(elm, d, i) { await popup_model_properties_view.up(d); }},
-            {title: "Results",
-                action: async function(elm, d, i) { await popup_model_results_view.up(d); }},
-            {title: "Remove",
-                action: async function(elm, d, i) {await obj.remove(d)}}];
+
 
         this.sizer = {};
         this.sizer.size = 10;
@@ -55,17 +47,15 @@ class Models {
             .classed("model", true)
             .attr("id", function (d) {
                 return "mu_"+d.id;
-            })
-            .on("contextmenu", contextMenu.onContextMenu(obj.menu));
+            });
         models.append("rect")
             .classed("box", true)
             .on("click", async function (mu) { await obj.activate(this, mu); })
-            .call(await obj.onModelDrag())
-            .on("contextmenu", contextMenu.onContextMenu(obj.menu));
+            .call(await obj.onModelDrag());
         models.append("text")
             .classed("model_name", true)
             .attr("text-anchor", "middle")
-            .attr("alignment-baseline", "top")
+            .attr("alignment-baseline", "top");
         models.append("rect")
             .classed("sizer", true)
             .call(await obj.onModelResize());

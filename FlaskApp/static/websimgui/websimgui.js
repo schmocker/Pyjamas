@@ -6,11 +6,9 @@ let menu;
 let connections;
 let models;
 let popup_addModel;
-let popup_model_docu;
 let contextMenu;
-let popup_model_properties_view;
-let popup_model_results_view;
 let view;
+let all_models;
 
 window.onload = async function() {
     await get_data();
@@ -35,15 +33,14 @@ window.onload = async function() {
         .classed("main",true);
 
 
-
+    await update_all_models();
     view = new View(d3.select("#wsg"));
 
     // Extras
     popup_addModel =                new Popup_addModel(d3.select("#wsg"));
-    popup_model_docu =              new Popup_model_docu(d3.select("#wsg"));
-    popup_model_properties_view =   new Popup_model_properties_view(d3.select("#wsg"));
-    popup_model_results_view =      new Popup_model_results_view(d3.select("#wsg"));
     contextMenu =                   new ContextMenu(d3.select("#wsg"));
+
+
 
     await build_all();
 };
@@ -65,6 +62,14 @@ async function update_all(){
 
 
     console.log("UPDATE DONE")
+}
+
+async function update_all_models(){
+    all_models = await $.get("/websimgui", {
+        'fnc': 'get_model_selection',
+        'data': JSON.stringify({})
+    });
+    all_models = JSON.parse(all_models);
 }
 
 async function get_data(){
