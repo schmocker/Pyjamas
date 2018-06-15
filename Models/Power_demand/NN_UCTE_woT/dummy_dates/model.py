@@ -11,13 +11,20 @@ class Model(Supermodel):
         # instantiate supermodel
         super(Model, self).__init__(id, name)
 
+        self.inputs['step'] = Input({'Name': 'step'})
+
         # define outputs
         self.outputs['dates'] = Output({'name': 'dates'})
 
 
+
     async def func_peri(self, prep_to_peri=None):
 
-        dates = [datetime(2006, 1, d, 1, 0) for d in [1, 2, 3]]
+        start_datetime = datetime(2006, 1, 1, 1, 0)
+        step = await self.get_input('step')
+        time_deltas = [timedelta(seconds=(x + step)*60*15) for x in [0, 1, 2, 3]]
+        dates = [start_datetime + time_delta for time_delta in time_deltas]
+        print(dates)
 
         # set output
         self.set_output("dates", dates)
