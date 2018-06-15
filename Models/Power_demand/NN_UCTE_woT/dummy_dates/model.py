@@ -23,6 +23,7 @@ class Model(Supermodel):
         # dates = date_list
         #dates = [utc_timezone.localize(datetime.strptime(x, '%d.%m.%Y %H:%M')) for x in date_list]
         dates = datetime(2006, 1, 1, 1, 0)
+        print(dates)
 
         # set output
         self.set_output("dates", dates)

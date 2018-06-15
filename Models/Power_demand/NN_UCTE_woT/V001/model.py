@@ -7,6 +7,7 @@ from datetime import date, timedelta
 import json
 from os import path
 
+
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
     # model constructor
@@ -29,7 +30,7 @@ class Model(Supermodel):
 
     async def func_birth(self):
         dir = path.dirname(path.realpath(__file__))
-        file = "model_parameter_LK_UCTE.txt"
+        file = "model_parameter_LK_UCTE_GW.txt"
         filepath = path.join(dir, file)
         try:
             with open(filepath, 'r') as f:
@@ -55,7 +56,7 @@ class Model(Supermodel):
         # date_country = Model.prep_prop_array(dates)
 
         # date preparation
-        NN_input = Model.prep_date(self, dates)
+        NN_input = Model.prep_date(dates)
 
         # calculations
         demand = self.calc_demand(NN_input)
@@ -64,16 +65,14 @@ class Model(Supermodel):
         self.set_output("p_dem", demand)
 
     @staticmethod
-    def prep_date(self, dates):
+    def prep_date(dates):
 
         # Country
         country_index = np.linspace(1, 24, 24)
-        #l_country = len(country_index)
-        self.l_country = len(country_index)
+        l_country = len(country_index)
 
         # Date
-        #l_date = 1  #len(dates)
-        self.l_date = 1  # len(dates)
+        l_date = 1  #len(dates)
         date_UTC = dates
         date_local = date_UTC.astimezone(timezone('Europe/Brussels'))
         year = date_local.year
@@ -92,6 +91,7 @@ class Model(Supermodel):
 
         return nn_input
 
+
     def calc_demand(self, nn_input):
 
         # calculation of demand per date and country
@@ -99,9 +99,7 @@ class Model(Supermodel):
 
         # summarize per date over countries
         num_country = np.unique(nn_input[:, 4])
-        # demand_GW = np.add.reduceat(demand_GW_i, np.arange(0, len(demand_GW_i), len(num_country)))
-        # demand_GW = np.add.reduceat(demand_GW_i, np.arange(0, demand_GW_i.size-1, num_country.size))
-        demand_reshape = demand_GW_i.reshape((self.l_date, self.l_country))
+        demand_reshape = demand_GW_i.reshape((1, num_country.size))
         demand_GW = np.sum(demand_reshape, axis=1)
 
         # convert GW to W
@@ -247,4 +245,5 @@ class Model(Supermodel):
 
 
 if __name__ == "__main__":
+    print('start')
     model = Model(5,"hwfd")
