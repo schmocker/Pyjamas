@@ -22,9 +22,15 @@ class Agent(db.Model):
         db.session.add(agent)
         db.session.commit()
 
+
+
+
     @classmethod
     def start_agent(cls,id):
         Agent.query.filter_by(id=id).first().start()
+    @classmethod
+    def kill_agent(cls,id):
+        Agent.query.filter_by(id=id).first().kill()
 
     def start(self):
 
@@ -34,6 +40,12 @@ class Agent(db.Model):
         controller.start_agent(self.id)
         self.active = True
 
+        db.session.commit()
+
+    def kill(self):
+        print("kill")
+        controller.kill_agent(self.id)
+        self.active = False
         db.session.commit()
 
     def pause(self):
@@ -83,6 +95,7 @@ class Agent(db.Model):
         agent = dict()
         agent['id'] = self.id
         agent['active'] = self.active
+        # Todo: @ Simon & Tobias "get_status" ['running' || 'paused' || 'stopped'] from controller
 
         agent['model_used'] = list()
         agent['connection'] = list()

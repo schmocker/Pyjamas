@@ -12,6 +12,10 @@ class View {
 
         let icon_size = 25;
 
+        this.update_interval = null;
+        this.interval_speed = 1;
+        this.run = 0;
+
         let h_start;
         let pos_start;
         this.menu.append("img")
@@ -76,7 +80,7 @@ class View {
             .attr("width", icon_size)
             .attr("height", icon_size)
             .on("click", async function () {
-                await models.remove(obj.mu);
+                if (obj.mu){ await models.remove(obj.mu); }
             });
 
 
@@ -91,8 +95,67 @@ class View {
                 let shadow = d3.select("#wsg_drawing").append("rect").attr("id", "shadow")
                     .style("width", "100%").style("height", "100%")
                     .style("fill", "white").style("opacity", 0.5);
+                await update_all_models();
                 await post("update", {}, true);
                 shadow.remove();
+            });
+
+
+
+        this.play = this.menu.append("img")
+            .attr("id", "btn_play")
+            .classed("view_menu_item", true)
+            .attr("src","static/images/icons/Play.png")
+            .attr("title", "start simulation")
+            .attr("width", icon_size)
+            .attr("height", icon_size)
+            .style("display", function () { return agent_data.active ? 'none' : 'block'})
+            .on("click", async function() {
+                await post("start", {},false);
+                agent_data.status = "running";
+                await obj.status();
+            });
+
+        this.pause = this.menu.append("img")
+            .attr("id", "btn_pause")
+            .classed("view_menu_item", true)
+            .attr("src","static/images/icons/Pause.png")
+            .attr("title", "pause simulation")
+            .attr("width", icon_size)
+            .attr("height", icon_size)
+            .style("display", function () { return agent_data.active ? 'block' : 'none'})
+            .on("click", async function() {
+                await post("pause", {},false);
+                agent_data.status = "paused";
+                await obj.status();
+            });
+
+        this.stop = this.menu.append("img")
+            .attr("id", "btn_stop")
+            .classed("view_menu_item", true)
+            .attr("src","static/images/icons/Stop.png")
+            .attr("title", "stop simulation")
+            .attr("width", icon_size)
+            .attr("height", icon_size)
+            .style("display", function () { return agent_data.active ? 'block' : 'none'})
+            .on("click", async function() {
+                await post("stop", {},false);
+                agent_data.status = "stopped";
+                await obj.status();
+            });
+
+        this.kill = this.menu.append("img")
+            .attr("id", "btn_stop")
+            .classed("view_menu_item", true)
+            .attr("src","static/images/icons/cancel.png")
+            .attr("title", "force stop simulation")
+            .attr("width", icon_size)
+            .attr("height", icon_size)
+            .style("display", function () { return agent_data.active ? 'block' : 'none'})
+            .on("click", async function() {
+                await post("kill", {},false);
+                agent_data.status = "stopped";
+                await obj.status();
             });
 
 
@@ -100,12 +163,47 @@ class View {
             .attr('id', 'view_content');
 
         this.mu = null;
-        this.set_mu(null)
+        this.set_mu(null);
+
+        // Todo: delete this
+        if (agent_data.active){
+            agent_data.status = "running";
+        } else {
+            agent_data.status = "stopped";
+        }
+        obj.status();
+
+    }
+
+    async status(){
+        switch(agent_data.status) {
+            case 'running':
+                this.play.style("display","none");
+                this.pause.style("display","block");
+                this.stop.style("display","block");
+                this.kill.style("display","block");
+                break;
+            case 'paused':
+                this.play.style("display","block");
+                this.pause.style("display","none");
+                this.stop.style("display","block");
+                this.kill.style("display","block");
+                break;
+            case 'stopped':
+                this.play.style("display","block");
+                this.pause.style("display","none");
+                this.stop.style("display","none");
+                this.kill.style("display","none");
+                break;
+            default:
+
+        }
 
     }
 
     async update_view(menu_item, new_mu){
         let mu = this.mu;
+        clearInterval(this.update_interval);
 
         let menu_sel;
         if (menu_item){ // menu_item = X
@@ -123,13 +221,18 @@ class View {
         menu_sel.classed("active", true);
 
         // umdate property menu item
-        if (menu_sel.attr("id") === "properties" && this.mu.model.has_property_view) {
-            if (!menu_sel.classed("custom") && menu_sel.classed("default")){
-                menu_sel.classed("custom", true);
-                menu_sel.classed("default", false);
+        if (menu_sel.attr("id") === "properties" && this.mu) {
+            if (this.mu.model.has_property_view){
+                if (!menu_sel.classed("custom") && menu_sel.classed("default")){
+                    menu_sel.classed("custom", true);
+                    menu_sel.classed("default", false);
+                } else {
+                    menu_sel.classed("custom", false);
+                    menu_sel.classed("default", true);
+                }
             } else {
                 menu_sel.classed("custom", false);
-                menu_sel.classed("default", true);
+                menu_sel.classed("default", false);
             }
         } else {
             menu_sel.classed("custom", false);
@@ -172,7 +275,8 @@ class View {
     // methods to update view
 
     async update_docu() {
-        if (!this.mu) { this.content.html(""); return }
+        this.content.html("");
+        if (!this.mu) { return }
         let obj = this;
         let html = await get('get_model_readme', {'mu_id': obj.mu.id});
         this.content.html(html);
@@ -180,7 +284,54 @@ class View {
 
     async update_results() {
         if (!this.mu) { this.content.html(""); return }
-        this.content.html("results will follow soon");
+        let obj = this;
+
+        this.content.html("");
+        this.content.append("label").text("Update Speed [s]: ");
+        this.content.append("input")
+            .attr("type", "text")
+            .attr("value", function () { return obj.interval_speed })
+            .on('keyup', async function () {
+                if (d3.event.keyCode === 13) {
+                    obj.interval_speed = parseFloat(this.value);
+                    await set_updater(obj)
+                }
+            })
+            .on('blur', async function () {
+                obj.interval_speed = parseFloat(this.value);
+                await set_updater(obj)
+            });
+        this.content.append('label').classed("update_dot",true);
+        this.content.append('br');
+        this.content.append('br');
+
+
+        let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
+        result = JSON.parse(result);
+
+        this.content.selectAll('.result').data(d3.entries(result.result))
+            .enter().append('div').classed('result', true).html(function(res){
+                return `<b>${res.key}:</b><br>${JSON.stringify(res.value)}`
+            }
+        );
+
+        await set_updater(this);
+
+        async function set_updater(obj) {
+            clearInterval(obj.update_interval);
+            obj.update_interval = setInterval(await async function() {
+                obj.content.select(".update_dot").html("I");
+                let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
+                result = JSON.parse(result);
+                if (result){
+                    obj.run = result.run;
+                    result = obj.content.selectAll('.result').data(d3.entries(result.result));
+                    result.html(function(res){ return `<b>${res.key}:</b><br>${JSON.stringify(res.value)}` }
+                    );
+                }
+                obj.content.select(".update_dot").html("");
+            }, obj.interval_speed*1000);
+        }
     }
 
     async update_default_property_view() {
@@ -190,39 +341,29 @@ class View {
 
         let prop_data = await get('get_model_properties', {'model': obj.mu.id});
         prop_data = JSON.parse(prop_data);
+
         let form = this.content.selectAll(".propertiesForm").data([obj.mu]);
         form = form.enter().append("g").classed("properties", true).attr("name", "properties");
 
-        let props = form.selectAll(".property").data(function (mu) {
-            return d3.entries(mu.model.info.properties)
-        });
+        let props = form.selectAll(".property")
+            .data(function (mu) { return d3.entries(mu.model.info.properties) });
         props = props.enter().append("g").classed("property", true);
         props.append("span").html(function (d, i) {
             let brake = (i === 0 ? '' : '<br>');
             return brake + d.value.name + ':<br>';
         });
         props.append("input")
-            .attr("id", function (d) {
-                return d.key;
-            })
-            .attr("name", function (d) {
-                return d.key;
-            })
+            .attr("id", function (d) { return d.key; })
+            .attr("name", function (d) { return d.key; })
             .attr("type", "text")
-            .attr("value", function (d) {
-                return prop_data[d.key]
-            })
-            .on("input", function (d) {
-                this.value = this.value.replace(/[^\d.-]/g, '');
-                obj.submit(d.key, this.value);
-            })
+            .attr("value", function (d) { return prop_data[d.key] })
             .on('keyup', function (d) {
                 if (d3.event.keyCode === 13) {
-                    obj.submit(d.key, this.value)
+                    post('set_model_property', {'model': obj.mu.id, 'property': d.key, 'value': this.value})
                 }
             })
             .on('blur', function (d) {
-                obj.submit(d.key, this.value)
+                post('set_model_property', {'model': obj.mu.id, 'property': d.key, 'value': this.value})
             });
         props.append("br");
     }
@@ -232,11 +373,7 @@ class View {
         let obj = this;
         this.content.html("");
         let src = '/model_view?MU_id=' + this.mu.id + '&view=properties';
-        this.menu.select("#properties")
-            .html("Default Properties")
-            .on('click', async function () {
-                await obj.update_default_property_view();
-            }).append("img")
+        this.menu.select("#properties").append("img")
             .attr("src", "static/images/icons/open.png")
             .style("width", "14px").style("height", "14px").style("margin-left", "15px")
             .on("click", function () {
@@ -248,11 +385,6 @@ class View {
 
 
     async update_add_model() {
-        let all_models = await $.get("/websimgui", {
-            'fnc': 'get_model_selection',
-            'data': JSON.stringify({})
-        });
-        all_models = JSON.parse(all_models);
         // Title
         this.content.html("");
         this.content.append("h2").text("Add Model");
@@ -286,7 +418,6 @@ class View {
             .on('change', function (d) {
                 let t_val = t_sel.property("value");
                 let vs = d[t_val][this.value];
-                log(vs);
                 form.select("#version_selection").selectAll("option").remove();
                 form.select("#version_selection").selectAll("option").data(d3.entries(vs))
                     .enter().append("option")
@@ -304,11 +435,12 @@ class View {
             .on("click", async function () {
                 let boxName = form.select("#model_name").property("value");
                 if (boxName === "") {form.select("#model_name").style("background-color","red"); return}
+                d3.select("#model_name").style("background-color","white");
                 let v = form.select("#version_selection").property("selectedOptions")[0].__data__;
                 await models.add(boxName, v.value.id);
                 form.select("#model_name").node().value = "";
             });
-        // trigger change
+        // trigger first change
         d3.select("#topic_selection").dispatch('change');
     }
 }

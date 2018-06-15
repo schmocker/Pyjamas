@@ -272,8 +272,10 @@ class Controller():
     
     def get_model_results_newer_than(self, agent_id, model_id, run):
         try:
-            if run < self.model_runs[agent_id][model_id]:
-                return self.get_model_result(agent_id, model_id)
+            cur_run = self.model_runs[agent_id][model_id]
+            if run < cur_run:
+                result = self.get_model_result(agent_id, model_id)
+                return {'run': cur_run, 'result': result}
         except KeyError:
             self.log_warning(f'no model run found for {model_id} in {agent_id}')
         return None
@@ -281,6 +283,8 @@ class Controller():
 #endregion simulation
 
 #region util
+
+    # Todo: @Simon: add function "get_status" to return ['running' || 'paused' || 'stopped']
 
     def is_existing_agent(self, agent_id):
         if agent_id in self.agents:
