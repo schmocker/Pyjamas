@@ -33,7 +33,7 @@ class View {
                 .on("drag", async function () {
                     let h = h_start + d3.mouse(d3.select("body").node())[1] - pos_start;
                     h = (h < 0) ? 0 : h;
-                    d3.select("#wsg").style('grid-template-rows', h + 'px 40px auto');
+                    d3.select("#wsg").style('grid-template-rows', h + 'px 1fr');
                 })
             );
 
@@ -172,7 +172,6 @@ class View {
             agent_data.status = "stopped";
         }
         obj.status();
-
     }
 
     async status(){
@@ -196,12 +195,11 @@ class View {
                 this.kill.style("display","none");
                 break;
             default:
-
         }
-
     }
 
     async update_view(menu_item, new_mu){
+        let obj = this;
         let mu = this.mu;
         clearInterval(this.update_interval);
 
@@ -220,31 +218,41 @@ class View {
         this.menu.selectAll(".view_menu_item").classed("active", false);
         menu_sel.classed("active", true);
 
-        // umdate property menu item
-        if (menu_sel.attr("id") === "properties" && this.mu) {
-            if (this.mu.model.has_property_view){
-                if (!menu_sel.classed("custom") && menu_sel.classed("default")){
-                    menu_sel.classed("custom", true);
-                    menu_sel.classed("default", false);
+        // update property & result menu item
+        let items = ["properties", "results"];
+        for (let i in items){
+            let item = items[i];
+            if (menu_sel.attr("id") === item && this.mu){
+                log(item);
+                log(menu_sel.attr("id") === item);
+                if (this.mu.model.has_property_view){
+                    if (!menu_sel.classed("custom") && menu_sel.classed("default")){
+                        menu_sel.classed("custom", true);
+                        menu_sel.classed("default", false);
+                    } else {
+                        menu_sel.classed("custom", false);
+                        menu_sel.classed("default", true);
+                    }
                 } else {
                     menu_sel.classed("custom", false);
-                    menu_sel.classed("default", true);
+                    menu_sel.classed("default", false);
                 }
+
             } else {
-                menu_sel.classed("custom", false);
-                menu_sel.classed("default", false);
+                this.menu.select("#"+item).classed("custom", false);
+                this.menu.select("#"+item).classed("default", false);
+
             }
-        } else {
-            menu_sel.classed("custom", false);
-            menu_sel.classed("default", false);
+            this.menu.select("#"+item).html(function () {
+                if ( obj.menu.select("#"+item).classed("custom")){return "default "+item}
+                if ( obj.menu.select("#"+item).classed("default")){return "custom "+item}
+                switch (item) {
+                    case 'properties': return "Properties" ;
+                    case 'results':return "Results";
+                    default: return "";
+                }
+            });
         }
-
-
-        this.menu.select("#properties").html(function () {
-            if (menu_sel.classed("custom")){return "default view"}
-            if (menu_sel.classed("default")){return "custom view"}
-            return "Properties"
-        });
 
 
 
@@ -262,7 +270,10 @@ class View {
                 if (menu_sel.classed("custom")){ await this.update_custom_property_view(); }
                 else { await this.update_default_property_view(); }
                 break;
-            case 'results': await this.update_results(); break;
+            case 'results':
+                if (menu_sel.classed("custom")){ await this.update_custom_result_view(); }
+                else { await this.update_default_result_view(); }
+                break;
             default: this.content.html("");
         }
     }
@@ -282,10 +293,10 @@ class View {
         this.content.html(html);
     }
 
-    async update_results() {
+    async update_default_result_view() {
         if (!this.mu) { this.content.html(""); return }
         let obj = this;
-
+        // speed
         this.content.html("");
         this.content.append("label").text("Update Speed [s]: ");
         this.content.append("input")
@@ -305,33 +316,40 @@ class View {
         this.content.append('br');
         this.content.append('br');
 
-
-        let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
-        result = JSON.parse(result);
-
-        this.content.selectAll('.result').data(d3.entries(result.result))
-            .enter().append('div').classed('result', true).html(function(res){
-                return `<b>${res.key}:</b><br>${JSON.stringify(res.value)}`
-            }
-        );
-
+        await update(this);
         await set_updater(this);
+
+        async function update(obj){
+            let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
+            result = JSON.parse(result);
+            if (result){
+                obj.run = result.run;
+                result = obj.content.selectAll('.result').data(d3.entries(result.result));
+                result.enter().append('div').classed('result', true).html(function(res){ return `<b>${res.key}:</b><br>${JSON.stringify(res.value)}` });
+                result.html(function(res){ return `<b>${res.key}:</b><br>${JSON.stringify(res.value)}` } );
+            }
+        }
 
         async function set_updater(obj) {
             clearInterval(obj.update_interval);
             obj.update_interval = setInterval(await async function() {
                 obj.content.select(".update_dot").html("I");
-                let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
-                result = JSON.parse(result);
-                if (result){
-                    obj.run = result.run;
-                    result = obj.content.selectAll('.result').data(d3.entries(result.result));
-                    result.html(function(res){ return `<b>${res.key}:</b><br>${JSON.stringify(res.value)}` }
-                    );
-                }
+                await update(obj);
                 obj.content.select(".update_dot").html("");
             }, obj.interval_speed*1000);
         }
+    }
+
+    async update_custom_result_view(){
+        if (!this.mu) { this.content.html(""); return }
+        this.content.html("");
+        let src = '/model_view?MU_id=' + this.mu.id + '&view=result';
+        this.menu.select("#results").append("img")
+            .attr("src", "static/images/icons/open.png")
+            .style("width", "14px").style("height", "14px").style("margin-left", "15px")
+            .on("click", function () {  window.open(src); });
+        this.content.append("div").style("height", "500px").style("background-color","white")
+            .html('<iframe src="' + src + '" width="100%" height="100%" ></iframe>');
     }
 
     async update_default_property_view() {
@@ -370,16 +388,13 @@ class View {
 
     async update_custom_property_view() {
         if (!this.mu) { this.content.html(""); return }
-        let obj = this;
         this.content.html("");
         let src = '/model_view?MU_id=' + this.mu.id + '&view=properties';
         this.menu.select("#properties").append("img")
             .attr("src", "static/images/icons/open.png")
             .style("width", "14px").style("height", "14px").style("margin-left", "15px")
-            .on("click", function () {
-                window.open(src);
-            });
-        this.content.append("div").style("height", "500px")
+            .on("click", function () { window.open(src); });
+        this.content.append("div").style("height", "500px").style("background-color","white")
             .html('<iframe src="' + src + '" width="100%" height="100%" ></iframe>');
     }
 

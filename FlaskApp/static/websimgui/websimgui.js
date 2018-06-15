@@ -2,7 +2,6 @@
 let agent_data;
 let main;
 
-let menu;
 let connections;
 let models;
 let popup_addModel;
@@ -25,8 +24,6 @@ window.onload = async function() {
             })
         )
         .on("dblclick.zoom", null);
-
-    menu = new Menu(d3.select("#wsg"));
 
 
     main = d3.select("#wsg_drawing").append("g")
