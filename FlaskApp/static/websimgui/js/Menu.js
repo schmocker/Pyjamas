@@ -1,6 +1,0 @@
-class Menu {
-    constructor(parent) {
-
-    }
-
-}
