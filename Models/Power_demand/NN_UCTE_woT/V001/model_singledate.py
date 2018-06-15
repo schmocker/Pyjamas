@@ -30,8 +30,7 @@ class Model(Supermodel):
 
     async def func_birth(self):
         dir = path.dirname(path.realpath(__file__))
-        #file = "model_parameter_LK_UCTE_GW.txt"
-        file = "model_parameter_LK_UCTE_GW_20L_0_96.txt"
+        file = "model_parameter_LK_UCTE_GW.txt"
         filepath = path.join(dir, file)
         try:
             with open(filepath, 'r') as f:
@@ -49,12 +48,10 @@ class Model(Supermodel):
         dates = await self.get_input('date')
 
         # date preparation
-        # NN_input = Model.prep_date(dates)
-        NN_input = [Model.prep_date(item) for item in dates]
+        NN_input = Model.prep_date(dates)
 
         # calculations
-        # demand = self.calc_demand(NN_input)
-        demand = [self.calc_demand(item) for item in NN_input]
+        demand = self.calc_demand(NN_input)
 
         # set output
         self.set_output("p_dem", demand)
@@ -64,17 +61,20 @@ class Model(Supermodel):
 
         # Country
         country_index = np.linspace(1, 24, 24)
-        l_country = country_index.size
+        l_country = len(country_index)
 
         # Date
-        l_date = 1 #dates.size
+        l_date = 1  #len(dates)
         date_UTC = dates
+        # print(1)
+        # print(date_UTC)
+        # print(1)
         date_local = date_UTC.astimezone(timezone('Europe/Brussels'))
         year = date_local.year
         weekend = int((date_local.isoweekday() == 6 | date_local.isoweekday() == 7) == True)
-        seconds = date_local.hour * 3600 + date_local.minute * 60
-        holiday = Model.func_holiday(date_local)
-
+        seconds = date_UTC.hour * 3600 + date_UTC.minute * 60
+        holiday = 1 #Model.func_holiday(date_local)
+        # date_pred = np.array([[year], [weekend], [seconds], [holiday]])
         date_pred = np.array([[year, weekend, seconds, holiday]])
         date_pred = np.tile(date_pred, (l_country, 1))
         # date_pred = np.sort(date_pred, axis=0])
@@ -176,6 +176,11 @@ class Model(Supermodel):
 
         # holidays
         holidays = int((hday_1 | hday_2) == True)
+        # holidays = hday_1 | hday_2
+        # if holidays == True:
+        #     holidays = 1
+        # else:
+        #     holidays = 0
 
         return holidays
 
@@ -189,6 +194,10 @@ class Model(Supermodel):
         easter_end = d_eastersun + timedelta(days=1)
 
         easterday = int(((easter_start <= date_x.date()) & (date_x.date() <= easter_end)) == True)
+        # if easterday == True:
+        #     easterday = 1
+        # else:
+        #     easterday = 0
 
         return easterday
 

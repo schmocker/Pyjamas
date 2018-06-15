@@ -11,18 +11,19 @@ class Model(Supermodel):
         # instantiate supermodel
         super(Model, self).__init__(id, name)
 
+        self.inputs['step'] = Input({'Name': 'step'})
+
         # define outputs
         self.outputs['dates'] = Output({'name': 'dates'})
 
 
+
     async def func_peri(self, prep_to_peri=None):
-        # date_list = ['01.01.2006 01:00', '01.01.2006 02:00', '01.01.2006 03:00', '01.01.2006 04:00']
-        # dates = [datetime.strptime(x, '%d.%m.%Y %H:%M') for x in date_list]
-        # date_list = datetime(2006, 1, 1, 1, 00) + np.arange(4) * timedelta(minutes=15)
-        # utc_timezone = pytz.timezone('UTC')
-        # dates = date_list
-        #dates = [utc_timezone.localize(datetime.strptime(x, '%d.%m.%Y %H:%M')) for x in date_list]
-        dates = datetime(2006, 1, 1, 1, 0)
+
+        start_datetime = datetime(2006, 1, 1, 1, 0)
+        step = await self.get_input('step')
+        time_deltas = [timedelta(seconds=(x + step)*60*15) for x in [0, 1, 2, 3]]
+        dates = [start_datetime + time_delta for time_delta in time_deltas]
         print(dates)
 
         # set output
