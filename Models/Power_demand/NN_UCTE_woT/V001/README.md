@@ -6,7 +6,7 @@ Determination of the european (UCTE) power demand dependent on date and time
 ## Inputs
 The input to this model:
 
-1. date
+1. date (series)
 
 
 ## Outputs
@@ -53,10 +53,11 @@ The output of this model is:
 * output
   * power demand in [GW]
 
+
 #### Remarks
+
 Time handling
 
   * at the moment the difference in time zone's and daylight saving time/summertime of the different UCTE countries is not considered
   * e.g. Portugal, Romania, Bulgaria, ...
   * less correlation of neural network when datetime in UTC is used, therefore the need to convert the timestamp from UTC to CET/CEST
-
