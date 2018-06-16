@@ -18,3 +18,4 @@ matplotlib
 pytz
 sqlalchemy
 datetime
+bson

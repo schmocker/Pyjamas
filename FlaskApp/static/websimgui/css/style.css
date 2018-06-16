@@ -73,7 +73,7 @@
 }
 #wsg #view #view_content{
     grid-column: 1/3;
-    background-color: #00A000;
+    background-color: white;
     padding: 10px;
 }
 
