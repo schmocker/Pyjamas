@@ -8,9 +8,10 @@ app.jinja_loader = jinja2.ChoiceLoader([
     jinja2.FileSystemLoader('Models'),
 ])
 
-
-app.config.from_pyfile('config.cfg')
-print('\nConfigs were loaded from config file.')
+try:
+    app.config.from_pyfile('config.cfg')
+except:
+    print('no valid file instance/config')
 keys = ['FLASK_HOST',
            'FLASK_PORT',
            'FLASK_DEBUG',
@@ -27,7 +28,6 @@ for key in keys:
         if key == 'FLASK_DEBUG':
             db_value = True if value == '1' else False
         app.config[key] = value
-        print((' -> The config "{}" was overwritten by its environment variable').format(key))
 
 db_values = [app.config.get(db_key) for db_key in ['DB_USER','DB_PASSWORD','DB_HOST','DB_PORT','DB_DATABASE']]
 db_uri = ("mysql+pymysql://{}:{}@{}:{}/{}").format(*db_values)
