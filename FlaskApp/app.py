@@ -19,15 +19,21 @@ keys = ['FLASK_HOST',
            'DB_PASSWORD',
            'DB_HOST',
            'DB_PORT',
-           'DB_DATABASE']
+           'DB_DATABASE',
+           'SECRET_KEY',
+           'SECURITY_PASSWORD_SALT',
+           'SECURITY_REGISTERABLE',
+           'SECURITY_PASSWORD_HASH',
+           'SQLALCHEMY_TRACK_MODIFICATIONS']
 
 for key in keys:
     value = env.get(key)
 
     if value is not None:
-        if key == 'FLASK_DEBUG':
+        if key in ['FLASK_DEBUG', 'SECURITY_REGISTERABLE', 'SQLALCHEMY_TRACK_MODIFICATIONS']:
             db_value = True if value == '1' else False
         app.config[key] = value
+
 
 db_values = [app.config.get(db_key) for db_key in ['DB_USER','DB_PASSWORD','DB_HOST','DB_PORT','DB_DATABASE']]
 db_uri = ("mysql+pymysql://{}:{}@{}:{}/{}").format(*db_values)
