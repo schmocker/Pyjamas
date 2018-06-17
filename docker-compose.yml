@@ -6,7 +6,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - 5001:5000
+      - 80:5000
     links:
       - db
     depends_on:
@@ -16,6 +16,9 @@ services:
       FLASK_HOST: 0.0.0.0
       FLASK_PORT: 5000
       FLASK_DEBUG: 1
+
+      FLASK_USER_EMAIL: pyjamas@fhnw.ch
+      FLASK_USER_PASSWORD: PYJAMAS_FHNW
 
       DB_HOST: db
       DB_PORT: 3306
@@ -30,6 +33,7 @@ services:
       SQLALCHEMY_TRACK_MODIFICATIONS: 0
 
   db:
+    #RPi: image: jsurf/rpi-raspbian:latest
     image: mariadb:latest
     ports:
       - 3306:3306
@@ -45,11 +49,12 @@ services:
       - "3306:3306" # delete for security reason
 
   phpmyadmin:
+    #RPi: image: sk278/phpmyadmin-armhf
     image: phpmyadmin/phpmyadmin
     links:
       - db
     ports:
-      - 8181:80 # use "localhost:8181" for phpMyAdmin
+      - 81:80 # use "localhost:81" for phpMyAdmin
     environment:
       MYSQL_USERNAME: pyjamas
       MYSQL_PASSWORD: PYJAMAS_FHNW
