@@ -38,7 +38,6 @@ for key in keys:
 db_values = [app.config.get(db_key) for db_key in ['DB_USER','DB_PASSWORD','DB_HOST','DB_PORT','DB_DATABASE']]
 db_uri = ("mysql+pymysql://{}:{}@{}:{}/{}").format(*db_values)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-print('\n')
 
 
 from . import routes
