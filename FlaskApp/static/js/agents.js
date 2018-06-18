@@ -6,6 +6,7 @@
 
 async function remove_agent(id) {
     await $.post("/agents", {'fnc': 'remove_agent', 'agent_id': id});
+    location.reload();
 }
 
 function edit_agent(id) {

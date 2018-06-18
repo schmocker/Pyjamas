@@ -1,4 +1,4 @@
-from .db_main import db
+from .db_main import db, controller
 import json
 import os
 
@@ -59,16 +59,17 @@ class Model_used(db.Model):
         return m.model.readme
 
     @classmethod
-    def get_properties_view(cls, id):
-        obj = cls.query.filter_by(id=id).first()
-        return obj.model.properties_view
-
-    @classmethod
     def get_properties(cls, id):
         obj = cls.query.filter_by(id=id).first()
         props = obj.properties
         props = '{}' if props is None else props
         return json.loads(props)
+
+    @classmethod
+    def get_results(cls, id, run):
+        obj = cls.query.filter_by(id=id).first()
+        result = controller.get_model_results_newer_than(obj.agent.id, obj.id, run)
+        return result
 
     @classmethod
     def set_property(cls, id, key, value):
@@ -81,11 +82,6 @@ class Model_used(db.Model):
         props[key] = value
         obj.properties = json.dumps(props)
         db.session.commit()
-
-    @classmethod
-    def get_results_view(cls, id):
-        m = cls.query.filter_by(id=id).first()
-        return m.model.results_view
 
     @classmethod
     def set_position(cls, id, x, y):

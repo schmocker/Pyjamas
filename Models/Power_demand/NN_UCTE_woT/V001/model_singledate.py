@@ -27,10 +27,10 @@ class Model(Supermodel):
         # define persistent variables
         self.model_pars = None
 
+
     async def func_birth(self):
         dir = path.dirname(path.realpath(__file__))
-        # file = "model_parameter_LK_UCTE_GW.txt"
-        file = "model_parameter_LK_UCTE_GW_20L_0_96.txt"
+        file = "model_parameter_LK_UCTE_GW.txt"
         filepath = path.join(dir, file)
         try:
             with open(filepath, 'r') as f:
@@ -42,17 +42,16 @@ class Model(Supermodel):
             data = None
         self.model_para = data
 
+
     async def func_peri(self, prep_to_peri=None):
         # get inputs
         dates = await self.get_input('date')
 
         # date preparation
-        # NN_input = Model.prep_date(dates)
-        NN_input = [Model.prep_date(item) for item in dates]
+        NN_input = Model.prep_date(dates)
 
         # calculations
-        # demand = self.calc_demand(NN_input)
-        demand = [self.calc_demand(item) for item in NN_input]
+        demand = self.calc_demand(NN_input)
 
         # set output
         self.set_output("p_dem", demand)
@@ -62,26 +61,31 @@ class Model(Supermodel):
 
         # Country
         country_index = np.linspace(1, 24, 24)
-        l_country = country_index.size
+        l_country = len(country_index)
 
         # Date
-        l_date = 1
-        date_UTC = dates.replace(tzinfo=timezone('UTC'))
+        l_date = 1  #len(dates)
+        date_UTC = dates
+        # print(1)
+        # print(date_UTC)
+        # print(1)
         date_local = date_UTC.astimezone(timezone('Europe/Brussels'))
         year = date_local.year
         weekend = int((date_local.isoweekday() == 6 | date_local.isoweekday() == 7) == True)
-        seconds = date_local.hour * 3600 + date_local.minute * 60
-        holiday = Model.func_holiday(date_local)
-
+        seconds = date_UTC.hour * 3600 + date_UTC.minute * 60
+        holiday = 1 #Model.func_holiday(date_local)
+        # date_pred = np.array([[year], [weekend], [seconds], [holiday]])
         date_pred = np.array([[year, weekend, seconds, holiday]])
         date_pred = np.tile(date_pred, (l_country, 1))
+        # date_pred = np.sort(date_pred, axis=0])
         sort_index = np.lexsort((date_pred[:, 3], date_pred[:, 2], date_pred[:, 1], date_pred[:, 0],))
-        date_pred = date_pred[sort_index]
+        date_pred = date_pred[sort_index] # wenn mehrere Daten überprüfen !!!!!!!!!!!!!!
 
         country_pred = np.tile(country_index, (1, l_date))
         nn_input = np.append(date_pred, country_pred.transpose(), axis=1)
 
         return nn_input
+
 
     def calc_demand(self, nn_input):
 
@@ -97,6 +101,7 @@ class Model(Supermodel):
         demand = np.multiply(demand_GW, 10e9)
 
         return demand
+
 
     def func_NeuralNetwork(self, x1):
         model_para = self.model_para
@@ -138,6 +143,7 @@ class Model(Supermodel):
 
     @staticmethod
     def mapminmax_apply(a, x1_step1):
+        # atilde = np.transpose(a.values)
         atilde = np.transpose(a)
         y = np.add(atilde, -np.array(x1_step1['xoffset']))
         y = y * np.array(x1_step1['gain'])
@@ -170,6 +176,11 @@ class Model(Supermodel):
 
         # holidays
         holidays = int((hday_1 | hday_2) == True)
+        # holidays = hday_1 | hday_2
+        # if holidays == True:
+        #     holidays = 1
+        # else:
+        #     holidays = 0
 
         return holidays
 
@@ -183,6 +194,10 @@ class Model(Supermodel):
         easter_end = d_eastersun + timedelta(days=1)
 
         easterday = int(((easter_start <= date_x.date()) & (date_x.date() <= easter_end)) == True)
+        # if easterday == True:
+        #     easterday = 1
+        # else:
+        #     easterday = 0
 
         return easterday
 
@@ -216,5 +231,14 @@ class Model(Supermodel):
         test_month = date_x.month == 12
         test_days = date_x.day == 24 | date_x.day == 25 | date_x.day == 26
         xmasday = int((test_month & test_days) == True)
+        # if xmasday == True:
+        #     xmasday = 1
+        # else:
+        #     xmasday = 0
 
         return xmasday
+
+
+if __name__ == "__main__":
+    print('start')
+    model = Model(5,"hwfd")

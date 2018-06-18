@@ -16,7 +16,7 @@ class Model(Supermodel):
         self.kw_data = None
 
     async def func_birth(self):
-        self.kw_data = 5
+        self.kw_data = 6
 
     async def func_peri(self, prep_to_peri=None):
 

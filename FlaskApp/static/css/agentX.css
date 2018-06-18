@@ -5,7 +5,14 @@
 }
 
 #content #title{
-    margin: 10px;
+    grid-row: 1/1;
+    grid-column: 1/1;
+    justify-self: stretch;
+    align-self: center;
+}
+
+#content #title h2{
+    width: auto;
 }
 
 #content #wsg{

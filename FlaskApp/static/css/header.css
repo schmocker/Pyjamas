@@ -1,34 +1,38 @@
 #header{
+    /* item */
     color: black;
     background-color: deepskyblue;
+    /* grid */
     display: grid;
     grid-template-columns: auto auto;
-    justify-content: stretch;
-    height: 100%;
+    justify-content: space-between;
 }
-#header #title{
+#header>#title{
+    /* item */
     align-self: stretch;
+    /* item */
     display: grid;
-    justify-content: left;
     grid-template-columns: auto auto;
     grid-column-gap: 1em;
-    align-content: stretch;
     margin: 5px;
 }
-#header #title-logo{
+#header>#title>#title-logo{
     align-self: stretch;
     max-height: 100%;
 }
-#header #title-logo>img{
+#header>#title>#title-logo>img{
     max-height: 100%;
+    max-width: 40px;
 }
 #header #title-text{
+    align-self: center;
     text-decoration: none;
     color: black;
-    align-self: center;
 }
 #header #menu{
+    /* item */
     align-self: center;
+    /* grid */
     display: grid;
     grid-template-rows: auto;
     grid-column-gap: 1em;
@@ -42,7 +46,6 @@
     color: white;
     padding: 5px;
     grid-row: 1;
-    justify-self: center;
     align-self: center;
 }
 #header .menu_item:hover{

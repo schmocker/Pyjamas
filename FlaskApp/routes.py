@@ -81,14 +81,13 @@ def websimgui_GET():
             elif fnc == 'get_model_readme':
                 return Model_used.get_readme(data['mu_id'])
 
-            elif fnc == 'get_model_properties_view':
-                return Model_used.get_properties_view(data['model'])
-
             elif fnc == 'get_model_properties':
                 return json.dumps(Model_used.get_properties(data['model']))
 
-            elif fnc == 'get_model_results_view':
-                return Model_used.get_results_view(data['model'])
+            elif fnc == 'get_mu_results':
+                results = Model_used.get_results(data['mu_id'], data['mu_run'])
+                return json.dumps(results)
+
 
         elif request.method == 'POST':
             data = json.loads(request.form['data'])
@@ -127,9 +126,14 @@ def websimgui_GET():
             elif request.form['fnc'] == 'stop':
                 db_agent.stop()
 
+            elif request.form['fnc'] == 'kill':
+                Agent.kill_agent(data['agent'])
+
             elif request.form['fnc'] == 'update':
                 print("updateing...")
                 Model.update_all()
+            else:
+                return json.dumps(False)
 
             if 'agent' in data.keys():
                 return json.dumps(db_agent.dict)

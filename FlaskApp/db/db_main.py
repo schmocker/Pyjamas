@@ -32,5 +32,6 @@ def create_user():
     for user in User.query.all():
         user_datastore.delete_user(user)
     db.session.commit()
-    user_datastore.create_user(email='pyjamas@fhnw.ch', password='PYJAMAS_FHNW')
+    user_datastore.create_user(email=app.config.get('FLASK_USER_EMAIL'),
+                               password=app.config.get('FLASK_USER_PASSWORD'))
     db.session.commit()

@@ -1,16 +1,22 @@
+# Required for bcrypt and cryptography on Debian:
+# sudo apt-get install build-essential libssl-dev libffi-dev python3-dev
+cryptography
+bcrypt
+
+# required for pyjamas
 Flask
 flask_security
 flask_sqlalchemy
 pymysql
-# Required for bcrypt on Linux:
-# sudo apt-get install build-essential libssl-dev libffi-dev python-dev
-# sudo pip install cryptography
-bcrypt
+
 markdown2
 pygments
+sqlalchemy
+python-dotenv
 
-# not used by pyjamas, but by models
-numpy
-scipy
-matplotlib
+# required for models
+datetime
 pytz
+sqlalchemy
+datetime
+bson
