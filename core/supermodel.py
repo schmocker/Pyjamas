@@ -262,3 +262,31 @@ class Supermodel:
 
 #endregion abstract methods
 
+    @classmethod
+    def test(cls, inputs, properties):
+
+        class MockModel(Supermodel):
+            def __init__(self):
+                super(MockModel, self).__init__(0, "mock")
+                for key, value in inputs.items():
+                    self.outputs[key] = Output({'name': f'mock input {key}'})
+                    self.outputs[key].set_output(value)
+
+        input_mock_mod = MockModel()
+        test_mod = cls(0, "test_model")
+
+        for key in inputs:
+            test_mod.link_input(input_mock_mod, key, key)
+
+        for key, value in properties:
+            test_mod.set_property(key, value)
+
+        # TODO: make mock agent or add (if self.agent) check in supermodel
+        loop = asyncio.get_event_loop()
+        birth = asyncio.ensure_future(test_mod._internal_birth())
+        loop.run_until_complete(asyncio.gather(birth))
+
+        prep = asyncio.ensure_future(test_mod._internal_post())
+        loop.run_until_complete(asyncio.gather(prep))
+
+        # TODO: get and return outputs
