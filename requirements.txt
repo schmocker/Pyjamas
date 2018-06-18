@@ -16,8 +16,6 @@ python-dotenv
 
 # required for models
 datetime
-scipy
-matplotlib
 pytz
 sqlalchemy
 datetime

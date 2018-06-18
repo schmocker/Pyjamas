@@ -1,8 +1,6 @@
 # Use an official Python runtime as a parent image
-FROM python:3.6-slim
-#RPi: FROM resin/raspberry-pi-python:3.6-slim
-
-# Use an official Python runtime as a parent image
+# FROM python:3.6-slim
+#RPi:
 FROM resin/raspberry-pi-python:3.6-slim
 
 # Set the working directory to /app
@@ -11,8 +9,14 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 ADD . /app
 
-#RPi: RUN sudo apt-get update
-#RPi: RUN sudo apt-get install build-essential libssl-dev libffi-dev python3-dev
+#RPi: 
+RUN #!/bin/bash
+#RPi: 
+RUN sudo apt-get update
+#RPi: 
+RUN sudo apt-get install build-essential libssl-dev libffi-dev python3-dev
+#RPi:
+RUN pip install --upgrade pip setuptools wheel
 
 
 # Install any required packages specified in requirements.txt
