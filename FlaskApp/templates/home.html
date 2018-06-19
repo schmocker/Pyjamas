@@ -6,21 +6,11 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css')}}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/home.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/code.css')}}">
 </head>
 <body>
     {% include 'imports/header.html' %}
 
-    <div id="content">
-        <h2>Welcome to Pyjamas</h2>
-        <p>Pyjamas is a web-based simulation environment. The word Pyjamas stands for:</p>
-        <ul>
-            <li><b>Py</b>thon: Pyjamas is running mainly on python.</li>
-            <li><b>J</b>oint: Pyjamas grew out of a collaboration within the FHNW.</li>
-            <li><b>A</b>gent based: Pyjamas grew out of a collaboration within the FHNW.</li>
-            <li><b>M</b>ulti model: Pyjamas is all about model and modular construction of simulations.</li>
-            <li><b>A</b>synchronous: Pyjamas is based on asynchronous functions.</li>
-            <li><b>S</b>imulation program: That's actually what Pyjamas is all about</li>
-        </ul>
-    </div>
+    <div id="content">{{ content }}</div>
 </body>
 </html>

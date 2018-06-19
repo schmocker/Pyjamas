@@ -7,18 +7,13 @@ import markdown2
 from .app import app
 import os
 
+
 @app.route('/')
 def home():
-    return render_template("home.html",
-                           loggedin=current_user.is_authenticated,
-                           test_agent=Agent.query.first())
-
-@app.route('/doc')
-def doc():
     txt = open('README.md', 'r', encoding="utf8").read()
     mkdwn = markdown2.markdown(txt, extras=['extra', 'fenced-code-blocks'])
     content = Markup(mkdwn)
-    return render_template("doc.html", content=content, loggedin=current_user.is_authenticated)
+    return render_template("home.html", content=content, loggedin=current_user.is_authenticated)
 
 
 @app.route("/agents", methods=['GET', 'POST'])
