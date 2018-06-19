@@ -1,4 +1,6 @@
 # imports for core
+from numpy.lib.tests.test__datasource import valid_baseurl
+
 from core import Supermodel
 from core.util import Input, Output, Property
 
@@ -19,9 +21,9 @@ from scipy.interpolate import griddata
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
     # model constructor
-    def __init__(self, id, name: str):
+    def __init__(self, model_id, name: str):
         # instantiate supermodel
-        super(Model, self).__init__(id, name)
+        super(Model, self).__init__(model_id, name)
 
         # define inputs
         self.inputs['t'] = Input({'name': 'Zeitarray'})
@@ -30,7 +32,8 @@ class Model(Supermodel):
         self.outputs['kw_park'] = Output({'name': 'Kraftwerkspark'})
 
         # define properties
-        self.properties['prop1'] = Property(10, {'name': 'property1'})
+        # Property(<initial value>,<type>,<info dictionary>)
+        self.properties['prop1'] = Property(10, float, {'name': 'property1'})
 
         # define persistent variables
         self.pers_variable_0 = 5
@@ -58,6 +61,7 @@ class Model(Supermodel):
 
         # get inputs
         t_arr = await self.get_input('t')
+        # only first time value
         t = t_arr[0]
 
         # query Kraftwerk
@@ -72,25 +76,25 @@ class Model(Supermodel):
         db_kw_spezinfo = self.session.query(Kraftwerk.spez_info).order_by(Kraftwerk.id).all()
 
         # query Brennstoffpreis
-        db_bsp_id = self...
+        db_bsp = self.session.query(Brennstoffpreis).all()
 
         # query Brennstofftyp
-        db_bst_id = self...
+        db_bst = self.session.query(Brennstofftyp).all()
 
         # query Co2Preis
-        db_co2_id = self...
+        db_co2 = self.session.query(Co2Preis).all()
 
         # query Entsorgungspreis
-        db_ents_id = self...
+        db_ents = self.session.query(Entsorgungspreis).all()
 
         # query Kraftwerkstyp
-        db_kwt_id = self...
+        db_kwt = self.session.query(Kraftwerkstyp).all()
 
         # query Vergütung
-        db_verg_id = self...
+        db_verg = self.session.query(Verguetung).all()
 
         # alternative
-        #  db_kw_id = [i.id for i in db_kw]
+        # db_kw_id = [i.id for i in db_kw]
         # db_kw_bez = [i.bezeichnung for i in db_kw]
         # db_kw_fk_kwt = [i.fk_kraftwerkstyp for i in db_kw]
         # db_kw_long = [i.long for i in db_kw]
@@ -106,8 +110,26 @@ class Model(Supermodel):
         # If you declare them "async" you will have to "await" them (like "extremely_complex_calculation")
         # Else one could declare "normal" (blocking) functions as well (like "complex_calculation")
 
+        # KEV Interpolation
+          # get KW_id ---> KWT
+        kev = self.interpol_3d(db_kev_t, db_kev_lat, db_kev_long, db_kev_preis, db_kw_lat, db_kw_long, t)
 
-        kev = self.interpol3d(db_kev_t, db_kev_lat, db_kev_long, db_kev_preise, db_kw_lat, db_kw_long, t)
+        # P_inst Interpolation
+        pinst = self.interpol_1d(db_kw_pinst, ..., t)
+
+        # Brennstoffpreis Interpolation
+          # get KW_id--> KWT-->BST
+        bsp = self.interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis, db_kw_lat, db_kw_long, t)
+
+        # CO2-Preise Interpolation
+        co2 = self.interpol_3d(db_co2_t, db_co2_lat, db_co2_long, db_co2_preis, db_kw_lat, db_kw_long, t)
+
+        # Entsorgungskosten Interpolation
+          # get KW_id ---> KWT
+        ents = self.interpol_3d(db_ents_t, db_ents_lat, db_ents_long, db_ents_preis, db_kw_lat, db_kw_long, t)
+
+
+
 
         # TODO assemble kwp table
 
@@ -127,32 +149,35 @@ class Model(Supermodel):
     async def func_death(self):
         pass
 
-    # define additional methods (normal)
-    def interpol3d(self, t, lat, lon, value, kw_lat, kw_long, kw_t):
-        rand_data = True
+    # 3D Interpolation
+    def interpol_3d(self, time, lat, long, values, kw_lat, kw_long, kw_t):
+        test_data = True
         rand_test = True
         plot_data = True
         """
         INPUTS:
             lat: Latitude [decimal degrees, (45,3452)]; ndarray, nx1, float
-            lon: Longitude [decimal degrees, (45,3452)]; ndarray, nx1, float
-            time: Time [decimal hours (12,25)]; mx1, float
+            long: Longitude [decimal degrees, (45,3452)]; ndarray, nx1, float
+            time: Time [datetime]; mx1, float
             values: Temperatur or ...; ndarray, mxn, float
             xi:  
         """
         # TODO Ausrichtung der Input Arrays kontrollieren (Zeile/Spalte)
 
-        if rand_data:
+        if test_data:
             # # set random weather station locations
             # lat = np.random.rand(10)  # * 30 + 20
-            # lon = np.random.rand(10)  # * 20 - 5
+            # long = np.random.rand(10)  # * 20 - 5
             # time = np.r_[0:24:3]
             # values = np.random.rand(lat.size, time.size)
 
             # set fixed weather station locations
             lat = np.array([0, 0, 0, .5, .5, .5, 1, 1, 1])
-            lon = np.array([0, .5, 1, 0, .5, 1, 0, .5, 1])
-            time = np.r_[0:24:6]
+            long = np.array([0, .5, 1, 0, .5, 1, 0, .5, 1])
+            #time = np.r_[0:24:6]
+            t0 = datetime.datetime.now()
+            time = t0 + np.arange(96) * datetime.timedelta(seconds=900)
+
             values = np.array([[10, 10, 10],
                                [20, 20, 20],
                                [30, 30, 30],
@@ -168,7 +193,9 @@ class Model(Supermodel):
 
         else:
             lat = lat
-            lon = lon
+            long = long
+            time = time
+            values = values
 
         if rand_test:
             xi = np.array([[.25, .5, .75, .25],  # testpoints 3D
@@ -176,12 +203,14 @@ class Model(Supermodel):
                        [3, 12, 15, 24]])
 
         else:
-            lat=lat
-            lon=lon
 
+            kw_lat = kw_lat
+            kw_long = kw_long
+            kw_t = kw_t
+            xi = np.vstack((kw_lat,kw_long,kw_t))
 
         # arrange inputs for griddata
-        gridpoints = np.vstack((np.tile(lat, time.size), np.tile(lon, time.size), np.repeat(time, lat.size)))
+        gridpoints = np.vstack((np.tile(lat, time.size), np.tile(long, time.size), np.repeat(time, lat.size)))
         latgrid = gridpoints[0, :]
         longrid = gridpoints[1, :]
         timegrid = gridpoints[2, :]
@@ -207,37 +236,91 @@ class Model(Supermodel):
             ax1 = plt.subplot(221, projection='3d')
             ax1.scatter(latgrid, longrid, timegrid, c=values, depthshade=False)
             ax1.scatter(xi[0, :], xi[1, :], xi[2, :], c='r', depthshade=False)
-            ax1.set_xlim3d(0, 1)
-            ax1.set_ylim3d(0, 1)
-            ax1.set_zlim3d(0, 24)
             ax1.set_xlabel("lat")
             ax1.set_ylabel("lon")
             ax1.set_zlabel("time")
 
             ax2 = plt.subplot(222)
-            ax2.plot(lat, lon, 'k.', ms=5)
+            ax2.plot(lat, long, 'k.', ms=5)
             ax2.plot(xi[0, :], xi[1, :], 'ro')
             plt.title('Lat/Lon')
-            ax2.set_xlim(-.1, 1.1)
-            ax2.set_ylim(-.1, 1.1)
             ax2.set_xlabel("lat")
             ax2.set_ylabel("lon")
 
             ax3 = plt.subplot(223)
             ax3.plot(xi[0, :], xi[2, :], 'ro')
-            plt.title('Lat/Time')
-            ax3.set_xlim(-.1, 1.1)
-            ax3.set_ylim(-.1, 25)
+            plt.title('Lat/Value')
             ax3.set_xlabel("lat")
-            ax3.set_ylabel("time")
+            ax3.set_ylabel("Value")
 
             ax4 = plt.subplot(224)
             ax4.plot(xi[1, :], xi[2, :], 'ro')
-            plt.title('Lon/Time')
-            ax4.set_xlim(-.1, 1.1)
-            ax4.set_ylim(-.1, 25)
+            plt.title('Lon/Value')
             ax4.set_xlabel("lon")
-            ax4.set_ylabel("time")
+            ax4.set_ylabel("Value")
+
+            plt.show()
+
+        return interp_combined
+
+    # 1D Interpolation
+    def interpol_1d(self, time, values, kw_t):
+        test_data = True
+        rand_test = True
+        plot_data = True
+        """
+        INPUTS:
+            time: Time [datetime]; nx1
+            values: Temperatur or ...; ndarray, nx1, float
+            kw_t:   
+        """
+        # TODO Ausrichtung der Input Arrays kontrollieren (Zeile/Spalte)
+
+        if test_data:
+            # # set random weather station locations
+            # time = np.r_[0:24:3]
+            # values = np.random.rand(10)
+
+            # set fixed weather station locations
+            #time = np.r_[0:24:6]
+            t0 = datetime.datetime.now()
+            time = t0 + np.arange(96) * datetime.timedelta(seconds=900)
+
+            values = np.array([10, 20, 40, 50, 70, 80, 100, 90, 60, 30])
+
+        else:
+            time = time
+            values = values
+
+        if rand_test:
+            xi = np.array([.25, .5, .75, .25])  # testpoints 1D
+
+        else:
+            xi = kw_t
+
+
+        # interpolate
+        interp_nearest = griddata(time.T, values.T, xi.T, method='nearest')
+        interp_linear = griddata(time.T, values.T, xi.T, method='linear')
+
+        # replace linear NAN with nearest
+        interp_combined = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
+
+        print('interp_linear')
+        print(interp_linear)
+        print('interp_nearest')
+        print(interp_nearest)
+        print('interp_combined')
+        print(interp_combined)
+
+        if plot_data:
+
+            ax1 = plt.subplot(121)
+            ax1.plot(time, values, 'k.', ms=5)
+            ax1.plot(xi, interp_combined, 'ro')
+            plt.title('Result')
+            ax1.set_xlabel("time")
+            ax1.set_ylabel("values")
 
             plt.show()
 
