@@ -38,6 +38,8 @@ class Kraftwerkstyp(Base):
     wirkungsgrad = Column(Float)
     spez_opex = Column(Float, nullable=False)
     capex = Column(Float, nullable=False)
+    p_typisch = Column(Float)
+    spez_info = Column(Text)
     # declare relations
     brennstofftyp = relationship("Brennstofftyp", foreign_keys=[fk_brennstofftyp],
                             backref=backref("kraftwerkstypen",cascade="all, delete-orphan", lazy=True))
@@ -51,12 +53,21 @@ class Kraftwerk(Base):
     fk_kraftwerkstyp = Column(Integer, ForeignKey('kraftwerkstyp.id', ondelete="CASCADE"))
     long = Column(Float, nullable=False)
     lat = Column(Float, nullable=False)
-    power_inst = Column(Float, nullable=False)
-    datetime = Column(DateTime, nullable=False)
-    spez_info = Column(Text)
     # declare relations
     kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp],
                             backref=backref("kraftwerke",cascade="all, delete-orphan", lazy=True))
+
+
+class Kraftwerksleistung(Base):
+    __tablename__ = 'kraftwerksleistung'
+    # declare columns
+    id = Column(Integer, primary_key=True)
+    fk_kraftwerk = Column(Integer, ForeignKey('kraftwerk.id', ondelete="CASCADE"))
+    power_inst = Column(Float, nullable=False)
+    datetime = Column(DateTime, nullable=False)
+    # declare relations
+    kraftwerk = relationship("Kraftwerk", foreign_keys=[fk_kraftwerk],
+                             backref=backref("kraftwerksleistung", cascade="all, delete-orphan", lazy=True))
 
 
 class Verguetung(Base):
@@ -85,6 +96,8 @@ class Entsorgungspreis(Base):
     # declare relations
     kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp],
                             backref=backref("entsorgungspreise",cascade="all, delete-orphan", lazy=True))
+
+
 class Co2Preis(Base):
     __tablename__ = 'co2preis'
     # declare columns

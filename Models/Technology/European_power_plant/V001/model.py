@@ -4,7 +4,7 @@ from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraf
 
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
-import datetime, random, os
+import os
 
 class Model(Supermodel):
     # model constructor
@@ -42,4 +42,4 @@ if __name__ == "__main__":
 
     kw = db.query(Kraftwerk).first()
 
-    r=5
+    r = 5
