@@ -27,6 +27,11 @@ class Model(Supermodel):
         #auslastung = self.calc_load(weather, kwDaten)
         auslastung = self.windturbinenauslastung(kwDaten, weatherdata)
 
+        auslastung = auslastung.tolist()
+
+        # back converting: np.array(auslastung)
+
+
         # set output
         self.set_output("load", auslastung)
 
@@ -55,11 +60,11 @@ class Model(Supermodel):
         a = 3.413
         b = 0.6958
         HubHeight = Nabenhoehe
-        print("Nabenhoehe :", HubHeight)
+        #print("Nabenhoehe :", HubHeight)
         Diameter = 10 ** ((np.log10(HubHeight / a)) / b)
-        print("Diameter :", Diameter)
+        #print("Diameter :", Diameter)
         Radius = Diameter / 2
-        print("Radius :", Radius)
+        #print("Radius :", Radius)
         return Radius
 
 
@@ -90,7 +95,7 @@ class Model(Supermodel):
         z0 = BodenRauhigkeit  # z.B 0.03 für offenes landwirtschaftliches Gelände ohne Zäune und Hecken,
         # evtl. mitweitläufig verstreuten Gebäuden und sehr sanfte Hügel
         Cwi_h = Cwi_ref * ((math.log(h / z0)) / (math.log(href / z0)))
-        print("Wind at hub height :", Cwi_h)
+        #print("Wind at hub height :", Cwi_h)
         return Cwi_h
 
 
@@ -112,7 +117,7 @@ class Model(Supermodel):
 
         # Maximum generated output power[Watt] by the wind turbine
         GeneratorNominalPower = (1 / 2) * (rho * A * (Vnominal ** 3)) * Cp
-        print("GeneratorNominalPower :", GeneratorNominalPower)
+        #print("GeneratorNominalPower :", GeneratorNominalPower)
 
         # Produced power at different wind speeds
         # Power = (1/2)*(rho*A*(v.^3))*Cp
@@ -133,7 +138,7 @@ class Model(Supermodel):
         PowerOutput = PowerOutput / 1e6  # Watt to MW conversion
         GeneratorNominalPower = GeneratorNominalPower / 1e6  # Watt to MW conversion
         Auslastung = PowerOutput / GeneratorNominalPower  # Auslastung = ProducedPower/Pnominal
-        print("Auslastung eine Turbine :", Auslastung)
+        #print("Auslastung eine Turbine :", Auslastung)
         return Auslastung
 
     def windturbinenauslastung(self, KWDaten, WetterDaten):
@@ -200,15 +205,16 @@ class Model(Supermodel):
         for i in range(0, WTWetterDaten.shape[0]):
             WindDaten = WTWetterDaten[i, 1:97]
             BodenRauhigkeit = KraftwerksDaten[i, 4]
-            print("BodenRauhigkeit: ", BodenRauhigkeit)
+            #print("BodenRauhigkeit: ", BodenRauhigkeit)
             Nabenhoehe = KraftwerksDaten[i, 3]
             Auslastung = self.windturbine(WindDaten, Nabenhoehe, BodenRauhigkeit)
             # PVAuslastung[KWID(i), Auslastung(0:96)]
             WTAuslastung[WTrowIndex] = np.hstack((WTWetterDaten[i, 0], Auslastung[0:96]))
             WTrowIndex = WTrowIndex + 1
-            #print("Load all PPs: ", WTAuslastung)
-            plt.plot(Auslastung)
-            plt.show()
+            #plt.plot(Auslastung)
+            #plt.show()
+
+        #print("Load all PPs: ", WTAuslastung)
         return WTAuslastung
 
 
