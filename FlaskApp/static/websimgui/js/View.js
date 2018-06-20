@@ -295,6 +295,7 @@ class View {
 
     async update_default_result_view() {
         if (!this.mu) { this.content.html(""); return }
+        this.run = 0;
         let obj = this;
         // speed
         this.content.html("");
@@ -315,7 +316,6 @@ class View {
         this.content.append('label').classed("update_dot",true);
         this.content.append('br');
         this.content.append('br');
-
         await update(this);
         await set_updater(this);
 
@@ -324,9 +324,23 @@ class View {
             result = JSON.parse(result);
             if (result){
                 obj.run = result.run;
+
                 result = obj.content.selectAll('.result').data(d3.entries(result.result));
-                result.enter().append('div').classed('result', true).html(function(res){ return `<b>${res.key}:</b><br>${JSON.stringify(res.value)}` });
-                result.html(function(res){ return `<b>${res.key}:</b><br>${JSON.stringify(res.value)}` } );
+
+                result.enter().append('div').classed('result', true);
+
+                obj.content.selectAll('.result').html(function(res){
+                    if (res.key === "time" || res.key === "times"){
+                        if(Array.isArray(res.value)){
+                            for (let i = 0; i < res.value.length; i++) {
+                                res.value[i] = new Date(res.value[i]*1000).toString()
+                            }
+                        } else {
+                            res.value = new Date(res.value*1000).toString()
+                        }
+                    }
+                    return `<b>${res.key}:</b><br><div style="overflow-y: scroll; max-height:400px;"><pre>${JSON.stringify(res.value,null,5)}</pre></div>`
+                });
             }
         }
 
@@ -368,7 +382,9 @@ class View {
         props = props.enter().append("g").classed("property", true);
         props.append("span").html(function (d, i) {
             let brake = (i === 0 ? '' : '<br>');
-            return brake + d.value.name + ':<br>';
+            brake += (d.value.name + ' ['+ d.value.unit +']:<br>');
+
+            return brake
         });
         props.append("input")
             .attr("id", function (d) { return d.key; })
