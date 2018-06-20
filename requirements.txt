@@ -20,3 +20,5 @@ pytz
 sqlalchemy
 datetime
 bson
+numpy
+scipy
