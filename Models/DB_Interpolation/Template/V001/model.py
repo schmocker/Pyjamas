@@ -4,11 +4,15 @@ from numpy.lib.tests.test__datasource import valid_baseurl
 from core import Supermodel
 from core.util import Input, Output, Property
 
+
+
 # imports for db querys
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
+import os
 from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
-    Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, db_url
+    Kraftwerksleistung, Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, create_dummy_data
+
 
 import datetime, random
 
@@ -17,6 +21,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 from scipy.interpolate import griddata
+
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -330,6 +335,39 @@ class Model(Supermodel):
     async def extremely_complex_calculation(self, speed, time):
         distance = speed * time / self.get_property("prop1")
         return distance
+
+
+def start_db():
+    db_path = 'db/powerplants.db'
+    if not os.path.isfile(db_path):
+        open(db_path, 'a').close()
+
+    # an engine is the real DB
+    engine = create_engine('sqlite:///'+db_path)
+
+    # delete all tables
+    Base.metadata.drop_all(engine)
+
+    # create all tables
+    Base.metadata.create_all(engine)
+
+    # a session is used to communicate with the DB
+    Base.metadata.bind = engine
+    session = sessionmaker(bind=engine)()
+
+    # create dummy data
+    create_dummy_data(session)
+
+    return session
+
+
+if __name__ == "__main__":
+    db = start_db()
+
+    kw = db.query(Kraftwerk).first()
+
+    r = 5
+
 
 if __name__ == "__main__":
     dt = 900
