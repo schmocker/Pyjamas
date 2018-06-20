@@ -24,6 +24,7 @@ def datetime2utc_time(datetime):
 
 # Example
 def example():
+
     print(f"All time zones: {pytz.all_timezones}")
 
     print("\nExample time")
