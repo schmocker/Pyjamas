@@ -1,8 +1,10 @@
 from core import Supermodel
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp,Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis, db_url, Co2Preis
+from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp,Brennstofftyp,\
+    Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, create_dummy_data
+
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
-import datetime, random
+import os
 
 class Model(Supermodel):
     # model constructor
@@ -10,14 +12,34 @@ class Model(Supermodel):
         # instantiate supermodel
         super(Model, self).__init__(id, name)
 
-if __name__ == "__main__":
-    engine = create_engine(db_url)
+
+def start_db():
+    db_path = 'db/powerplants.db'
+    if not os.path.isfile(db_path):
+        open(db_path, 'a').close()
+
+    # an engine is the real DB
+    engine = create_engine('sqlite:///'+db_path)
+
+    # delete all tables
+    Base.metadata.drop_all(engine)
+
+    # create all tables
+    Base.metadata.create_all(engine)
+
+    # a session is used to communicate with the DB
     Base.metadata.bind = engine
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
+    session = sessionmaker(bind=engine)()
+
+    # create dummy data
+    create_dummy_data(session)
+
+    return session
 
 
-    kw = session.query(Kraftwerk).first()
+if __name__ == "__main__":
+    db = start_db()
 
-    r=5
-    
+    kw = db.query(Kraftwerk).first()
+
+    r = 5

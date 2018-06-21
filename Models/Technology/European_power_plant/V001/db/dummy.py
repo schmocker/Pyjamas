@@ -1,19 +1,13 @@
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
-    Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, db_url
+from Models.Technology.European_power_plant.V001.db.db_declarative import Base, Kraftwerk, Kraftwerkstyp, \
+    Kraftwerksleistung, Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis
 
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
-import datetime, random
+import datetime
+import random
 
 
-if __name__ == "__main__":
-    engine = create_engine(db_url)
-    Base.metadata.bind = engine
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-
-
-
+def create_dummy_data(session):
 
     ################### Brennstofftyp #############################
     session.query(Brennstofftyp).delete()
@@ -79,10 +73,36 @@ if __name__ == "__main__":
         kw = Kraftwerk(bezeichnung=kwt.bezeichnung + "_" + str(i),
                        fk_kraftwerkstyp=kwt.id,
                        long=random.random()*200,
-                       lat=random.random()*150,
-                       power_inst=random.random()*1500,
-                       datetime=datetime.datetime.now())
+                       lat=random.random()*150)
         session.add(kw)
+        try:
+            session.commit()
+        except exc.IntegrityError as e:
+            print(e)
+            session.rollback()
+
+
+    ################### Kraftwerksleistung #############################
+    session.query(Kraftwerksleistung).delete()
+    session.commit()
+
+    kws = session.query(Kraftwerk).all()
+    for kw in kws:
+        kwl = Kraftwerksleistung(fk_kraftwerk=kw.id,
+                                 power_inst=random.random()*1500,
+                                 datetime=datetime.datetime.now())
+        session.add(kwl)
+
+        kwl = Kraftwerksleistung(fk_kraftwerk=kw.id,
+                                 power_inst=random.random()*1500,
+                                 datetime=datetime.datetime.now())
+        session.add(kwl)
+
+        kwl = Kraftwerksleistung(fk_kraftwerk=kw.id,
+                                 power_inst=random.random()*1500,
+                                 datetime=datetime.datetime.now())
+        session.add(kwl)
+
         try:
             session.commit()
         except exc.IntegrityError as e:
