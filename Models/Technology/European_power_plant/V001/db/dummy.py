@@ -34,8 +34,8 @@ def create_dummy_data(session):
 
     bsts = session.query(Brennstofftyp).all()
     for bst in bsts:
-        if bst.Brennstofftyp != "None":
-            for _ in random.randint(1, 10):
+        if bst.bezeichnung != "None":
+            for _ in range(random.randint(1, 10)):
                 bsp = Brennstoffpreis(fk_brennstofftyp=bst.id,
                                       long=random.random()*60 - 20,
                                       lat=random.random()*60 + 20,
@@ -69,7 +69,7 @@ def create_dummy_data(session):
                      ["Windturbine", "offshore", "None"],
                      ["Windturbine", "onshore schwachwind", "None"],
                      ["Windturbine", "onshore starkwind", "None"]]:
-        bst = session.query().filter_by(bezeichnung=kwt_info[2]).first()
+        bst = session.query(Brennstofftyp).filter_by(bezeichnung=kwt_info[2]).first()
         kwt = Kraftwerkstyp(bezeichnung=kwt_info[0],
                             bezeichnung_subtyp=kwt_info[1],
                             fk_brennstofftyp=bst.id,
@@ -109,7 +109,7 @@ def create_dummy_data(session):
 
     kws = session.query(Kraftwerk).all()
     for kw in kws:
-        for _ in random.randint(1, 3):
+        for _ in range(random.randint(1, 3)):
             kwl = Kraftwerksleistung(fk_kraftwerk=kw.id,
                                      power_inst=random.randint(500, 1500),
                                      datetime=datetime.datetime.now()+random.randint(0, 20) *
@@ -127,7 +127,7 @@ def create_dummy_data(session):
 
     kwts = session.query(Kraftwerkstyp).all()
     for kwt in kwts:
-        for _ in random.randint(1, 5):
+        for _ in range(random.randint(1, 5)):
             verg = Verguetung(fk_kraftwerkstyp=kwt.id,
                               long=random.random() * 60 - 20,
                               lat=random.random() * 60 + 20,
@@ -147,8 +147,8 @@ def create_dummy_data(session):
 
     kwts = session.query(Kraftwerkstyp).all()
     for kwt in kwts:
-        if kwt.Brennstofftyp != "None":
-            for _ in random.randint(1, 3):
+        if kwt.brennstofftyp.bezeichnung != "None":
+            for _ in range(random.randint(1, 3)):
                 entp = Entsorgungspreis(fk_kraftwerkstyp=kwt.id,
                                         long=random.random() * 60 - 20,
                                         lat=random.random() * 60 + 20,
@@ -156,11 +156,11 @@ def create_dummy_data(session):
                                                  datetime.timedelta(days=365),
                                         preis=random.randint(100, 200))
                 session.add(entp)
-            try:
-                session.commit()
-            except exc.IntegrityError as e:
-                print(e)
-                session.rollback()
+                try:
+                    session.commit()
+                except exc.IntegrityError as e:
+                    print(e)
+                    session.rollback()
 
     # ################### Co2Preis #############################
     session.query(Co2Preis).delete()

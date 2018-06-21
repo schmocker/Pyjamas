@@ -33,7 +33,7 @@ class Kraftwerkstyp(Base):
     __tablename__ = 'kraftwerkstyp'
     # declare columns
     id = Column(Integer, primary_key=True)
-    bezeichnung = Column(String(250), nullable=False, unique=True)
+    bezeichnung = Column(String(250), nullable=False)
     bezeichnung_subtyp = Column(String(250))
     fk_brennstofftyp = Column(Integer, ForeignKey('brennstofftyp.id', ondelete="CASCADE"))
     wirkungsgrad = Column(Float)

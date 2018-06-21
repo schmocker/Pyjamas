@@ -364,6 +364,7 @@ def start_db():
 if __name__ == "__main__":
     db = start_db()
 
+    kws = db.query(Kraftwerk).all()
     kw = db.query(Kraftwerk).first()
 
     r = 5
