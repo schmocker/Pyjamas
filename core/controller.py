@@ -340,6 +340,8 @@ class Controller():
                 self.handle_dead_order(msg)
             elif msg['order'] == 'data':
                 self.handle_data_order(msg)
+            elif msg['order'] == 'kill':
+                self.handle_kill_order(msg)
         except KeyError:
             self.log_warning(f'message could not be handled correctly')
             self.log_warning(f'message = {msg}')
@@ -353,6 +355,10 @@ class Controller():
         if self.is_agent_paused(agent_id):
             self.agents_paused.remove(agent_id)
         self.log_debug(f'agent {agent_id} removed from running list')
+
+    def handle_kill_order(self, msg):
+        agent_id = msg['agent']
+        self.kill_agent(agent_id)
 
     def handle_data_order(self, msg):
         agent_id = msg['agent']
