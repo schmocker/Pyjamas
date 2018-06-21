@@ -1,7 +1,6 @@
 from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 
 
@@ -17,17 +16,22 @@ class Model(Supermodel):
         self.inputs['kwDaten'] = Input({'name': 'PowerPlantsData'})
 
         # define outputs
-        self.outputs['auslastung'] = Output({'name': 'Load'})
+        self.outputs['load'] = Output({'name': 'Load'})
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
         weatherdata = await self.get_input('weather')
+
+
         kwDaten = await self.get_input('kwDaten')
 
         #auslastung = self.calc_load(weather, kwDaten)
         auslastung = self.windturbinenauslastung(kwDaten, weatherdata)
 
-        auslastung = auslastung.tolist()
+        auslastung = auslastung
+
+
+
 
         # back converting: np.array(auslastung)
 
@@ -68,7 +72,7 @@ class Model(Supermodel):
         return Radius
 
 
-    def windgeschwindigkeit(self, WindDaten, Nabenhoehe, BodenRauhigkeit):
+    def windgeschwindigkeit(self, WindDaten, Nabenhoehe, BodenRauhigkeit, WindMesshoehe):
         # Calculates the wind speed a specified incoming hub-height(Nabenhoehe)
         # Use case: Internally called by windturbine()
         ###################################################################################################################
@@ -89,7 +93,7 @@ class Model(Supermodel):
         # Cwi,ref: Windgeschwindigkeit referenzhöhe(Messungshöhe) [m/s]
         # z0: Rauhigkeitslänge, Für die Rauhigkeitslänge können Werte der Tabelle 1.1-1 in WiWa_Skript_V26 verwendet werden
 
-        href = 10
+        href = WindMesshoehe
         Cwi_ref = WindDaten
         h = Nabenhoehe  # z.B. 100m
         z0 = BodenRauhigkeit  # z.B 0.03 für offenes landwirtschaftliches Gelände ohne Zäune und Hecken,
@@ -99,7 +103,7 @@ class Model(Supermodel):
         return Cwi_h
 
 
-    def windturbine(self, WindDaten, Nabenhoehe, BodenRauhigkeit):
+    def windturbine(self, WindDaten, Nabenhoehe, BodenRauhigkeit, WindMesshoehe):
         # Simulates wind power plant for specified incoming hub-hight(Nabenhoehe)
         ###################################################################################################################
         # Input Arguments:
@@ -123,7 +127,7 @@ class Model(Supermodel):
         # Power = (1/2)*(rho*A*(v.^3))*Cp
         #
         # v = 0:30; # Wind velocity[m/sec]  # temporary for testing purposes, will be removed
-        v = self.windgeschwindigkeit(WindDaten, Nabenhoehe, BodenRauhigkeit)  # Wind velocity[m/sec] at specific (e.g. 100m) hub height
+        v = self.windgeschwindigkeit(WindDaten, Nabenhoehe, BodenRauhigkeit, WindMesshoehe)  # Wind velocity[m/sec] at specific (e.g. 100m) hub height
         TheoraticalPower = (1 / 2) * (rho * A * (v ** 3)) * Cp
 
         # Output Power produced by the wind turbine[watt]
@@ -187,32 +191,64 @@ class Model(Supermodel):
         ###################################################################################################################
         ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
 
+
+        KWDaten = np.array([ KWDaten['id'], KWDaten['fk_kwt'], KWDaten['spez_info']]).transpose()
+        # Wetter = np.array([ WetterDaten['id'], WetterDaten['wetter']]).transpose()
+
+
+
         # Extracting data corresponding solely to wind turbines, by selecting rows of KWDaten where Foreign-Key= 2
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == ForeignKeyKWTyp]
 
+        def make_load_for_one_wt(kw_id, NH, Z0):
+
+            index_of_kwid_in_wetter = WetterDaten['id'].index(kw_id)
+            wind_for_kwid = WetterDaten['windspeed'][index_of_kwid_in_wetter]
+            wind_messhoehe = WetterDaten['windmesshoehe'][index_of_kwid_in_wetter]
+            wind = np.array(wind_for_kwid)
+
+            auslastung = self.windturbine(wind, NH, Z0, wind_messhoehe)
+            return auslastung.tolist()
+
+        id = [kw[0] for kw in KraftwerksDaten]
+        load = [make_load_for_one_wt(kw[0], kw[2]['NH'], kw[2]['Z0']) for kw in KraftwerksDaten]
+
+        WTAuslastung = {'id': id, 'load': load}
+
+        #NH = [kw[3]['NH'] for kw in KraftwerksDaten]
+        #Z0 = [kw[3]['Z0'] for kw in KraftwerksDaten]
+
+        #NH = np.array([NH]).transpose()
+        #KraftwerksDaten = np.append(KraftwerksDaten, NH, axis=1)
+
+        #Z0 = np.array([Z0]).transpose()
+        #KraftwerksDaten = np.append(KraftwerksDaten, Z0, axis=1)
+
         # Selecting KWIDs of filtered wind turbines
-        KWID_WT = KraftwerksDaten[:, 0]
-        print("KWID_WT: ", KWID_WT)
+        ####KWID_WT = KraftwerksDaten[:, 0]
+        ####print("KWID_WT: ", KWID_WT)
         # Extracting weather data corresponding solely to wind turbines, by selecting rows of incoming WetterDaten where
         # KWID of WetterDaten = KWID_PV
-        BoolWeather = np.in1d(WetterDaten[:, 0],
-                              KWID_WT)  # 1D vector holding TRUE/FALSE, TRUE values corresponds to PV data
-        WTWetterDaten = WetterDaten[BoolWeather == True]
+        ####BoolWeather = np.in1d(WetterDaten[:, 0],
+        #                  KWID_WT)  # 1D vector holding TRUE/FALSE, TRUE values corresponds to PV data
+        ######WTWetterDaten = WetterDaten[BoolWeather == True]
 
-        WTAuslastung = np.zeros(WTWetterDaten.shape)
-        WTrowIndex = 0
+        #########WTAuslastung = np.zeros(WTWetterDaten.shape)
 
+
+
+        '''
         for i in range(0, WTWetterDaten.shape[0]):
-            WindDaten = WTWetterDaten[i, 1:97]
-            BodenRauhigkeit = KraftwerksDaten[i, 4]
+            WindDaten = WTWetterDaten[i, 1:]
+            BodenRauhigkeit = KraftwerksDaten[i, 3]['Z0']
             #print("BodenRauhigkeit: ", BodenRauhigkeit)
-            Nabenhoehe = KraftwerksDaten[i, 3]
+            Nabenhoehe = KraftwerksDaten[i, 3]['NH']
             Auslastung = self.windturbine(WindDaten, Nabenhoehe, BodenRauhigkeit)
             # PVAuslastung[KWID(i), Auslastung(0:96)]
-            WTAuslastung[WTrowIndex] = np.hstack((WTWetterDaten[i, 0], Auslastung[0:96]))
-            WTrowIndex = WTrowIndex + 1
+            WTAuslastung[i] = np.hstack((KraftwerksDaten[i, 0], Auslastung))
             #plt.plot(Auslastung)
             #plt.show()
+        '''
 
         #print("Load all PPs: ", WTAuslastung)
         return WTAuslastung
