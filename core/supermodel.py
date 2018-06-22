@@ -13,7 +13,7 @@ class Supermodel:
     Provides the necessary steps to run and connect the model with others in a simulation.
 
     Arguments:
-        uuid {Any} -- the id of the model
+        uuid {'Any'} -- the id of the model
         name {str} -- the name of the model
     """
 
@@ -53,7 +53,7 @@ class Supermodel:
 
 #region ports
 
-    def link_input(self, output_model: Supermodel, output_name: str, input_name: str) -> bool:
+    def link_input(self, output_model: 'Supermodel', output_name: str, input_name: str) -> bool:
         """Connect an input of this model to an output of another model
         
         Arguments:
@@ -87,14 +87,14 @@ class Supermodel:
         except KeyError:
             return False
 
-    async def get_input(self, input_name: str) -> Any:
+    async def get_input(self, input_name: str) -> 'Any':
         """Awaits the connected output
         
         Arguments:
             input_name {str} -- the name of the input
         
         Returns:
-            {Any} -- the awaited output value
+            {'Any'} -- the awaited output value
         """
 
         try:
@@ -105,12 +105,12 @@ class Supermodel:
             for task in asyncio.Task.all_tasks():
                 task.cancel()
 
-    def set_output(self, output_name: str, output: Any):
+    def set_output(self, output_name: str, output: 'Any'):
         """Set the value of an output
         
         Arguments:
             output_name {str} -- the name of the output
-            output {Any} -- the value that is to be set
+            output {'Any'} -- the value that is to be set
         """
 
         try:
@@ -130,19 +130,19 @@ class Supermodel:
             self.outputs[key].clean_output()
         self.log_debug("outputs cleaned")
 
-    def get_property(self, property_name: str) -> Any:
+    def get_property(self, property_name: str) -> 'Any':
         try:
             return self.properties[property_name].get_property()
         except KeyError:
             self.log_error(f'could not retrieve property {property_name}')
             return None
 
-    def set_property(self, property_name: str, property_value: Any):
+    def set_property(self, property_name: str, property_value: 'Any'):
         """Set a value for a property that will be used instantly
         
         Arguments:
             property_name {str} -- the name of the property
-            property_value {Any} -- the value of the property
+            property_value {'Any'} -- the value of the property
         """
 
         try:
@@ -153,12 +153,12 @@ class Supermodel:
         except ValueError:
             self.log_warning(f'could not change property for property_name {property_name} : property_type does not fit')
 
-    def set_amend_property(self, property_name: str, property_value: Any):
+    def set_amend_property(self, property_name: str, property_value: 'Any'):
         """Set a value for a property that will be used starting with the next run
         
         Arguments:
             property_name {str} -- the name of the property
-            property_value {Any} -- the value of the property
+            property_value {'Any'} -- the value of the property
         """
 
         try:
