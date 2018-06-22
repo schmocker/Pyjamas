@@ -17,6 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 from scipy.interpolate import griddata
+from pytz import timezone
 
 
 # define the model class and inherit from class "Supermodel"
@@ -58,10 +59,12 @@ class Model(Supermodel):
         ## prep_result = prep_to_peri
 
         # get inputs
-        t_arr = await self.get_input('t')
-        # only first time value
-        t = t_arr[0]
+        t_in = await self.get_input('t')
+        # only first time value for interpolation
+        t = t_in[0]
 
+
+        # TODO query all data
         # query Kraftwerk
         db_kw = self.db.query(Kraftwerk).all()
         db_kw_id = self.db.query(Kraftwerk.id).order_by(Kraftwerk.id).all()
@@ -85,6 +88,9 @@ class Model(Supermodel):
         # query Entsorgungspreis
         db_ents = self.db.query(Entsorgungspreis).all()
 
+        # query Kraftwerksleistung
+        db_kwt = self.db.query(Kraftwerksleistung).all()
+
         # query Kraftwerkstyp
         db_kwt = self.db.query(Kraftwerkstyp).all()
 
@@ -101,13 +107,7 @@ class Model(Supermodel):
         # db_kw_datetime = [i.datetime for i in db_kw]
         # db_kw_spezinfo = [i.spez_info for i in db_kw]
 
-        break1 = 0
-
-        # calculate something
-        # One can declare custom functions (eg: see end of file)
-        # If you declare them "async" you will have to "await" them (like "extremely_complex_calculation")
-        # Else one could declare "normal" (blocking) functions as well (like "complex_calculation")
-
+        # TODO Interpolationen fertig, outputs ordnen
         # KEV Interpolation
           # get KW_id ---> KWT
         kev = self.interpol_3d(db_kev_t, db_kev_lat, db_kev_long, db_kev_preis, db_kw_lat, db_kw_long, t)
@@ -127,13 +127,18 @@ class Model(Supermodel):
         ents = self.interpol_3d(db_ents_t, db_ents_lat, db_ents_long, db_ents_preis, db_kw_lat, db_kw_long, t)
 
 
-
+        # TODO Berechnugnen integrieren für
+        # TODO CO2-Kosten (CO2Preise*CO2_Emiss Fakt/Wirkungsgrad)
+        # TODO Entsorgungskosten (entsorgungskosten/Wirkungsgrad)
+        # TODO Brennstoffkosten (Brennstoffpreise/Wirkungsgrad)
 
         # TODO assemble kwp table
-
+        # id¦bez¦lat¦long¦p_inst¦fk_KWT¦bez_KWT¦bez_subtyp¦wirk.¦spez_opex¦capex¦p_typ¦spez_info¦ents.preis¦verg¦
+        # fk_bst¦bez_bst¦co2emissfakt¦bs_preis¦co2_preis¦co2kosten¦entskosten¦brennstoffkosten
         # set output
         self.set_output("kw_park", kwp)
 
+        # TODO remove if func_post is unused
         # pass values to post function
         outputs = {'kw_park': kwp}
         return outputs
@@ -148,6 +153,7 @@ class Model(Supermodel):
         pass
 
     # 3D Interpolation
+    # TODO check function: inputs also as point?
     def interpol_3d(self, time, lat, long, values, kw_lat, kw_long, kw_t):
         test_data = True
         rand_test = True
@@ -262,68 +268,65 @@ class Model(Supermodel):
         return interp_combined
 
     # 1D Interpolation
-    def interpol_1d(self, time, values, kw_t):
+    def interpol_1d(self, db_time, db_values, kw_t):
+        # test data or database data
         test_data = True
-        rand_test = True
-        plot_data = True
+
         """
         INPUTS:
-            time: Time [datetime]; nx1
-            values: Temperatur or ...; ndarray, nx1, float
-            kw_t:   
+            time: ndarray of [datetime]; nx1
+            values: ndarray of [float]; nx1
+            kw_t: ndarray of [datetime]; mx1 (m>=1)
+
+        OUTPUTS:
+            interp_combined: ndarray of [float]; mx1 (corresponding values (yi) when interpolating kw_t (xi) 
+                                                      between time (x) and values (y))
         """
-        # TODO Ausrichtung der Input Arrays kontrollieren (Zeile/Spalte)
 
         if test_data:
-            # # set random weather station locations
-            # time = np.r_[0:24:3]
-            # values = np.random.rand(10)
+            # create 3 time values (today, 1 and 2 years from now) and random corresponding y values
+            t0 = datetime.datetime.now(timezone('utc'))
+            time = t0 + np.arange(3) * datetime.timedelta(days=365)
+            values = np.random.rand(3) * 100
 
-            # set fixed weather station locations
-            #time = np.r_[0:24:6]
-            t0 = datetime.datetime.now()
-            time = t0 + np.arange(96) * datetime.timedelta(seconds=900)
-
-            values = np.array([10, 20, 40, 50, 70, 80, 100, 90, 60, 30])
+            # create 1 or 4 test values
+            xi = t0 + np.random.rand(4) * 30 * datetime.timedelta(days=30)
+            # xi = t0 + np.random.rand(1) * 30 * datetime.timedelta(days=30)
 
         else:
-            time = time
-            values = values
-
-        if rand_test:
-            xi = np.array([.25, .5, .75, .25])  # testpoints 1D
-
-        else:
+            time = db_time
+            values = db_values
             xi = kw_t
 
+        # change time values from datetime to float
+        time = np.asarray([datetime.datetime.timestamp(i) for i in time])
+        xi = np.asarray([datetime.datetime.timestamp(i) for i in xi])
 
         # interpolate
         interp_nearest = griddata(time.T, values.T, xi.T, method='nearest')
         interp_linear = griddata(time.T, values.T, xi.T, method='linear')
 
-        # replace linear NAN with nearest
+        # replace Nan in linear with nearest (out of range values)
         interp_combined = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
 
-        print('interp_linear')
-        print(interp_linear)
-        print('interp_nearest')
-        print(interp_nearest)
-        print('interp_combined')
-        print(interp_combined)
+        if __name__ == "__main__":
+            print('interp_linear')
+            print(interp_linear)
+            print('interp_nearest')
+            print(interp_nearest)
+            print('interp_combined')
+            print(interp_combined)
 
-        if plot_data:
-
-            ax1 = plt.subplot(121)
-            ax1.plot(time, values, 'k.', ms=5)
+            ax1 = plt.axes()
+            ax1.plot(time, values, 'k+', ms=15)
             ax1.plot(xi, interp_combined, 'ro')
-            plt.title('Result')
             ax1.set_xlabel("time")
             ax1.set_ylabel("values")
-
             plt.show()
 
         return interp_combined
 
+    # TODO remove if interpol remains normal (not async)
     # define additional methods (async)
     async def extremely_complex_calculation(self, speed, time):
         distance = speed * time / self.get_property("prop1")
@@ -360,7 +363,7 @@ if __name__ == "__main__":
     kws = db.query(Kraftwerk).all()
     kw = db.query(Kraftwerk).first()
 
-    r = 5
+    stop = 1
 
 
 if __name__ == "__main__":
