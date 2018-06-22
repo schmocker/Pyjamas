@@ -316,31 +316,42 @@ class View {
         this.content.append('label').classed("update_dot",true);
         this.content.append('br');
         this.content.append('br');
+
+        let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
+        result = JSON.parse(result);
+        let keys = Object.keys(result.result);
+        let result_obj = obj.content.selectAll('.result').data(keys);
+        let new_result_obj = result_obj.enter().append('div').classed('result', true);
+        new_result_obj.append('b').text(function(d){return d + ":";});
+        new_result_obj.append('div').classed('value', true)
+            .attr('style', 'overflow-y: scroll; max-height:200px;')
+            .style('border', '1px solid');
+
+
         await update(this);
         await set_updater(this);
 
         async function update(obj){
             let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
             result = JSON.parse(result);
+
             if (result){
-                obj.run = result.run;
-
-                result = obj.content.selectAll('.result').data(d3.entries(result.result));
-
-                result.enter().append('div').classed('result', true);
-
-                obj.content.selectAll('.result').html(function(res){
-                    if (res.key === "time" || res.key === "times"){
-                        if(Array.isArray(res.value)){
-                            for (let i = 0; i < res.value.length; i++) {
-                                res.value[i] = new Date(res.value[i]*1000).toString()
+                obj.content.selectAll('.value')
+                    .html(function (key) {
+                        let value = result.result[key];
+                        if (key === "time" || key === "times"){
+                            if(Array.isArray(value)){
+                                for (let i = 0; i < value.length; i++) {
+                                    value[i] = new Date(value[i]*1000).toString()
+                                }
+                            } else {
+                                value = new Date(value*1000).toString()
                             }
-                        } else {
-                            res.value = new Date(res.value*1000).toString()
                         }
-                    }
-                    return `<b>${res.key}:</b><br><div style="overflow-y: scroll; max-height:400px;"><pre>${JSON.stringify(res.value,null,5)}</pre></div>`
-                });
+                        return `<pre style="margin: 3px">${JSON.stringify(value,null,5)}</pre>`;
+                    });
+
+
             }
         }
 
