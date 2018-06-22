@@ -1,22 +1,18 @@
 # imports for core
 from numpy.lib.tests.test__datasource import valid_baseurl
-
 from core import Supermodel
 from core.util import Input, Output, Property
 
-
-
-# imports for db querys
+# imports for database
 from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 import os
 from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
     Kraftwerksleistung, Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, create_dummy_data
 
-
-import datetime, random
-
-# used for interpolating
+# imports
+import datetime
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
@@ -42,14 +38,11 @@ class Model(Supermodel):
 
         # define persistent variables
         self.pers_variable_0 = 5
-        self.session = None
+        self.db = None
 
     async def func_birth(self):
-        # create DBsession
-        engine = create_engine(db_url)
-        Base.metadata.bind = engine
-        DBSession = sessionmaker(bind=engine)
-        self.session = DBSession()
+        # create database
+        self.db = start_db()
 
     async def func_amend(self, keys=[]):
         pass
@@ -70,33 +63,33 @@ class Model(Supermodel):
         t = t_arr[0]
 
         # query Kraftwerk
-        db_kw = self.session.query(Kraftwerk).all()
-        db_kw_id = self.session.query(Kraftwerk.id).order_by(Kraftwerk.id).all()
-        db_kw_bez = self.session.query(Kraftwerk.bezeichnung).order_by(Kraftwerk.id).all()
-        db_kw_fk_kwt = self.session.query(Kraftwerk.fk_kraftwerkstyp).order_by(Kraftwerk.id).all()
-        db_kw_long = self.session.query(Kraftwerk.long).order_by(Kraftwerk.id).all()
-        db_kw_lat = self.session.query(Kraftwerk.lat).order_by(Kraftwerk.id).all()
-        db_kw_pinst = self.session.query(Kraftwerk.power_inst).order_by(Kraftwerk.id).all()
-        db_kw_datetime = self.session.query(Kraftwerk.datetime).order_by(Kraftwerk.id).all()
-        db_kw_spezinfo = self.session.query(Kraftwerk.spez_info).order_by(Kraftwerk.id).all()
+        db_kw = self.db.query(Kraftwerk).all()
+        db_kw_id = self.db.query(Kraftwerk.id).order_by(Kraftwerk.id).all()
+        db_kw_bez = self.db.query(Kraftwerk.bezeichnung).order_by(Kraftwerk.id).all()
+        db_kw_fk_kwt = self.db.query(Kraftwerk.fk_kraftwerkstyp).order_by(Kraftwerk.id).all()
+        db_kw_long = self.db.query(Kraftwerk.long).order_by(Kraftwerk.id).all()
+        db_kw_lat = self.db.query(Kraftwerk.lat).order_by(Kraftwerk.id).all()
+        db_kw_pinst = self.db.query(Kraftwerk.power_inst).order_by(Kraftwerk.id).all()
+        db_kw_datetime = self.db.query(Kraftwerk.datetime).order_by(Kraftwerk.id).all()
+        db_kw_spezinfo = self.db.query(Kraftwerk.spez_info).order_by(Kraftwerk.id).all()
 
         # query Brennstoffpreis
-        db_bsp = self.session.query(Brennstoffpreis).all()
+        db_bsp = self.db.query(Brennstoffpreis).all()
 
         # query Brennstofftyp
-        db_bst = self.session.query(Brennstofftyp).all()
+        db_bst = self.db.query(Brennstofftyp).all()
 
         # query Co2Preis
-        db_co2 = self.session.query(Co2Preis).all()
+        db_co2 = self.db.query(Co2Preis).all()
 
         # query Entsorgungspreis
-        db_ents = self.session.query(Entsorgungspreis).all()
+        db_ents = self.db.query(Entsorgungspreis).all()
 
         # query Kraftwerkstyp
-        db_kwt = self.session.query(Kraftwerkstyp).all()
+        db_kwt = self.db.query(Kraftwerkstyp).all()
 
         # query Vergütung
-        db_verg = self.session.query(Verguetung).all()
+        db_verg = self.db.query(Verguetung).all()
 
         # alternative
         # db_kw_id = [i.id for i in db_kw]
