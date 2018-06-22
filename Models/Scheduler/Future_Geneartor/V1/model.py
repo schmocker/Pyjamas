@@ -32,7 +32,7 @@ class Model(Supermodel):
         if steps < 1:
             steps = 1
         interval = self.get_property("interval")
-        futures = (np.arange(steps) * interval + time).tolist()
+        futures = [i * interval + time for i in range(steps)]
         self.set_output("times", futures)
 
     async def func_post(self, peri_to_post=None):

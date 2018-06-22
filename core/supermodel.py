@@ -262,3 +262,73 @@ class Supermodel:
 
 #endregion abstract methods
 
+#region test model
+
+    @classmethod
+    def test(cls, inputs, properties):
+
+        class MockAgent():
+
+            def __init__(self, model):
+                self.model = model
+                self.model.agent = self
+                self.result = None
+
+            def run(self):
+                self.loop = asyncio.get_event_loop()
+
+                # sync gates
+                self.sync_gate_first = asyncio.Event()
+                self.sync_gate_second = asyncio.Event()
+
+                # func gates
+                self.prep_gate = asyncio.Event()
+                self.peri_gate = asyncio.Event()
+                self.post_gate = asyncio.Event()
+
+                # open func gates
+                self.prep_gate.set()
+                self.peri_gate.set()
+                self.post_gate.set()
+
+                birth = asyncio.ensure_future(self.model._internal_birth())
+                self.loop.run_until_complete(asyncio.gather(birth))
+
+                prep = asyncio.ensure_future(self.model.internal_loop())
+                self.loop.run_until_complete(asyncio.gather(prep))
+
+                return self.data
+
+            async def syncFirst(self):
+                self.model.alive = False
+                self.sync_gate_first.set()
+
+            async def syncSecond(self):
+                self.model.alive = False
+                self.sync_gate_second.set()
+
+            def send_data_order(self, model_id, data):
+                self.data = data
+
+        class MockModel(Supermodel):
+            def __init__(self):
+                super(MockModel, self).__init__(0, "mock")
+                for key, value in inputs.items():
+                    self.outputs[key] = Output({'name': f'mock input {key}'})
+                    self.outputs[key].clean_output()
+                    self.outputs[key].set_output(value)
+
+        mock_input_mod = MockModel()
+        test_mod = cls(0, "test_model")
+
+        for key in inputs:
+            test_mod.link_input(mock_input_mod, key, key)
+
+        for key, value in properties:
+            test_mod.set_property(key, value)
+
+        mock_agent = MockAgent(test_mod)
+
+        return mock_agent.run()
+
+#endregion test model

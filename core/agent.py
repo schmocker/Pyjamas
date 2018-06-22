@@ -55,6 +55,10 @@ class Agent():
         if self.logger:
             self.logger.warning(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
+    def log_error(self, msg):
+        if self.logger:
+            self.logger.error(f"[AGENT][{__name__}][{self.name}] : {msg}")
+
 #endregion logging
 
 #region simulation
@@ -128,6 +132,10 @@ class Agent():
             self.loop.run_until_complete(asyncio.gather(*preps))
         except concurrent.futures._base.CancelledError:
             self.log_debug(f'all tasks killed')
+        except Exception as e:
+            self.log_error(f'an exeption was thrown during the simulation --> stopping simulation')
+            self.log_error(e)
+            self.send_kill_order()
 
         self.running = False
 
@@ -287,6 +295,12 @@ class Agent():
     def send_dead_order(self):
         order = {}
         order['order'] = 'dead'
+        order['agent'] = self.id
+        self.controller_queue.put(order)
+
+    def send_kill_order(self):
+        order = {}
+        order['order'] = 'kill'
         order['agent'] = self.id
         self.controller_queue.put(order)
 

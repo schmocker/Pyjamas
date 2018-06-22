@@ -26,3 +26,16 @@ class Model(Supermodel):
         res = in1 + in2 + in3
 
         self.set_output("sum",res)
+
+if __name__=='__main__':
+    inputs = {
+        'in1':1,
+        'in2':2,
+        'in3':3
+    }
+
+    properties = {}
+
+    outputs = Model.test(inputs,properties)
+
+    print(outputs)
