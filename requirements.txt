@@ -21,3 +21,4 @@ numpy
 sqlalchemy
 datetime
 bson
+zip

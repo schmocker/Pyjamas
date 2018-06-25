@@ -225,7 +225,10 @@ class View {
             if (menu_sel.attr("id") === item && this.mu){
                 log(item);
                 log(menu_sel.attr("id") === item);
-                if (this.mu.model.has_property_view){
+
+                let has = (item === "properties") ? "has_property_view" :  "has_result_view";
+
+                if (this.mu.model[has]){
                     if (!menu_sel.classed("custom") && menu_sel.classed("default")){
                         menu_sel.classed("custom", true);
                         menu_sel.classed("default", false);

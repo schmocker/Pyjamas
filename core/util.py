@@ -4,6 +4,7 @@ import importlib
 import logging
 import errno
 
+
 class Port():
     def __init__(self, info: dict):
         self.items = dict()
@@ -30,6 +31,7 @@ class Input(Port):
         except KeyError:
             raise
 
+
 class Output(Port):
     
     def clean_output(self):
@@ -40,6 +42,7 @@ class Output(Port):
 
     def get_output(self):
         return self.items['value']
+
 
 class Property(Port):
 
@@ -76,6 +79,7 @@ class Property(Port):
         self.amend_value = None
         return False
 
+
 class CreateDirFileHandler(logging.FileHandler):
     def __init__(self, filename, mode='a', encoding=None, delay=0):
         self.create_dir(os.path.dirname(filename))
@@ -93,7 +97,6 @@ class CreateDirFileHandler(logging.FileHandler):
                 else: raise
 
 
-
 def get_models():
     def _get_folders(path):
         dirs = os.listdir(path)
@@ -101,26 +104,29 @@ def get_models():
         dirs = filter(lambda x: x[0] != '_', dirs)
         return list(dirs)
 
+    def _get_model_info(p, t, m, v):
+        try:
+            mod = importlib.import_module(f"{p}.{t}.{m}.{v}.model").Model(1, '')
+            info = mod.get_info()
+            docks = list()
+            for direction in ['input', 'output']:
+                for port_key, port in info[direction + "s"].items():
+                    port['key'] = port_key
+                ports = [port for key, port in info[direction + "s"].items()]
+                orientation = "left" if direction == "input" else "right"
+                docks.append({'direction': direction, 'orientation': orientation, 'ports': ports})
+            return {'docks': docks, 'properties': info["properties"]}
+        except Exception as e:
+            print(f"Error in {p}.{t}.{m}.{v}.model ({e})")
+
     path = "Models"
     model_dict = dict()
     for topic in _get_folders(path):
         model_dict[topic] = dict()
-        for model in _get_folders(path + '/' + topic):
+        topic_path = os.path.join(path, topic)
+        for model in _get_folders(topic_path):
             model_dict[topic][model] = dict()
-            for version in _get_folders(path + '/' + topic + '/' + model):
-
-
-                try:
-                    mod = importlib.import_module(f"Models.{topic}.{model}.{version}.model").Model(1, '')
-                    info = mod.get_info()
-                    docks = list()
-                    for direction in ['input', 'output']:
-                        for port_key, port in info[direction + "s"].items():
-                            port['key'] = port_key
-                        ports = [port for key, port in info[direction + "s"].items()]
-                        orientation = "left" if direction == "input" else "right"
-                        docks.append({'direction': direction, 'orientation': orientation, 'ports': ports})
-                    model_dict[topic][model][version] = {'docks': docks, 'properties': info["properties"]}
-                except Exception as e:
-                    print(f"Error in Models.{topic}.{model}.{version}.model ({e})")
+            model_path = os.path.join(topic_path, model)
+            for version in _get_folders(model_path):
+                model_dict[topic][model][version] = _get_model_info(path, topic, model, version)
     return model_dict
