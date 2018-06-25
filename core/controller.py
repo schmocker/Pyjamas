@@ -302,6 +302,13 @@ class Controller():
             return True
         return False
 
+    def get_agent_status(self, agent_id):
+        if self.is_agent_paused(agent_id):
+            return "paused"
+        if self.is_agent_running(agent_id):
+            return "running"
+        return "stopped"
+
     def get_agents_running(self):
         return list(self.agents_running)
 
