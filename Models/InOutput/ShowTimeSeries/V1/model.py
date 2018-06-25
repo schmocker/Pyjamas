@@ -13,25 +13,26 @@ class Model(Supermodel):
         self.inputs['times'] = Input({'name': 'Times', 'unit': '[times]', 'dimensions': []})
         self.inputs['values'] = Input({'name': 'Values', 'unit': '[values]', 'dimensions': []})
 
-        self.outputs['times'] = Output({'name': 'Times', 'unit': '[times]', 'dimensions': []})
-        self.outputs['values'] = Output({'name': 'Filtered values', 'unit': '[values]', 'dimensions': []})
+        self.outputs['times_out'] = Output({'name': 'Times', 'unit': '[times]', 'dimensions': []})
+        self.outputs['values_out'] = Output({'name': 'Filtered values', 'unit': '[values]', 'dimensions': []})
 
-        self.properties["filter"] = Property('', str, {'name': 'Serial dict filter', 'unit': 'f1/f2/f3/...', 'dimensions': []})
+        self.properties["filter"] = Property('', str, {'name': 'Serial dict filter', 'unit': 'dictname/5/dictname/...', 'dimensions': []})
+        Property()
 
     async def func_peri(self, prep_to_peri=None):
         times = await self.get_input("times")
         values = await self.get_input("values")
 
-        filter = self.get_property("filter")
+        fil = self.get_property("filter")
 
-        if filter is not '':
-            filter = filter.split('/')
-            for f in filter:
+        if fil is not '':
+            fil = fil.split('/')
+            for f in fil:
                 try:
                     f = int(f)
                 except:
                     pass
                 values = values[f]
 
-        self.set_output("times", times)
-        self.set_output("values", values)
+        self.set_output("times_out", times)
+        self.set_output("values_out", values)

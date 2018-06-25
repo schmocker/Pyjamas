@@ -20,9 +20,9 @@ let margin, width, height;
 async function create_view(){
 
 
-    margin = {top: 20, right: 20, bottom: 90, left: 50};
+    margin = {top: 20, right: 20, bottom: 150, left: 50};
     width = window.innerWidth - margin.left - margin.right;
-    height = window.innerWidth/16*9 - margin.top - margin.bottom;
+    height = window.innerHeight - margin.top - margin.bottom;
 
 // set the ranges
     x = d3.scaleTime().range([0, width]);
@@ -64,7 +64,7 @@ async function create_view(){
 
 
 
-
+    await update_view();
     await set_updater();
 }
 
@@ -72,7 +72,7 @@ async function set_updater() {
     clearInterval(update_interval);
     update_interval = setInterval(await async function() {
         await update_view();
-    }, 5*1000);
+    }, 1*1000);
 }
 
 async function update_view(){
@@ -138,12 +138,12 @@ async function get_data(){
     result = JSON.parse(result);
     result = result.result;
 
-    times = result.times;
+    times = result.times_out;
 
     for (i = 0; i < times.length; i++) {
         datetimes[i] = new Date(times[i] * 1E3)
     }
-    values = result.values;
+    values = result.values_out;
 
     let data = [];
     for (i = 0; i < times.length; i++) {
