@@ -123,9 +123,9 @@ class Agent():
         if not self.prepare_models():
             return
 
-        # start the internal loop of all models
-        self.log_debug("starting internal loop of all models")
-        preps = [asyncio.ensure_future(model.internal_loop()) for i,model in self.models.items()]
+        # start the simulation loop of all models
+        self.log_debug("starting simulation loop of all models")
+        preps = [asyncio.ensure_future(model.simulation_loop()) for i,model in self.models.items()]
         preps.append(asyncio.ensure_future(self.read_queue()))
         try:
             # main loop
