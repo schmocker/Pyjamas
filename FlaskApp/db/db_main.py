@@ -5,6 +5,7 @@ from core import Controller
 
 
 controller = Controller(logging_path='logs', DEBUG=True)
+print("CONTROLLER CREATED") #TODO: Multiple empty controllers get created (1 every time a agent is startet -> see log files) @Tobias do you know why?
 db = SQLAlchemy(app)
 
 

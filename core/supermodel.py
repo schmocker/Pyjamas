@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from flask import Markup
 from markdown2 import markdown
+import traceback
 
 
 class Supermodel:
@@ -38,14 +39,20 @@ class Supermodel:
             pass
 
     def log_warning(self, msg: str):
+        print(f"[WARNING][{self.id}][{__name__}][{self.name}] : {msg}")
+        print(traceback.format_exc())
         try:
             self.agent.logger.warning(f"[{self.id}][{__name__}][{self.name}] : {msg}")
+            self.agent.logger.warning(f"[{self.id}][{__name__}][{self.name}] : {traceback.format_exc()}")
         except AttributeError:
             pass
 
     def log_error(self, msg: str):
+        print(f"[ERROR][{self.id}][{__name__}][{self.name}] : {msg}")
+        print(traceback.format_exc())
         try:
             self.agent.logger.error(f"[{self.id}][{__name__}][{self.name}] : {msg}")
+            self.agent.logger.error(f"[{self.id}][{__name__}][{self.name}] : {traceback.format_exc()}")
         except AttributeError:
             pass
 
@@ -100,10 +107,8 @@ class Supermodel:
         try:
             return await self.inputs[input_name].get_input()
         except KeyError:
-            self.log_error(f'input {input_name} could not retrieve Future')
-            self.log_error(f'stopping simulation')
-            for task in asyncio.Task.all_tasks():
-                task.cancel()
+            self.log_error(f'input {input_name} could not retrieve Future --> stopping simulation')
+            self.agent.send_kill_order()
 
     def set_output(self, output_name: str, output: 'Any'):
         """Set the value of an output
@@ -371,7 +376,7 @@ class Supermodel:
                 prep = asyncio.ensure_future(self.model.simulation_loop())
                 self.loop.run_until_complete(asyncio.gather(prep))
 
-                return self.data
+                return self.result
 
             async def syncFirst(self):
                 self.model.alive = False
@@ -382,7 +387,7 @@ class Supermodel:
                 self.sync_gate_second.set()
 
             def send_data_order(self, model_id, data):
-                self.data = data
+                self.result = data
 
         class MockModel(Supermodel):
             def __init__(self):
@@ -403,6 +408,16 @@ class Supermodel:
 
         mock_agent = MockAgent(test_mod)
 
-        return mock_agent.run()
+        outputs_raw = mock_agent.run()
+
+        if outputs_raw:
+            outputs = {}
+            for key, output in outputs_raw[1:]:
+                outputs[key] = output
+            return outputs
+        else:
+            return None
+
+
 
 #endregion test model

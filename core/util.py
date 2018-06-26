@@ -76,6 +76,7 @@ class Property(Port):
                 self.amend_value = None
                 return True
             except ValueError:
+                self.amend_value = None
                 raise
         self.amend_value = None
         return False
