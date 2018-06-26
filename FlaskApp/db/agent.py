@@ -26,10 +26,11 @@ class Agent(db.Model):
 
 
     @classmethod
-    def start_agent(cls,id):
+    def start_agent(cls, id):
         Agent.query.filter_by(id=id).first().start()
+
     @classmethod
-    def kill_agent(cls,id):
+    def kill_agent(cls, id):
         Agent.query.filter_by(id=id).first().kill()
 
     def start(self):

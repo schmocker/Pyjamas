@@ -43,6 +43,12 @@ def example():
     utc_time2 = datetime2utc_time(local_datetime)
     print(f"utc_timetime: {utc_time2}  -> " + time.strftime("%Y-%m-%d %H:%M:%S+00:00", time.gmtime(utc_time2)))
 
+    print("\nFrom timestring > 2038 to datetime (only 64 bit)")
+    t_string = 'Fri Jun 22 10:55:01 2060'
+    t_tuple = time.strptime(t_string)
+    t = calendar.timegm(t_tuple)
+    dt = utc_time2datetime(t)
+    print(dt)
 
 if __name__ == "__main__":
     example()

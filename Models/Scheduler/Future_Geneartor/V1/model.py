@@ -3,6 +3,7 @@ from core.util import Input, Output, Property
 from core.supermodel import Supermodel
 import numpy as np
 
+
 class Model(Supermodel):
     """
         schedules the func gates of the agent

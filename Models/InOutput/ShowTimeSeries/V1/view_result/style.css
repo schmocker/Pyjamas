@@ -1,0 +1,27 @@
+#view{
+    width: 100%;
+    height: 100%;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    height: 28px;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    color: black;
+    border: 0px;
+    pointer-events: none;
+}
+
+circle:hover{
+    fill: blue;
+}

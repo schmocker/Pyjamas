@@ -17,9 +17,9 @@ python-dotenv
 # required for models
 datetime
 pytz
+numpy
 sqlalchemy
 datetime
 bson
-numpy
 scipy
-matplotlib
+paho-mqtt

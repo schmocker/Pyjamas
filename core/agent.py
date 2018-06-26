@@ -4,6 +4,7 @@ import logging
 import concurrent
 import datetime
 from core.util import CreateDirFileHandler
+import traceback
 
 class Agent():
 
@@ -52,12 +53,18 @@ class Agent():
             self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
     def log_warning(self, msg):
+        print(f"[WARNING][AGENT][{__name__}][{self.name}] : {msg}")
+        print(traceback.format_exc())
         if self.logger:
             self.logger.warning(f"[AGENT][{__name__}][{self.name}] : {msg}")
+            self.logger.warning(f"[AGENT][{__name__}][{self.name}] : {traceback.format_exc()}")
 
     def log_error(self, msg):
+        print(f"[ERROR][AGENT][{__name__}][{self.name}] : {msg}")
+        print(traceback.format_exc())
         if self.logger:
             self.logger.error(f"[AGENT][{__name__}][{self.name}] : {msg}")
+            self.logger.error(f"[AGENT][{__name__}][{self.name}] : {traceback.format_exc()}")
 
 #endregion logging
 
@@ -132,9 +139,8 @@ class Agent():
             self.loop.run_until_complete(asyncio.gather(*preps))
         except concurrent.futures._base.CancelledError:
             self.log_debug(f'all tasks killed')
-        except Exception as e:
+        except Exception:
             self.log_error(f'an exeption was thrown during the simulation --> stopping simulation')
-            self.log_error(e)
             self.send_kill_order()
 
         self.running = False
@@ -269,8 +275,7 @@ class Agent():
             else:
                 self.log_debug(f'recieved order could not be executed')
         except KeyError:
-            self.log_warning(f'message could not be handled correctly')
-            self.log_warning(f'message = {msg}')
+            self.log_warning(f'message does not have the right format')
 
     def pause(self):
         self.pause_gate.clear()
