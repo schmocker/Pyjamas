@@ -22,12 +22,28 @@ class Agent(db.Model):
         db.session.add(agent)
         db.session.commit()
 
+    @classmethod
+    def get_agent(cls, id):
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
+    def get_all_agents(cls):
+        return cls.query.order_by(Agent.name).all()
+
 
 
 
     @classmethod
     def start_agent(cls, id):
         Agent.query.filter_by(id=id).first().start()
+
+    @classmethod
+    def pause_agent(cls, id):
+        Agent.query.filter_by(id=id).first().pause()
+
+    @classmethod
+    def stop_agent(cls, id):
+        Agent.query.filter_by(id=id).first().stop()
 
     @classmethod
     def kill_agent(cls, id):
@@ -90,6 +106,11 @@ class Agent(db.Model):
             input_name = conn['port_id_to'].split('_', 1)[-1]
 
             controller.link_models(agent_id, output_model_id, output_name, input_model_id, input_name)
+
+    @classmethod
+    def dict_agent(cls, id):
+        return Agent.query.filter_by(id=id).first().dict
+
 
     @property
     def dict(self):

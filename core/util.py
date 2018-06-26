@@ -3,7 +3,7 @@ import os
 import importlib
 import logging
 import errno
-
+import time
 
 class Port():
     def __init__(self, info: dict):
@@ -98,36 +98,19 @@ class CreateDirFileHandler(logging.FileHandler):
                 else: raise
 
 
-def get_models():
-    def _get_folders(path):
-        dirs = os.listdir(path)
-        dirs = filter(lambda x: os.path.isdir(path + '/' + x), dirs)
-        dirs = filter(lambda x: x[0] != '_', dirs)
-        return list(dirs)
+def get_model_info(p, t, m, v):
+    def gen_dock(direction, in_out_puts):
+        orientation = "left" if direction == "input" else "right"
+        ports = [gen_port(key, in_out_put) for key, in_out_put in in_out_puts.items()]
+        return {'direction': direction, 'orientation': orientation, 'ports': ports}
 
-    def _get_model_info(p, t, m, v):
-        try:
-            mod = importlib.import_module(f"{p}.{t}.{m}.{v}.model").Model(1, '')
-            info = mod.get_info()
-            docks = list()
-            for direction in ['input', 'output']:
-                for port_key, port in info[direction + "s"].items():
-                    port['key'] = port_key
-                ports = [port for key, port in info[direction + "s"].items()]
-                orientation = "left" if direction == "input" else "right"
-                docks.append({'direction': direction, 'orientation': orientation, 'ports': ports})
-            return {'docks': docks, 'properties': info["properties"]}
-        except Exception as e:
-            print(f"Error in {p}.{t}.{m}.{v}.model ({e})")
+    def gen_port(key, in_out_put):
+        in_out_put['key'] = key
+        return in_out_put
 
-    path = "Models"
-    model_dict = dict()
-    for topic in _get_folders(path):
-        model_dict[topic] = dict()
-        topic_path = os.path.join(path, topic)
-        for model in _get_folders(topic_path):
-            model_dict[topic][model] = dict()
-            model_path = os.path.join(topic_path, model)
-            for version in _get_folders(model_path):
-                model_dict[topic][model][version] = _get_model_info(path, topic, model, version)
-    return model_dict
+    try:
+        info = importlib.import_module(f"{p}.{t}.{m}.{v}.model").Model(1, '').get_info()
+        docks = [gen_dock(direction, info[direction + "s"]) for direction in ['input', 'output']]
+        return {'docks': docks, 'properties': info["properties"]}
+    except Exception as e:
+        print(f" --> Error updating {p}.{t}.{m}.{v}.model ({e})")

@@ -4,7 +4,6 @@ let main;
 
 let connections;
 let models;
-let popup_addModel;
 let contextMenu;
 let view;
 let all_models;
@@ -34,7 +33,6 @@ window.onload = async function() {
     view = new View(d3.select("#wsg"));
 
     // Extras
-    popup_addModel =                new Popup_addModel(d3.select("#wsg"));
     contextMenu =                   new ContextMenu(d3.select("#wsg"));
 
 

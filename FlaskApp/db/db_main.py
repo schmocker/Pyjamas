@@ -20,7 +20,7 @@ from .connection import Connection
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
-
+'''
 @app.before_first_request
 def create_all():
     db.create_all()
@@ -35,3 +35,4 @@ def create_user():
     user_datastore.create_user(email=app.config.get('FLASK_USER_EMAIL'),
                                password=app.config.get('FLASK_USER_PASSWORD'))
     db.session.commit()
+'''

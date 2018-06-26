@@ -10,7 +10,7 @@ class View {
         this.menu = this.view.append('div')
             .attr('id', 'view_menu');
 
-        let icon_size = 25;
+        let icon_size = 20;
 
         this.update_interval = null;
         this.interval_speed = 1;
@@ -36,6 +36,23 @@ class View {
                     d3.select("#wsg").style('grid-template-rows', h + 'px 1fr');
                 })
             );
+
+        this.menu.append("img")
+            .attr("id", "update")
+            .classed("view_menu_item", true)
+            .attr("src", "static/images/icons/update.png")
+            .attr("title", "update all models")
+            .attr("width", icon_size)
+            .attr("height", icon_size)
+            .on("click", async function () {
+                let shadow = d3.select("#wsg_drawing").append("rect").attr("id", "shadow")
+                    .style("width", "100%").style("height", "100%")
+                    .style("fill", "white").style("opacity", 0.5);
+                await post("update", {}, true);
+                await update_all_models();
+                await obj.update_view();
+                shadow.remove();
+            });
 
         this.menu.append('div')
             .classed("view_menu_item", true)
@@ -81,23 +98,6 @@ class View {
             .attr("height", icon_size)
             .on("click", async function () {
                 if (obj.mu){ await models.remove(obj.mu); }
-            });
-
-
-        this.menu.append("img")
-            .attr("id", "update")
-            .classed("view_menu_item", true)
-            .attr("src", "static/images/icons/update.png")
-            .attr("title", "update all models")
-            .attr("width", icon_size)
-            .attr("height", icon_size)
-            .on("click", async function () {
-                let shadow = d3.select("#wsg_drawing").append("rect").attr("id", "shadow")
-                    .style("width", "100%").style("height", "100%")
-                    .style("fill", "white").style("opacity", 0.5);
-                await update_all_models();
-                await post("update", {}, true);
-                shadow.remove();
             });
 
 
@@ -209,7 +209,7 @@ class View {
         } else if (!mu){ // menu_item = null && mu = null
             menu_sel = this.menu.select("#add")
         } else  if (new_mu && this.menu.select("#add").classed("active")){ // menu_item = null && mu = X && new_mu = false
-            menu_sel = this.menu.select("#docu");
+            menu_sel = this.menu.select("#properties");
         } else {
             menu_sel = this.menu.select(".active");
         }
@@ -320,6 +320,16 @@ class View {
         this.content.append('br');
         this.content.append('br');
 
+        let outputs = obj.mu.model.info.docks[1].ports;
+
+        let result_obj = obj.content.selectAll('.result').data(outputs);
+        let new_result_obj = result_obj.enter().append('div').classed('result', true);
+        new_result_obj.append('b').text(function(d){return d.name + " [" + d.unit + "]" + ":";});
+        new_result_obj.append('div').classed('value', true)
+            .attr('style', 'overflow-y: scroll; max-height:200px;')
+            .style('border', '1px solid');
+
+        /*
         let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
         result = JSON.parse(result);
         let keys = Object.keys(result.result);
@@ -329,6 +339,7 @@ class View {
         new_result_obj.append('div').classed('value', true)
             .attr('style', 'overflow-y: scroll; max-height:200px;')
             .style('border', '1px solid');
+        */
 
 
         await update(this);
@@ -340,9 +351,9 @@ class View {
 
             if (result){
                 obj.content.selectAll('.value')
-                    .html(function (key) {
-                        let value = result.result[key];
-                        if (key === "time" || key === "times"){
+                    .html(function (d) {
+                        let value = result.result[d.key];
+                        if (d.key === "time" || d.key === "times"){
                             if(Array.isArray(value)){
                                 for (let i = 0; i < value.length; i++) {
                                     value[i] = new Date(value[i]*1000).toString()

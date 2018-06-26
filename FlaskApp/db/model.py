@@ -2,7 +2,7 @@ from .db_main import db
 import os
 from markdown2 import markdown
 from flask import Markup
-from core import get_models
+from core import get_model_info
 import json
 
 class Model(db.Model):
@@ -53,36 +53,38 @@ class Model(db.Model):
 
     @classmethod
     def update_all(cls):
-        models = get_models()
+        def add_or_update_model(topic, model, version):
+            info = get_model_info(path, topic, model, version)
+            if info:
+                info = json.dumps(info)
+                db_model = cls.query.filter_by(name=model).filter_by(topic=topic).filter_by(version=version).first()
+                if db_model is None:
+                    db.session.add(cls(name=model, topic=topic, version=version, info=info))
+                else:
+                    db_model.info = info
+                    unused_models.remove(db_model)
 
-        for topic in models:
-            for model in models[topic]:
-                for version in models[topic][model]:
-                    info = json.dumps(models[topic][model][version])
-                    db_model = cls.query.filter_by(name=model).filter_by(topic=topic).filter_by(version=version).first()
-
-                    # TODO: add orientation form DB to Info
-                    if db_model is None:
-                        db.session.add(cls(model, topic, version, info=info))
-                    else:
-                        db_model.info = info
+        unused_models = cls.query.all()
+        path = 'Models'
+        s = os.path.sep
+        models = [p[0].split(s)[1:4] for p in os.walk(path) if 'model.py' in p[2] and len(p[0].split(s)) is 4]
+        # models = [['topic_1', 'model_1', 'version_1'], ..., ['topic_n', 'model_n', 'version_n']]
+        [add_or_update_model(model[0], model[1], model[2]) for model in models]
+        [cls.query.filter_by(id=model.id).delete() for model in unused_models]
         db.session.commit()
 
-        # delete deleted models out of db
-        db_model_ids = list()
-        for topic in models:
-            for model in models[topic]:
-                for version in models[topic][model]:
-                    db_model = cls.query.filter_by(name=model).filter_by(topic=topic).filter_by(version=version).first()
-                    db_model_ids.append(db_model.id)
+    @classmethod
+    def get_model(cls, id):
+        return cls.query.filter_by(id=id).first()
 
-        cls.query.filter(cls.id.notin_(db_model_ids)).delete(synchronize_session=False)
-        db.session.commit()
+    @classmethod
+    def get_all_models(cls):
+        return cls.query.order_by(Model.topic).all()
 
     @classmethod
     def get_all(cls):
         d = dict()
-        for model in cls.query.all():
+        for model in cls.get_all_models():
             if model.topic not in d.keys():
                 d[model.topic] = dict()
             if model.name not in d[model.topic].keys():

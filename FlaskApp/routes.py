@@ -5,65 +5,49 @@ import json
 from flask import Markup
 import markdown2
 from .app import app
-import os
 
 
 @app.route('/')
 def home():
     txt = open('README.md', 'r', encoding="utf8").read()
     mkdwn = markdown2.markdown(txt, extras=['extra', 'fenced-code-blocks'])
-    content = Markup(mkdwn)
-    return render_template("home.html", content=content, loggedin=current_user.is_authenticated)
+    return render_template("home.html", content=Markup(mkdwn), loggedin=current_user.is_authenticated)
 
 
+# @login_required
 @app.route("/agents", methods=['GET', 'POST'])
-#@login_required
 def agents():
     if request.method == 'GET':
-        agent_id = request.args.get('agent', None)
-        if agent_id == None:
-            all_agents = Agent.query.order_by(Agent.name).all()
-            return render_template("agents.html", agents=all_agents, loggedin=current_user.is_authenticated)
+        agent_id = request.args.get('agent', None, int)
+        agent = Agent.get_agent(agent_id)
+        if agent:
+            return render_template("agentX.html", agent=agent, loggedin=current_user.is_authenticated)
         else:
-            currentAgent = Agent.query.filter_by(id=agent_id).first()
-            if currentAgent != None:
-                return render_template("agentX.html", agent=currentAgent, loggedin=current_user.is_authenticated)
-            else:
-                return "no valid Agent is chosen"
-
-
+            return render_template("agents.html", agents=Agent.get_all_agents(), loggedin=current_user.is_authenticated)
 
     elif request.method == 'POST':
         fnc = request.form['fnc']
 
         if fnc == 'remove_agent':
-            agent_id = request.form['agent_id']
+            agent_id = request.form.get('agent_id', None, int)
             Agent.remove(agent_id)
             return redirect(url_for('.agents'))
 
         if fnc == 'add_agent':
-            name = request.form['agent_name'];
+            name = request.form.get('agent_name', None, str)
             Agent.add(name)
             return redirect(url_for('.agents'))
 
 
-
-
-
-
-        #agent = Agent.query.filter_by(name=agentName).first()
-        #return render_template("agentX.html", agent=agent, loggedin=current_user.is_authenticated)
-
-
-#@login_required
+# @login_required
 @app.route('/websimgui', methods=['GET', 'POST'])
-def websimgui_GET():
+def web_sim_gui():
     try:
+
         if request.method == 'GET':
-
-            fnc = request.args.get('fnc', None)
-
-            data = json.loads(request.args['data'])
+            fnc = request.args.get('fnc', None, str)
+            data = request.args.get('data', None, str)
+            data = json.loads(data) if data else data
 
             if fnc == 'get_agent':
                 agent_id = request.args.get('agent', None)
@@ -83,79 +67,79 @@ def websimgui_GET():
                 results = Model_used.get_results(data['mu_id'], data['mu_run'])
                 return json.dumps(results)
 
-
         elif request.method == 'POST':
-            data = json.loads(request.form['data'])
+            fnc = request.form.get('fnc', None, str)
+            data = request.form.get('data', None, str)
+            data = json.loads(data) if data else data
 
-            if 'agent' in data.keys():
-                db_agent = Agent.query.filter_by(id=data['agent']).first()
-
-            if request.form['fnc'] == 'set_model_pos':
+            if fnc == 'set_model_pos':
                 Model_used.set_position(data['model'], data['x'], data['y'])
 
-            elif request.form['fnc'] == 'set_model_size':
+            elif fnc == 'set_model_size':
                 Model_used.set_size(data['model'], data['width'], data['height'])
 
-            elif request.form['fnc'] == 'set_model_property':
+            elif fnc == 'set_model_property':
                 Model_used.set_property(data['model'], data['property'], data['value'])
 
-            elif request.form['fnc'] == 'add_connection':
+            elif fnc == 'add_connection':
                 Connection.add(data['fk_model_used_from'], data['port_id_from'],
                                data['fk_model_used_to'], data['port_id_to'])
 
-            elif request.form['fnc'] == 'add_model_used':
+            elif fnc == 'add_model_used':
                 Model_used.add(data['name'], data['fk_model'], data['agent'])
 
-            elif request.form['fnc'] == 'remove_connection':
+            elif fnc == 'remove_connection':
                 Connection.remove(data['connection'])
 
-            elif request.form['fnc'] == 'remove_model':
+            elif fnc == 'remove_model':
                 Model_used.remove(data['model'])
 
-            elif request.form['fnc'] == 'start':
+            elif fnc == 'start':
                 Agent.start_agent(data['agent'])
 
-            elif request.form['fnc'] == 'pause':
-                db_agent.pause()
+            elif fnc == 'pause':
+                Agent.pause_agent(data['agent'])
 
-            elif request.form['fnc'] == 'stop':
-                db_agent.stop()
+            elif fnc == 'stop':
+                Agent.stop_agent(data['agent'])
 
-            elif request.form['fnc'] == 'kill':
+            elif fnc == 'kill':
                 Agent.kill_agent(data['agent'])
 
-            elif request.form['fnc'] == 'update':
-                print("updateing...")
+            elif fnc == 'update':
                 Model.update_all()
+
             else:
-                return json.dumps(False)
+                fnc = 'None' if fnc is None else fnc
+                raise ValueError(f"Function '{fnc}' is not defined for websimgui")
 
             if 'agent' in data.keys():
-                return json.dumps(db_agent.dict)
+                data = Agent.dict_agent(data['agent'])
+                return json.dumps(data)
             else:
                 return json.dumps(True)
 
     except Exception as e:
-        print(e)
-        print(f"no valid {request.method} request")
+        print(f"no valid {request.method} request ({e})")
         return json.dumps(False)
 
 
+# @login_required
 @app.route('/model_view')
 def model_view():
-    mu_id = request.args.get('MU_id')
-    view = request.args.get('view')
+    mu_id = request.args.get('MU_id', None, int)
+    view = request.args.get('view', None, str)
 
     p = Model_used.get_path_folders(mu_id)
-    return render_template(f"{p['topic']}/{p['model']}/{p['version']}/view_{view}/index.html",
-                           MU_id=mu_id,
-                           view=view)
+    return render_template(f"{p['topic']}/{p['model']}/{p['version']}/view_{view}/index.html", MU_id=mu_id, view=view)
 
+
+# @login_required
 @app.route('/model_view_static')
 def serve_model_view():
-    mu_id = request.args.get('MU_id')
-    view = request.args.get('view')
-    fn = request.args.get('fn')
+    mu_id = request.args.get('MU_id', None, int)
+    view = request.args.get('view', None, str)
+    fn = request.args.get('fn', None, str)
 
     p = Model_used.get_path_folders(mu_id)
     return send_from_directory(f"../Models/{p['topic']}/{p['model']}/{p['version']}/view_{view}", fn)
