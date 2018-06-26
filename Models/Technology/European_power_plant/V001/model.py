@@ -15,10 +15,12 @@ import datetime
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
+from mpl_toolkits.mplot3d import axes3d # is used even if warning says otherwise!
 from scipy.interpolate import griddata
 from pytz import timezone
 
+from Models._utils.time import utc_time2datetime
+from Models._utils.time import datetime2utc_time
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -152,179 +154,169 @@ class Model(Supermodel):
     async def func_death(self):
         pass
 
+    # TODO Ausrichtung der Input Arrays kontrollieren (Zeile/Spalte)
     # 3D Interpolation
-    # TODO check function: inputs also as point?
-    def interpol_3d(self, time, lat, long, values, kw_lat, kw_long, kw_t):
+    def interpol_3d(self, db_time, db_lat, db_long, db_values, kw_lat, kw_long, kw_time):
         test_data = True
-        rand_test = True
+        test_data_ordered = True
         plot_data = True
+
         """
+        This function interpolates in a grid of points (db_lat,db_long,db_time) with assigned values (db_values).
+        It interpolates for points given by (kw_lat, kw_long, kw_time) and outputs their corresponding value.
+        Values inside the grid are interpolated linearly and values outside of the grid are interpolated to the nearest point
+        of the grid.
+
+        "db_" inputs are things as KEV, fuel costs or similar
+        "kw_" inputs denote the power plants
+
         INPUTS:
-            lat: Latitude [decimal degrees, (45,3452)]; ndarray, nx1, float
-            long: Longitude [decimal degrees, (45,3452)]; ndarray, nx1, float
-            time: Time [datetime]; mx1, float
-            values: Temperatur or ...; ndarray, mxn, float
-            xi:  
+            db_lat: Latitude, ndarray of [float]; nx1
+            db_long: Longitude, ndarray of [float]; nx1
+            db_time: Time, ndarray of [datetime]; nx1
+            db_values: ndarray of [float]; nx1
+            kw_lat: Latitude, ndarray of [float]; jx1
+            kw_long: Longitude, ndarray of [float]; jx1
+            kw_time: Time, ndarray of [datetime]; jx1  
+
+        OUTPUTS:
+            kw_values: ndarray of [float]; jx1
         """
-        # TODO Ausrichtung der Input Arrays kontrollieren (Zeile/Spalte)
 
         if test_data:
-            # # set random weather station locations
-            # lat = np.random.rand(10)  # * 30 + 20
-            # long = np.random.rand(10)  # * 20 - 5
-            # time = np.r_[0:24:3]
-            # values = np.random.rand(lat.size, time.size)
+            if not test_data_ordered:
+                # generate random locations and values for the grid and the data points
+                n_db_pts = 50
+                db_lat = np.random.rand(n_db_pts) * 30 + 20
+                db_long = np.random.rand(n_db_pts) * 20 - 5
+                t0 = datetime.datetime.utcnow()
+                db_time = t0 + np.random.randint(120, size=n_db_pts) * datetime.timedelta(days=30)
+                db_values = np.random.rand(db_lat.size) * 100
 
-            # set fixed weather station locations
-            lat = np.array([0, 0, 0, .5, .5, .5, 1, 1, 1])
-            long = np.array([0, .5, 1, 0, .5, 1, 0, .5, 1])
-            #time = np.r_[0:24:6]
-            t0 = datetime.datetime.now()
-            time = t0 + np.arange(96) * datetime.timedelta(seconds=900)
+                n_kw = 3
+                kw_lat = np.random.rand(n_kw) * 40 + 15
+                kw_long = np.random.rand(n_kw) * 30 - 10
+                kw_time = t0 + np.random.randint(-20, 130, size=n_kw) * datetime.timedelta(days=30)
 
-            values = np.array([[10, 10, 10],
-                               [20, 20, 20],
-                               [30, 30, 30],
-                               [40, 40, 40],
-                               [50, 50, 50],
-                               [60, 60, 60],
-                               [70, 70, 70],
-                               [80, 80, 80],
-                               [90, 90, 90],
-                               [100, 100, 100],
-                               [110, 110, 110],
-                               [120, 120, 120]])
+            else:
+                # set fixed locations and values for the grid and the data points
+                n_times = 5
+                db_lat = np.tile(np.array([0, 0, 0, 5, 5, 5, 10, 10, 10]), n_times)
+                db_long = np.tile(np.array([0, 5, 10, 0, 5, 10, 0, 5, 10]), n_times)
+                t0 = datetime.datetime.utcnow()
+                db_time = np.repeat(t0 + np.arange(n_times) * datetime.timedelta(days=365), 9)
+                db_values = np.repeat(np.arange(10, 151, 10), 3)
 
-        else:
-            lat = lat
-            long = long
-            time = time
-            values = values
+                kw_lat = np.array([2.5, 7.5, 11])
+                kw_long = np.array([2.5, 7.5, 5])
+                kw_time = t0 + np.array([0.5, 2.5, 5]) * datetime.timedelta(days=365)
 
-        if rand_test:
-            xi = np.array([[.25, .5, .75, .25],  # testpoints 3D
-                       [.25, .5, 1, .5],
-                       [3, 12, 15, 24]])
-
-        else:
-
-            kw_lat = kw_lat
-            kw_long = kw_long
-            kw_t = kw_t
-            xi = np.vstack((kw_lat,kw_long,kw_t))
-
+        # change time values from datetime to float
+        db_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in db_time])
+        kw_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in kw_time])
         # arrange inputs for griddata
-        gridpoints = np.vstack((np.tile(lat, time.size), np.tile(long, time.size), np.repeat(time, lat.size)))
-        latgrid = gridpoints[0, :]
-        longrid = gridpoints[1, :]
-        timegrid = gridpoints[2, :]
-
-        values = values.reshape(-1)
-
+        xi = np.vstack((kw_lat, kw_long, kw_timestamp))
+        gridpoints = np.vstack((db_lat, db_long, db_timestamp))
         # interpolate
-        interp_nearest = griddata(gridpoints.T, values.T, xi.T, method='nearest')
-        interp_linear = griddata(gridpoints.T, values.T, xi.T, method='linear')
-
+        interp_nearest = griddata(gridpoints.T, db_values.T, xi.T, method='nearest')
+        interp_linear = griddata(gridpoints.T, db_values.T, xi.T, method='linear')
         # replace linear NAN with nearest
-        interp_combined = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
-
-        print('interp_linear')
-        print(interp_linear)
-        print('interp_nearest')
-        print(interp_nearest)
-        print('interp_combined')
-        print(interp_combined)
+        kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
 
         if plot_data:
+            print('interp_linear')
+            print(interp_linear)
+            print('interp_nearest')
+            print(interp_nearest)
+            print('kw_values')
+            print(kw_values)
 
             ax1 = plt.subplot(221, projection='3d')
-            ax1.scatter(latgrid, longrid, timegrid, c=values, depthshade=False)
-            ax1.scatter(xi[0, :], xi[1, :], xi[2, :], c='r', depthshade=False)
+            ax1.scatter(db_lat, db_long, db_timestamp, c=db_values, depthshade=False)
+            ax1.scatter(kw_lat, kw_long, kw_timestamp, c='r', depthshade=False)
             ax1.set_xlabel("lat")
             ax1.set_ylabel("lon")
             ax1.set_zlabel("time")
-
             ax2 = plt.subplot(222)
-            ax2.plot(lat, long, 'k.', ms=5)
-            ax2.plot(xi[0, :], xi[1, :], 'ro')
-            plt.title('Lat/Lon')
-            ax2.set_xlabel("lat")
-            ax2.set_ylabel("lon")
-
+            ax2.plot(db_long, db_timestamp, 'k.', ms=5)
+            ax2.plot(kw_long, kw_timestamp, 'ro')
+            plt.title('Lon/Time')
+            ax2.set_ylabel("timestamp")
+            ax2.set_xlabel("lon")
             ax3 = plt.subplot(223)
-            ax3.plot(xi[0, :], xi[2, :], 'ro')
-            plt.title('Lat/Value')
+            ax3.plot(db_lat, db_timestamp, 'k.', ms=5)
+            ax3.plot(kw_lat, kw_timestamp, 'ro')
+            plt.title('Lat/Time')
             ax3.set_xlabel("lat")
-            ax3.set_ylabel("Value")
-
+            ax3.set_ylabel("timestamp")
             ax4 = plt.subplot(224)
-            ax4.plot(xi[1, :], xi[2, :], 'ro')
-            plt.title('Lon/Value')
-            ax4.set_xlabel("lon")
-            ax4.set_ylabel("Value")
+            ax4.plot(db_lat, db_long, 'k.', ms=5)
+            ax4.plot(kw_lat, kw_long, 'ro')
+            plt.title('Lat/Lon')
+            ax4.set_xlabel("lat")
+            ax4.set_ylabel("lon")
 
             plt.show()
 
-        return interp_combined
+        return kw_values
 
     # 1D Interpolation
-    def interpol_1d(self, db_time, db_values, kw_t):
+    def interpol_1d(self, db_time, db_values, kw_time):
         # test data or database data
         test_data = True
+        plot_data = True
 
         """
+        This function interpolates in 1 dimension
+        X (time)
+        Y (values)
+        xi (kw_time)
+        yi (kw_values, output)
+        Values of xi between time.min and time.max are interpolated linearly, otherwise interpolated to nearest.
+
         INPUTS:
             time: ndarray of [datetime]; nx1
             values: ndarray of [float]; nx1
-            kw_t: ndarray of [datetime]; mx1 (m>=1)
+            kw_time: ndarray of [datetime]; mx1 (m>=1)
 
         OUTPUTS:
-            interp_combined: ndarray of [float]; mx1 (corresponding values (yi) when interpolating kw_t (xi) 
-                                                      between time (x) and values (y))
+            kw_values: ndarray of [float]; mx1
         """
-
         if test_data:
             # create 3 time values (today, 1 and 2 years from now) and random corresponding y values
             t0 = datetime.datetime.now(timezone('utc'))
-            time = t0 + np.arange(3) * datetime.timedelta(days=365)
-            values = np.random.rand(3) * 100
+            db_time = t0 + np.arange(3) * datetime.timedelta(days=365)
+            db_values = np.random.rand(3) * 100
 
             # create 1 or 4 test values
-            xi = t0 + np.random.rand(4) * 30 * datetime.timedelta(days=30)
-            # xi = t0 + np.random.rand(1) * 30 * datetime.timedelta(days=30)
-
-        else:
-            time = db_time
-            values = db_values
-            xi = kw_t
+            kw_time = t0 + np.random.rand(4) * 30 * datetime.timedelta(days=30)
+            # kw_time = t0 + np.random.rand(1) * 30 * datetime.timedelta(days=30)
 
         # change time values from datetime to float
-        time = np.asarray([datetime.datetime.timestamp(i) for i in time])
-        xi = np.asarray([datetime.datetime.timestamp(i) for i in xi])
-
+        time = np.asarray([datetime.datetime.timestamp(i) for i in db_time])
+        xi = np.asarray([datetime.datetime.timestamp(i) for i in kw_time])
         # interpolate
-        interp_nearest = griddata(time.T, values.T, xi.T, method='nearest')
-        interp_linear = griddata(time.T, values.T, xi.T, method='linear')
-
+        interp_nearest = griddata(time.T, db_values.T, xi.T, method='nearest')
+        interp_linear = griddata(time.T, db_values.T, xi.T, method='linear')
         # replace Nan in linear with nearest (out of range values)
-        interp_combined = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
+        kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
 
-        if __name__ == "__main__":
+        if plot_data:
             print('interp_linear')
             print(interp_linear)
             print('interp_nearest')
             print(interp_nearest)
             print('interp_combined')
-            print(interp_combined)
+            print(kw_values)
 
             ax1 = plt.axes()
-            ax1.plot(time, values, 'k+', ms=15)
-            ax1.plot(xi, interp_combined, 'ro')
+            ax1.plot(time, db_values, 'k+', ms=15)
+            ax1.plot(xi, kw_values, 'ro')
             ax1.set_xlabel("time")
             ax1.set_ylabel("values")
             plt.show()
 
-        return interp_combined
+        return kw_values
 
     # TODO remove if interpol remains normal (not async)
     # define additional methods (async)
