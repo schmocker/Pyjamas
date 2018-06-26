@@ -403,6 +403,14 @@ class Supermodel:
 
         mock_agent = MockAgent(test_mod)
 
-        return mock_agent.run()
+        outputs_raw = mock_agent.run()
+
+        outputs = {}
+        for key, output in outputs_raw[1:]:
+            outputs[key] = output
+
+        return outputs
+
+
 
 #endregion test model
