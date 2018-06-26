@@ -2,6 +2,7 @@ import asyncio
 from core.util import Input, Output, Property
 from core.supermodel import Supermodel
 
+
 class Model(Supermodel):
     """
         schedules the func gates of the agent

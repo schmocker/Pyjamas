@@ -398,7 +398,7 @@ class Supermodel:
         for key in inputs:
             test_mod.link_input(mock_input_mod, key, key)
 
-        for key, value in properties:
+        for key, value in properties.items():
             test_mod.set_property(key, value)
 
         mock_agent = MockAgent(test_mod)
