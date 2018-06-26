@@ -371,7 +371,7 @@ class Supermodel:
                 prep = asyncio.ensure_future(self.model.simulation_loop())
                 self.loop.run_until_complete(asyncio.gather(prep))
 
-                return self.data
+                return self.result
 
             async def syncFirst(self):
                 self.model.alive = False
@@ -382,7 +382,7 @@ class Supermodel:
                 self.sync_gate_second.set()
 
             def send_data_order(self, model_id, data):
-                self.data = data
+                self.result = data
 
         class MockModel(Supermodel):
             def __init__(self):
@@ -405,11 +405,13 @@ class Supermodel:
 
         outputs_raw = mock_agent.run()
 
-        outputs = {}
-        for key, output in outputs_raw[1:]:
-            outputs[key] = output
-
-        return outputs
+        if outputs_raw:
+            outputs = {}
+            for key, output in outputs_raw[1:]:
+                outputs[key] = output
+            return outputs
+        else:
+            return None
 
 
 

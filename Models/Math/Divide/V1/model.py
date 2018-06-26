@@ -38,4 +38,14 @@ class Model(Supermodel):
             f_mod = dividend % divisor
             self.set_output("floor_modulus",f_mod)
 
-        
+if __name__=='__main__':
+    inputs = {
+        'dividend':7,
+        'divisor':5,
+    }
+
+    properties = {}
+
+    outputs = Model.test(inputs,properties)
+
+    print(outputs)
