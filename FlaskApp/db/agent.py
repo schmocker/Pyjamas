@@ -116,8 +116,7 @@ class Agent(db.Model):
     def dict(self):
         agent = dict()
         agent['id'] = self.id
-        agent['active'] = self.active
-        # Todo: @ Simon & Tobias "get_status" ['running' || 'paused' || 'stopped'] from controller
+        agent['status'] = controller.get_agent_status(self.id)
 
         agent['model_used'] = list()
         agent['connection'] = list()

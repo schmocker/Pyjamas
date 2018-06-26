@@ -51,7 +51,7 @@ def web_sim_gui():
 
             if fnc == 'get_agent':
                 agent_id = request.args.get('agent', None)
-                db_agent = Agent.query.filter_by(id=agent_id).first()
+                db_agent = Agent.get_agent(agent_id)
                 return json.dumps(db_agent.dict)
 
             if fnc == 'get_model_selection':

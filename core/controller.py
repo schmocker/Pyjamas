@@ -291,7 +291,7 @@ class Controller():
                 result = self.get_model_result(agent_id, model_id)
                 return {'run': cur_run, 'result': result}
         except KeyError:
-            self.log_warning(f'no model run found for {model_id} in {agent_id}')
+            self.log_warning(f'no model run found for model {model_id} in agent {agent_id}')
         return None
 
 #endregion simulation

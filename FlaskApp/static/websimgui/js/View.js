@@ -165,12 +165,6 @@ class View {
         this.mu = null;
         this.set_mu(null);
 
-        // Todo: delete this
-        if (agent_data.active){
-            agent_data.status = "running";
-        } else {
-            agent_data.status = "stopped";
-        }
         obj.status();
     }
 
@@ -201,6 +195,7 @@ class View {
     async update_view(menu_item, new_mu){
         let obj = this;
         let mu = this.mu;
+        await this.status();
         clearInterval(this.update_interval);
 
         let menu_sel;
