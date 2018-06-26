@@ -7,6 +7,7 @@ from threading import Thread
 import logging
 import datetime
 from core.util import CreateDirFileHandler
+import traceback
 
 class Controller():
 
@@ -54,8 +55,11 @@ class Controller():
             self.logger.debug(f"[CONTROLLER][{__name__}] : {msg}")
 
     def log_warning(self, msg):
+        print(f"[WARNING][CONTROLLER][{__name__}] : {msg}")
+        print(traceback.format_exc())
         if self.logger:
             self.logger.warning(f"[CONTROLLER][{__name__}] : {msg}")
+            self.logger.warning(f"[CONTROLLER][{__name__}] : {traceback.format_exc()}")
 
 #endregion logging
 
@@ -94,9 +98,19 @@ class Controller():
             if self.is_agent_running(agent_id):
                 self.log_debug(f'agent {agent_id} is running')
                 self.kill_agent(agent_id)
-            del self.agent_queues[agent_id]
-            del self.agents[agent_id]
-            del self.result_data[agent_id]
+            try:
+                del self.agent_queues[agent_id]
+            except KeyError:
+                pass
+            try:
+                del self.agents[agent_id]
+            except KeyError:
+                pass
+            try:
+                del self.result_data[agent_id]
+            except KeyError:
+                pass
+
             if self.is_agent_paused(agent_id):
                 self.agents_paused.remove(agent_id)
             self.log_debug(f'agent {agent_id} removed')
@@ -105,7 +119,7 @@ class Controller():
                 self.log_debug(f'stopped queue reading thread')
             return True
         except Exception:
-            self.log_debug(f'agent {agent_id} could not be removed')
+            self.log_warning(f'agent {agent_id} could not be removed')
         return False
 
     def get_agent_info(self, agent_id):
