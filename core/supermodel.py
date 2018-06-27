@@ -185,6 +185,7 @@ class Supermodel:
             except ValueError:
                 self.log_warning(f'could not amend property for property_name {key} : property_type does not fit')
         if keys:
+            await self.send_properties()
             await self.func_amend(keys)
         self.log_debug("finished amend")
 
@@ -251,6 +252,7 @@ class Supermodel:
     async def _internal_birth(self):
 
         self.clean_outputs()
+        await self.send_properties()
 
         self.log_debug("starting func_birth")
         await self.func_birth()
@@ -326,6 +328,16 @@ class Supermodel:
             data.append(data_point)
         
         self.agent.send_data_order(self.id, data)
+
+    async def send_properties(self):
+        """Send the current properties to the controller
+        """
+
+        props = {}
+        for key, prop in self.properties.items():
+            props[key] = prop.get_property()
+
+        self.agent.send_cpro_order(self.id, props)
 
 #endregion simulation loop
 
@@ -409,7 +421,7 @@ class Supermodel:
             def __init__(self):
                 super(MockModel, self).__init__(0, "mock")
                 for key, value in inputs.items():
-                    self.outputs[key] = Output({'name': f'mock input {key}'})
+                    self.outputs[key] = Output(name=f'mock input {key}')
                     self.outputs[key].clean_output()
                     self.outputs[key].set_output(value)
 

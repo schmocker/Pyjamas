@@ -5,7 +5,7 @@ from core.supermodel import Supermodel
 class Model(Supermodel):
     def __init__(self, uuid, name: str):
         super(Model, self).__init__(uuid, name)
-        
+
 
     async def func_peri(self, prep_to_peri=None):
         #this should fail here and stop the simulation

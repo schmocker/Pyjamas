@@ -297,11 +297,19 @@ class Controller():
             self.log_warning(f'no model run found for model {model_id} in agent {agent_id}')
         return None
 
+    def get_model_properties(self, agent_id, model_id):
+        self.log_debug(f'starting get_model_properties')
+        try:
+            return self.property_data[agent_id][model_id]
+        except KeyError:
+            self.log_warning(f'no property data found for model {model_id} in agent {agent_id}')
+            return None
+
 #endregion simulation
 
 #region util
 
-    # Todo: @Simon: add function "get_status" to return ['running' || 'paused' || 'stopped']
+    # TODO: @Simon: add function "get_status" to return ['running' || 'paused' || 'stopped']
 
     def is_existing_agent(self, agent_id):
         if agent_id in self.agents:
@@ -364,11 +372,12 @@ class Controller():
                 self.handle_dead_order(msg)
             elif msg['order'] == 'data':
                 self.handle_data_order(msg)
+            elif msg['order'] == 'cpro':
+                self.handle_cpro_order(msg)
             elif msg['order'] == 'kill':
                 self.handle_kill_order(msg)
         except KeyError:
-            self.log_warning(f'message could not be handled correctly')
-            self.log_warning(f'message = {msg}')
+            self.log_warning(f'message {msg} could not be handled correctly')
 
     def handle_dead_order(self, msg):
         agent_id = msg['agent']
@@ -400,6 +409,19 @@ class Controller():
         
         for name, result in data[1:]:
             self.result_data[agent_id][model_id][name] = result
+
+    def handle_cpro_order(self, msg):
+        agent_id = msg['agent']
+        model_id = msg['model']
+        props = msg['text']
+
+        if not agent_id in self.property_data:
+            self.property_data[agent_id] = {}
+        if not model_id in self.property_data[agent_id]:
+            self.property_data[agent_id][model_id] = {}
+
+        for key, prop in props.items():
+            self.property_data[agent_id][model_id][key] = prop
 
     # orders
 

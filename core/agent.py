@@ -160,6 +160,7 @@ class Agent():
         self.sync_counter_second = self.sync_counter_second + 1
         self.log_debug(f"second sync gate counter: {self.sync_counter_second}/{len(self.models)}")
         if self.sync_counter_second >= len(self.models):
+            await self.force_read_queue()
             await self.pause_gate.wait()
             self.sync_gate_first.clear()
             self.sync_gate_second.set()
@@ -251,6 +252,17 @@ class Agent():
                     self.log_debug("queue was empty")
             await asyncio.sleep(0)
 
+    async def force_read_queue(self):
+        while not self.agent_queue.empty():
+            try:
+                msg = self.agent_queue.get(False)
+                if self.id == msg["agent"]:
+                    await self.handle_order(msg) 
+            except KeyError:
+                self.log_debug("non valid message format")
+            except Exception:
+                self.log_debug("queue was empty")
+
     async def handle_order(self, msg):
         try:
             order = msg['order']
@@ -315,6 +327,14 @@ class Agent():
         order['agent'] = self.id
         order['model'] = model_id
         order['text'] = data
+        self.controller_queue.put(order)
+
+    def send_cpro_order(self, model_id, props):
+        order = {}
+        order['order'] = 'cpro'
+        order['agent'] = self.id
+        order['model'] = model_id
+        order['text'] = props
         self.controller_queue.put(order)
 
 #endregion messaging
