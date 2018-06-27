@@ -8,11 +8,11 @@ class Model(Supermodel):
     def __init__(self, uuid, name: str):
         super(Model, self).__init__(uuid, name)
 
-        self.inputs['data'] = Input({'name': 'Data', 'unit': 'num', 'dimensions': []})
+        self.inputs['data'] = Input(name='Data', unit='any', info='Data to be published must be convertible to json')
 
-        self.properties['host'] = Property('iot.eclipse.org', str, {'name': 'Broker Address', 'unit': 'string'})
-        self.properties['port'] = Property(1883, str, {'name': 'Broker Port', 'unit': 'int'})
-        self.properties['topic'] = Property('pyjamas', str, {'name': 'Topic', 'unit': 'string'})
+        self.properties['host'] = Property('iot.eclipse.org', str, name='Broker Address', unit='-', info='string')
+        self.properties['port'] = Property(1883, int, name='Broker Port', unit='-', info='int, usually 1883 for MQTT')
+        self.properties['topic'] = Property('pyjamas', str, name='Topic', unit='-', info='string')
 
         self.client = None
         self.host = None

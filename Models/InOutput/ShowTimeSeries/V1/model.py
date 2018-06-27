@@ -12,13 +12,15 @@ class Model(Supermodel):
     def __init__(self, uuid, name :str):
         super(Model, self).__init__(uuid,name)
 
-        self.inputs['times'] = Input({'name': 'Times', 'unit': '[times]', 'dimensions': []})
-        self.inputs['values'] = Input({'name': 'Values', 'unit': '[values]', 'dimensions': []})
+        self.inputs['times'] = Input(name='Times', unit='s', info='utc time array')
+        self.inputs['values'] = Input(name='Values', unit='any', info='value array')
 
-        self.outputs['times_out'] = Output({'name': 'Times', 'unit': '[times]', 'dimensions': []})
-        self.outputs['values_out'] = Output({'name': 'Filtered values', 'unit': '[values]', 'dimensions': []})
+        self.outputs['times_out'] = Output(name='Times', unit='times]', info='utc time arry')
+        self.outputs['values_out'] = Output(name='Filtered values', unit='values', info='filtered value array')
 
-        self.properties["filter"] = Property('', str, {'name': 'Serial dict and array filter for values', 'unit': '"dictname", 3, ...', 'dimensions': []})
+        self.properties["filter"] = Property('', str, name='Filter',
+                                             unit='-', info='comma separated dict keys and array indexes',
+                                             example='"speed", 2')
 
     async def func_peri(self, prep_to_peri=None):
         times = await self.get_input("times")
