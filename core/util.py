@@ -6,9 +6,11 @@ import errno
 import time
 
 class Port():
-    def __init__(self, info: dict):
+    def __init__(self, name='', unit='-', **kwargs):
         self.items = dict()
-        self.items['info'] = info
+        self.items['info'] = kwargs if kwargs is not None else dict()
+        self.items['info']['name'] = name
+        self.items['info']['unit'] = unit
 
     def get_port_info(self):
         return self.items['info']
@@ -46,8 +48,8 @@ class Output(Port):
 
 class Property(Port):
 
-    def __init__(self, initial_value, property_type, info: dict):
-        super(Property, self).__init__(info)
+    def __init__(self, initial_value, property_type, name='', unit='-', **kwargs):
+        super(Property, self).__init__(name, unit, **kwargs)
         self.property_type = property_type
         self.amend_value = None
 

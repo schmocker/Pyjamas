@@ -198,9 +198,25 @@ class Supermodel:
         info = {}
         info['id'] = self.id
         info['name'] = self.name
-        info['inputs'] = {key: inp.get_port_info() for key,inp in self.inputs.items()}
-        info['outputs'] = {key: out.get_port_info() for key,out in self.outputs.items()}
-        info['properties'] = {key: prop.get_port_info() for key,prop in self.properties.items()}
+
+        info['inputs'] = {}
+        for key, inp in self.inputs.items():
+            info['inputs'][key] = inp.get_port_info()
+            if info['inputs'][key]['name'] == '':
+                info['inputs'][key]['name'] = key
+
+        info['outputs'] = {}
+        for key, out in self.outputs.items():
+            info['outputs'][key] = out.get_port_info()
+            if info['outputs'][key]['name'] == '':
+                info['outputs'][key]['name'] = key
+
+        info['properties'] = {}
+        for key, prop in self.properties.items():
+            info['properties'][key] = prop.get_port_info()
+            if info['properties'][key]['name'] == '':
+                info['properties'][key]['name'] = key
+
         return info
 
 #endregion ports

@@ -267,9 +267,12 @@ class Controller():
         if self.is_existing_agent(agent_id):
             if self.is_agent_running(agent_id):
                 self.agents_running[agent_id].terminate()
+                try:
+                    del self.agents_running[agent_id]
+                except KeyError:
+                    pass
                 if self.is_agent_paused(agent_id):
                     self.agents_paused.remove(agent_id)
-                del self.agents_running[agent_id]
                 return True
             else:
                 self.log_debug(f'agent {agent_id} is not running')
@@ -303,7 +306,7 @@ class Controller():
     def is_existing_agent(self, agent_id):
         if agent_id in self.agents:
             return True
-        self.log_debug(f'agent {agent_id} is not existing')
+        self.log_warning(f'agent {agent_id} is not existing')
         return False
 
     def is_agent_running(self, agent_id):

@@ -51,7 +51,7 @@ class Agent(db.Model):
 
     def start(self):
 
-        if not self.active:
+        if not self.active: # TODO: if application is started (run.py) and no agents are existing. If 'active' is True in the DB it tries to start a non existing agent (maybe set all 'active' in DB to False when application is starting?)
             self.add_full_agent()
 
         controller.start_agent(self.id)
