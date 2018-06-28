@@ -65,7 +65,6 @@ class Model(Supermodel):
         # only first time value for interpolation
         kw_time = t_in[0]
 
-
         # TODO query all data
         # query Kraftwerk
         db_kw = self.db.query(Kraftwerk).all()
@@ -82,13 +81,6 @@ class Model(Supermodel):
         # db_kw_long = [i.long for i in db_kw]
         # db_kw_lat = [i.lat for i in db_kw]
 
-        # query Kraftwerksleistung
-        db_kwl = self.db.query(Kraftwerksleistung).order_by(Kraftwerksleistung.id).all()
-        db_kwl_id = self.db.query(Kraftwerksleistung.id).order_by(Kraftwerksleistung.id).all()
-        db_kwl_fk_kw = self.db.query(Kraftwerksleistung.fk_kraftwerk).order_by(Kraftwerksleistung.id).all()
-        db_kwl_pinst = self.db.query(Kraftwerksleistung.power_inst).order_by(Kraftwerksleistung.id).all()
-        db_kwl_datetime = self.db.query(Kraftwerksleistung.datetime).order_by(Kraftwerksleistung.id).all()
-
         # query Brennstoffpreis
         db_bsp = self.db.query(Brennstoffpreis).all()
 
@@ -97,48 +89,92 @@ class Model(Supermodel):
 
         # query Co2Preis
         db_co2 = self.db.query(Co2Preis).all()
+        db_co2_t = [i.datetime for i in db_co2]
+        db_co2_lat = [i.lat for i in db_co2]
+        db_co2_long = [i.long for i in db_co2]
+        db_co2_preis = [i.preis for i in db_co2]
 
         # query Entsorgungspreis
         db_ents = self.db.query(Entsorgungspreis).order_by(Entsorgungspreis.id).all()
-        db_ents_id = self.db.query(Entsorgungspreis.id).order_by(Entsorgungspreis.id).all()
-        db_ents_fk_kwt = self.db.query(Entsorgungspreis.fk_kraftwerkstyp).order_by(Entsorgungspreis.id).all()
-        db_ents_long = self.db.query(Entsorgungspreis.long).order_by(Entsorgungspreis.id).all()
-        db_ents_lat = self.db.query(Entsorgungspreis.lat).order_by(Entsorgungspreis.id).all()
-        db_ents_datetime = self.db.query(Entsorgungspreis.datetime).order_by(Entsorgungspreis.id).all()
-        db_ents_preis = self.db.query(Entsorgungspreis.preis).order_by(Entsorgungspreis.id).all()
 
         # query Kraftwerksleistung
-        db_kwt = self.db.query(Kraftwerksleistung).all()
+        db_kwl = self.db.query(Kraftwerksleistung).order_by(Kraftwerksleistung.id).all()
+        db_kwl_id = self.db.query(Kraftwerksleistung.id).order_by(Kraftwerksleistung.id).all()
+        db_kwl_fk_kw = self.db.query(Kraftwerksleistung.fk_kraftwerk).order_by(Kraftwerksleistung.id).all()
+        db_kwl_pinst = self.db.query(Kraftwerksleistung.power_inst).order_by(Kraftwerksleistung.id).all()
+        db_kwl_datetime = self.db.query(Kraftwerksleistung.datetime).order_by(Kraftwerksleistung.id).all()
 
         # query Kraftwerkstyp
         db_kwt = self.db.query(Kraftwerkstyp).all()
 
-        # query Vergütung
+        # query Verguetung
         db_verg = self.db.query(Verguetung).all()
 
 
         # TODO Interpolationen fertig, outputs ordnen
-        # KEV Interpolation
-          # get KW_id ---> KWT
-        kev = self.interpol_3d(db_kev_t, db_kev_lat, db_kev_long, db_kev_preis, db_kw_lat, db_kw_long, kw_time)
-
-        # P_inst Interpolation
-        pinst = self.interpol_1d(db_time, db_values, kw_time)
-
         # Brennstoffpreis Interpolation
-          # get KW_id--> KWT-->BST
-        bsp = self.interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis, db_kw_lat, db_kw_long, kw_time)
+        bsp = []
+        for kw in db_kw:
+            if kw.kraftwerkstyp.brennstofftyp.bezeichnung == "None":
+                kw_bsp = np.asarray([np.nan])
+            else:
+                print("Brennstoffpreis", kw.id, kw.bezeichnung)
+                db_bsp = kw.kraftwerkstyp.brennstofftyp.brennstoffpreise
+                db_bsp_t = [i.datetime for i in db_bsp]
+                db_bsp_lat = [i.lat for i in db_bsp]
+                db_bsp_long = [i.long for i in db_bsp]
+                db_bsp_preis = [i.preis for i in db_bsp]
 
-        # CO2-Preise Interpolation
-        co2 = self.interpol_3d(db_co2_t, db_co2_lat, db_co2_long, db_co2_preis, db_kw_lat, db_kw_long, kw_time)
+                db_kw_lat = kw.lat
+                db_kw_long = kw.long
+
+                kw_bsp = interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis,
+                                     db_kw_lat, db_kw_long, kw_time)
+
+            bsp = bsp + [kw_bsp]
+        bsp = np.array(bsp)
+
+        # CO2-Preis Interpolation
+        co2 = []
+        for kw in db_kw:
+            print("CO2-Preis", kw.id, kw.bezeichnung)
+
+            db_kw_lat = kw.lat
+            db_kw_long = kw.long
+
+            co2 = co2 + [self.interpol_3d(db_co2_t, db_co2_lat, db_co2_long, db_co2_preis,
+                                          db_kw_lat, db_kw_long, kw_time)]
+        co2 = np.array(co2)
 
         # Entsorgungspreis Interpolation
-          # get KW_id ---> KWT
-        ents = self.interpol_3d(db_ents_t, db_ents_lat, db_ents_long, db_ents_preis, db_kw_lat, db_kw_long, kw_time)
+        ents = []
+        for kw in db_kw:
+            print("Entsorgungspreis", kw.id, kw.bezeichnung)
+            db_ents = kw.kraftwerkstyp.entsorgungspreise
+            db_ents_t = [i.datetime for i in db_ents]
+            db_ents_lat = [i.lat for i in db_ents]
+            db_ents_long = [i.long for i in db_ents]
+            db_ents_preis = [i.preis for i in db_ents]
 
+            db_kw_lat = kw.lat
+            db_kw_long = kw.long
+
+            ents = ents + [self.interpol_3d(db_ents_t, db_ents_lat, db_ents_long, db_ents_preis,
+                                            db_kw_lat, db_kw_long, kw_time)]
+        ents = np.array(ents)
+
+        # P_inst Interpolation
+        pinst = []
+        for kw in db_kw:
+            print("P_inst", kw.id, kw.bezeichnung)
+            db_pinst = kw.kraftwerksleistungen
+            db_pinst_t = [i.datetime for i in db_pinst]
+            db_pinst_p = [i.power_inst for i in db_pinst]
+
+            pinst = pinst + [self.interpol_1d(db_pinst_t, db_pinst_p, kw_time)]
+        pinst = np.array(pinst)
+        
         # Verguetung Interpolation
-          # get KW_id ---> KWT
-
         verg = []
         for kw in db_kw:
             print("Verguetung", kw.id, kw.bezeichnung)
@@ -151,7 +187,8 @@ class Model(Supermodel):
             db_kw_lat = kw.lat
             db_kw_long = kw.long
 
-            verg = verg + [self.interpol_3d(db_verg_t, db_verg_lat, db_verg_long, db_verg_beitrag, db_kw_lat, db_kw_long, kw_time)]
+            verg = verg + [self.interpol_3d(db_verg_t, db_verg_lat, db_verg_long, db_verg_beitrag,
+                                             db_kw_lat, db_kw_long, kw_time)]
         verg = np.array(verg)
 
 
@@ -187,24 +224,24 @@ class Model(Supermodel):
         This function interpolates in a grid of points (db_lat,db_long,db_time) with assigned values (db_values).
         It interpolates for points given by (kw_lat, kw_long, kw_time) and outputs their corresponding value.
 
-        Values inside the grid are interpolated linearly and values outside of the grid are interpolated to the nearest point
-        of the grid.
+        Values inside the grid are interpolated linearly and values outside of the grid are interpolated to the
+        nearest point of the grid.
 
         ATTENTION: If there are less than 4 points in db_... no grid can be formed and everything will be "interpolated"
                    to nearest.
                    Also, it is not allowed to have all points forming a plane, they must span a 3dimensional space
 
-        "db_" inputs are things as KEV, fuel costs or similar
-        "kw_" inputs denote the power plants
+        |  "db_" inputs are things as KEV, fuel costs or similar
+        |  "kw_" inputs denote the power plants
 
         INPUTS:
-            db_lat: Latitude, list of [float]; nx1
-            db_long: Longitude, list of [float]; nx1
-            db_time: Time, list of [datetime]; nx1
-            db_values: list of [float]; nx1
-            kw_lat: Latitude, list of [float]; jx1
-            kw_long: Longitude, list of [float]; jx1
-            kw_time: Time, list of [datetime]; jx1
+            |  db_lat: Latitude, list of [float]; nx1
+            |  db_long: Longitude, list of [float]; nx1
+            |  db_time: Time, list of [datetime]; nx1
+            |  db_values: list of [float]; nx1
+            |  kw_lat: Latitude, list of [float]; jx1
+            |  kw_long: Longitude, list of [float]; jx1
+            |  kw_time: Time, list of [datetime]; jx1
 
         OUTPUTS:
             kw_values: ndarray of [float]; jx1
@@ -309,6 +346,7 @@ class Model(Supermodel):
 
         return kw_values
 
+    # 2D Interpolation
     def interpol_2d(self, db_lat, db_long, db_values, kw_lat, kw_long):
         """
         This function interpolates in a grid of points (db_lat,db_long) with assigned values (db_values).
@@ -321,15 +359,15 @@ class Model(Supermodel):
                    to nearest.
                    Also, it is not allowed to have all points forming a line, they must span a 2dimensional space
 
-        "db_" inputs are things as KEV, fuel costs or similar
-        "kw_" inputs denote the power plants
+        |  "db_" inputs are things as KEV, fuel costs or similar
+        |  "kw_" inputs denote the power plants
 
         INPUTS:
-            db_lat: Latitude, list of [float]; nx1
-            db_long: Longitude, list of [float]; nx1
-            db_values: list of [float]; nx1
-            kw_lat: Latitude, list of [float]; jx1
-            kw_long: Longitude, list of [float]; jx1
+            |  db_lat: Latitude, list of [float]; nx1
+            |  db_long: Longitude, list of [float]; nx1
+            |  db_values: list of [float]; nx1
+            |  kw_lat: Latitude, list of [float]; jx1
+            |  kw_long: Longitude, list of [float]; jx1
 
         OUTPUTS:
             kw_values: ndarray of [float]; jx1
@@ -407,19 +445,19 @@ class Model(Supermodel):
     def interpol_1d(self, db_time, db_values, kw_time):
         """
         This function interpolates in one dimension.
-        X: time
-        Y: values
-        xi: kw_time
-        yi: kw_values (output)
+        |  X: time
+        |  Y: values
+        |  xi: kw_time
+        |  yi: kw_values (output)
 
         Values inside [X(min), X(max)] are interpolated linearly,
         values outside of it are interpolated to the nearest X.
         If only one value for X and Y is provided, the output array is filled with the input value (nearest)
 
         INPUTS:
-            time: list of [datetime]; nx1 (n>=2)
-            values: list of [float]; nx1 (n>=2)
-            kw_time: list of [datetime]; mx1 (m>=1)
+            |  time: list of [datetime]; nx1 (n>=2)
+            |  values: list of [float]; nx1 (n>=2)
+            |  kw_time: list of [datetime]; mx1 (m>=1)
 
         OUTPUTS:
             kw_values: ndarray of [float]; mx1
