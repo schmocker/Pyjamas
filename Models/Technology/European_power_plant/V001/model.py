@@ -30,14 +30,14 @@ class Model(Supermodel):
         super(Model, self).__init__(model_id, name)
 
         # define inputs
-        self.inputs['t'] = Input({'name': 'Zeitarray'})
+        self.inputs['t'] = Input(name='Zeitarray')
 
         # define outputs
-        self.outputs['kw_park'] = Output({'name': 'Kraftwerkspark'})
+        self.outputs['kw_park'] = Output(name='Kraftwerkspark')
 
         # define properties
         # Property(<initial value>,<type>,<info dictionary>)
-        self.properties['prop1'] = Property(10, float, {'name': 'property1'})
+        self.properties['prop1'] = Property(10, float, name='property1')
 
         # define persistent variables
         self.pers_variable_0 = 5
@@ -181,39 +181,44 @@ class Model(Supermodel):
     async def func_death(self):
         pass
 
-    # TODO Ausrichtung der Input Arrays kontrollieren (Zeile/Spalte)
     # 3D Interpolation
     def interpol_3d(self, db_time, db_lat, db_long, db_values, kw_lat, kw_long, kw_time):
-        test_data = True
-        test_data_ordered = True
-        plot_data = True
-
         """
         This function interpolates in a grid of points (db_lat,db_long,db_time) with assigned values (db_values).
         It interpolates for points given by (kw_lat, kw_long, kw_time) and outputs their corresponding value.
+
         Values inside the grid are interpolated linearly and values outside of the grid are interpolated to the nearest point
         of the grid.
+
+        ATTENTION: If there are less than 4 points in db_... no grid can be formed and everything will be "interpolated"
+                   to nearest.
+                   Also, it is not allowed to have all points forming a plane, they must span a 3dimensional space
 
         "db_" inputs are things as KEV, fuel costs or similar
         "kw_" inputs denote the power plants
 
         INPUTS:
-            db_lat: Latitude, ndarray of [float]; nx1
-            db_long: Longitude, ndarray of [float]; nx1
-            db_time: Time, ndarray of [datetime]; nx1
-            db_values: ndarray of [float]; nx1
-            kw_lat: Latitude, ndarray of [float]; jx1
-            kw_long: Longitude, ndarray of [float]; jx1
-            kw_time: Time, ndarray of [datetime]; jx1  
+            db_lat: Latitude, list of [float]; nx1
+            db_long: Longitude, list of [float]; nx1
+            db_time: Time, list of [datetime]; nx1
+            db_values: list of [float]; nx1
+            kw_lat: Latitude, list of [float]; jx1
+            kw_long: Longitude, list of [float]; jx1
+            kw_time: Time, list of [datetime]; jx1
 
         OUTPUTS:
             kw_values: ndarray of [float]; jx1
         """
 
+        # test data or database data
+        test_data = False
+        test_data_ordered = False
+        plot_data = False
+
         if test_data:
             if not test_data_ordered:
                 # generate random locations and values for the grid and the data points
-                n_db_pts = 50
+                n_db_pts = 10
                 db_lat = np.random.rand(n_db_pts) * 30 + 20
                 db_long = np.random.rand(n_db_pts) * 20 - 5
                 t0 = datetime.datetime.utcnow()
@@ -256,7 +261,7 @@ class Model(Supermodel):
 
         # interpolate
         interp_nearest = griddata(gridpoints.T, db_values.T, xi.T, method='nearest')
-        if db_values.size <= 3:
+        if db_values.size < 4:
             kw_values = interp_nearest
         else:
             interp_linear = griddata(gridpoints.T, db_values.T, xi.T, method='linear')
@@ -264,7 +269,7 @@ class Model(Supermodel):
             kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
 
         if plot_data:
-            if not db_values.size <= 3:
+            if not db_values.size < 4:
                 print('interp_linear')
                 print(interp_linear)
             print('interp_nearest')
@@ -278,18 +283,21 @@ class Model(Supermodel):
             ax1.set_xlabel("lat")
             ax1.set_ylabel("lon")
             ax1.set_zlabel("time")
+
             ax2 = plt.subplot(222)
             ax2.plot(db_long, db_timestamp, 'k.', ms=5)
             ax2.plot(kw_long, kw_timestamp, 'ro')
             plt.title('Lon/Time')
             ax2.set_ylabel("timestamp")
             ax2.set_xlabel("lon")
+
             ax3 = plt.subplot(223)
             ax3.plot(db_lat, db_timestamp, 'k.', ms=5)
             ax3.plot(kw_lat, kw_timestamp, 'ro')
             plt.title('Lat/Time')
             ax3.set_xlabel("lat")
             ax3.set_ylabel("timestamp")
+
             ax4 = plt.subplot(224)
             ax4.plot(db_lat, db_long, 'k.', ms=5)
             ax4.plot(kw_lat, kw_long, 'ro')
@@ -301,28 +309,126 @@ class Model(Supermodel):
 
         return kw_values
 
-    # 1D Interpolation
-    def interpol_1d(self, db_time, db_values, kw_time):
-        # test data or database data
-        test_data = True
-        plot_data = True
-
+    def interpol_2d(self, db_lat, db_long, db_values, kw_lat, kw_long):
         """
-        This function interpolates in 1 dimension
-        X (time)
-        Y (values)
-        xi (kw_time)
-        yi (kw_values, output)
-        Values of xi between time.min and time.max are interpolated linearly, otherwise interpolated to nearest.
+        This function interpolates in a grid of points (db_lat,db_long) with assigned values (db_values).
+        It interpolates for points given by (kw_lat, kw_long) and outputs their corresponding value.
+
+        Values inside the grid are interpolated linearly and values outside of the grid are interpolated
+        to the nearest point of the grid.
+
+        ATTENTION: If there are less than 3 points in db_... no grid can be formed and everything will be "interpolated"
+                   to nearest.
+                   Also, it is not allowed to have all points forming a line, they must span a 2dimensional space
+
+        "db_" inputs are things as KEV, fuel costs or similar
+        "kw_" inputs denote the power plants
 
         INPUTS:
-            time: ndarray of [datetime]; nx1
-            values: ndarray of [float]; nx1
-            kw_time: ndarray of [datetime]; mx1 (m>=1)
+            db_lat: Latitude, list of [float]; nx1
+            db_long: Longitude, list of [float]; nx1
+            db_values: list of [float]; nx1
+            kw_lat: Latitude, list of [float]; jx1
+            kw_long: Longitude, list of [float]; jx1
+
+        OUTPUTS:
+            kw_values: ndarray of [float]; jx1
+        """
+
+        # test data or database data
+        test_data = False
+        test_data_ordered = False
+        plot_data = False
+
+        if test_data:
+            if not test_data_ordered:
+                # generate random locations and values for the grid and the data points
+
+                n_db_pts = 5
+                db_lat = np.random.rand(n_db_pts) * 30 + 20
+                db_long = np.random.rand(n_db_pts) * 20 - 5
+                db_values = np.random.rand(db_lat.size) * 100
+
+                n_kw = 3
+                kw_lat = np.random.rand(n_kw) * 40 + 15
+                kw_long = np.random.rand(n_kw) * 30 - 10
+
+            else:
+                # set fixed locations and values for the grid and the data points
+
+                db_lat = np.array([0, 0, 0, 5, 5, 5, 10, 10, 10])
+                db_long = np.array([0, 5, 10, 0, 5, 10, 0, 5, 10])
+                db_values = np.arange(9) + 1
+
+                kw_lat = np.array([2.5, 7.5, 11])
+                kw_long = np.array([2.5, 7.5, 5])
+
+        else:
+            db_lat = np.asarray(db_lat)
+            db_long = np.asarray(db_long)
+            db_values = np.asarray(db_values)
+            kw_lat = np.asarray(kw_lat)
+            kw_long = np.asarray(kw_long)
+
+        # arrange inputs for griddata
+        xi = np.vstack((kw_lat, kw_long))
+        gridpoints = np.vstack((db_lat, db_long))
+
+        # interpolate
+        interp_nearest = griddata(gridpoints.T, db_values.T, xi.T, method='nearest')
+
+        if db_values.size < 3:
+            kw_values = interp_nearest
+        else:
+            interp_linear = griddata(gridpoints.T, db_values.T, xi.T, method='linear')
+            # replace Nan in linear with nearest (out of range values)
+            kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
+
+        if plot_data:
+            if not db_values.size < 3:
+                print('interp_linear')
+                print(interp_linear)
+            print('interp_nearest')
+            print(interp_nearest)
+            print('kw_values')
+            print(kw_values)
+
+            ax1 = plt.axes()
+            ax1.plot(db_long, db_lat, 'k+', ms=15)
+            ax1.plot(kw_long, kw_lat, 'ro')
+            plt.title('Lon/Lat')
+            ax1.set_xlabel("longitude")
+            ax1.set_ylabel("latitude")
+            plt.show()
+
+        return kw_values
+
+    # 1D Interpolation
+    def interpol_1d(self, db_time, db_values, kw_time):
+        """
+        This function interpolates in one dimension.
+        X: time
+        Y: values
+        xi: kw_time
+        yi: kw_values (output)
+
+        Values inside [X(min), X(max)] are interpolated linearly,
+        values outside of it are interpolated to the nearest X.
+        If only one value for X and Y is provided, the output array is filled with the input value (nearest)
+
+        INPUTS:
+            time: list of [datetime]; nx1 (n>=2)
+            values: list of [float]; nx1 (n>=2)
+            kw_time: list of [datetime]; mx1 (m>=1)
 
         OUTPUTS:
             kw_values: ndarray of [float]; mx1
         """
+
+        # test data or database data
+        test_data = False
+        plot_data = False
+
         if test_data:
             # create 3 time values (today, 1 and 2 years from now) and random corresponding y values
             t0 = datetime.datetime.now(timezone('utc'))
@@ -339,25 +445,33 @@ class Model(Supermodel):
             kw_time = np.asarray(kw_time)
 
         # change time values from datetime to float
-        time = np.asarray([datetime.datetime.timestamp(i) for i in db_time])
-        xi = np.asarray([datetime.datetime.timestamp(i) for i in kw_time])
-        # interpolate
-        interp_nearest = griddata(time.T, db_values.T, xi.T, method='nearest')
-        interp_linear = griddata(time.T, db_values.T, xi.T, method='linear')
-        # replace Nan in linear with nearest (out of range values)
-        kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
+        db_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in db_time])
+        kw_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in kw_time])
+
+        if db_timestamp.size > 1:
+            # interpolate
+            interp_nearest = griddata(db_timestamp.T, db_values.T, kw_timestamp.T, method='nearest')
+            interp_linear = griddata(db_timestamp.T, db_values.T, kw_timestamp.T, method='linear')
+
+            # replace Nan in linear with nearest (out of range values)
+            kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
+
+        else:
+            # if only one time and one value is provided, set output to nearest (which in this case is the input value)
+            kw_values = np.full(kw_time.size, db_values[0])
 
         if plot_data:
-            print('interp_linear')
-            print(interp_linear)
-            print('interp_nearest')
-            print(interp_nearest)
-            print('interp_combined')
-            print(kw_values)
+            if db_timestamp.size > 1:
+                print('interp_linear')
+                print(interp_linear)
+                print('interp_nearest')
+                print(interp_nearest)
+                print('interp_combined')
+                print(kw_values)
 
             ax1 = plt.axes()
-            ax1.plot(time, db_values, 'k+', ms=15)
-            ax1.plot(xi, kw_values, 'ro')
+            ax1.plot(db_timestamp, db_values, 'k+', ms=15)
+            ax1.plot(kw_timestamp, kw_values, 'ro')
             ax1.set_xlabel("time")
             ax1.set_ylabel("values")
             plt.show()
@@ -410,4 +524,3 @@ if __name__ == "__main__":
     properties = {'h_hub': h_hub, 'd': d}
 
     outputs = Model.test(inputs, properties)
-
