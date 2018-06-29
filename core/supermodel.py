@@ -417,6 +417,9 @@ class Supermodel:
             def send_data_order(self, model_id, data):
                 self.result = data
 
+            def send_cpro_order(self, model_id, data):
+                pass
+
         class MockModel(Supermodel):
             def __init__(self):
                 super(MockModel, self).__init__(0, "mock")
