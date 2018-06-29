@@ -65,7 +65,8 @@ def web_sim_gui():
 
             elif fnc == 'get_mu_results':
                 results = Model_used.get_results(data['mu_id'], data['mu_run'])
-                return json.dumps(results)
+                results = json.dumps(results)
+                return results
 
         elif request.method == 'POST':
             fnc = request.form.get('fnc', None, str)
