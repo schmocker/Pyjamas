@@ -65,6 +65,25 @@ def web_sim_gui():
 
             elif fnc == 'get_mu_results':
                 results = Model_used.get_results(data['mu_id'], data['mu_run'])
+                filter = data.get('filter')
+
+                '''
+                Filter results
+                --------------
+                Example: {'h': ['output1', 'height'], 't': [output2, 'times', 0]}
+                this will search for:
+                - result['output1']['height'] and stores it in result['h']
+                - result['output1']['times'][0] and stores it in result['t']
+                all other data will no be returned
+                '''
+                if filter:
+                    filtered_results = {}
+                    for k, v in data.get('filter').items():
+                        filtered_results[k] = results['result']
+                        for f in v:
+                            filtered_results[k] = filtered_results[k][f]
+                    results['result'] = filtered_results
+
                 results = json.dumps(results)
                 return results
 
