@@ -109,7 +109,6 @@ class View {
             .attr("title", "start simulation")
             .attr("width", icon_size)
             .attr("height", icon_size)
-            .style("display", function () { return agent_data.active ? 'none' : 'block'})
             .on("click", async function() {
                 await post("start", {},false);
                 agent_data.status = "running";
@@ -123,7 +122,6 @@ class View {
             .attr("title", "pause simulation")
             .attr("width", icon_size)
             .attr("height", icon_size)
-            .style("display", function () { return agent_data.active ? 'block' : 'none'})
             .on("click", async function() {
                 await post("pause", {},false);
                 agent_data.status = "paused";
@@ -137,7 +135,6 @@ class View {
             .attr("title", "stop simulation")
             .attr("width", icon_size)
             .attr("height", icon_size)
-            .style("display", function () { return agent_data.active ? 'block' : 'none'})
             .on("click", async function() {
                 await post("stop", {},false);
                 agent_data.status = "stopped";
@@ -151,7 +148,6 @@ class View {
             .attr("title", "force stop simulation")
             .attr("width", icon_size)
             .attr("height", icon_size)
-            .style("display", function () { return agent_data.active ? 'block' : 'none'})
             .on("click", async function() {
                 await post("kill", {},false);
                 agent_data.status = "stopped";
@@ -174,19 +170,19 @@ class View {
                 this.play.style("display","none");
                 this.pause.style("display","block");
                 this.stop.style("display","block");
-                this.kill.style("display","block");
+                //this.kill.style("display","block");
                 break;
             case 'paused':
                 this.play.style("display","block");
                 this.pause.style("display","none");
                 this.stop.style("display","block");
-                this.kill.style("display","block");
+                //this.kill.style("display","block");
                 break;
             case 'stopped':
                 this.play.style("display","block");
                 this.pause.style("display","none");
                 this.stop.style("display","none");
-                this.kill.style("display","none");
+                //this.kill.style("display","none");
                 break;
             default:
         }

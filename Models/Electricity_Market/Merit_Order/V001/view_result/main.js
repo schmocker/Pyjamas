@@ -8,17 +8,103 @@ let result;
 
 let update_interval;
 
-let times;
 let values;
 
 let svg;
 
 let margin, width, height;
 
+
+
+let i_dn = 0;
+let i_ts = 0;
+let times = null;
+
+async function create_menu(parent) {
+
+    result = await get('get_mu_results', {'mu_id': mu_id, 'mu_run': run, 'filter': {'t': ['all_data', 'times']}});
+
+    times = result.result.t;
+
+    let i_times = [0, times.length-1];
+
+
+
+    let margin = {left: 50, right: 250};
+    let width = window.innerWidth - margin.left - margin.right;
+    let height = 50;
+    let x = d3.scaleLinear()
+        .domain(i_times)
+        .range([0, width])
+        .clamp(true);
+
+    let svg = parent.append("svg");
+
+    let time_label = svg.append("text").attr('x', 45).attr('y', 70).text(new Date(times[0]*1E3));
+
+    let slider = svg.append("g")
+        .attr("class", "slider")
+        .attr("transform", "translate(" + margin.left + "," + height / 2 + ")");
+
+    slider.append("line")
+        .attr("class", "track")
+        .attr("x1", x.range()[0])
+        .attr("x2", x.range()[1])
+        .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
+        .attr("class", "track-inset")
+        .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
+        .attr("class", "track-overlay")
+        .call(d3.drag()
+            .on("start drag", function() {
+                let h = x.invert(d3.event.x);
+                h = Math.round(h);
+                handle.attr("cx", x(h));
+                let t = times[h]*1000;
+                time_label.text(new Date(t));
+
+            })
+            .on("end", async function() {
+                let h = x.invert(d3.event.x);
+                i_ts = Math.round(h);
+                console.log(i_ts);
+                await update_view()
+            }));
+
+    slider.insert("g", ".track-overlay")
+        .attr("class", "ticks")
+        .attr("transform", "translate(0," + 18 + ")")
+        .selectAll("text")
+        .data(x.ticks(i_times[1]/6))
+        .enter().append("text")
+        .attr("x", x)
+        .attr("text-anchor", "middle")
+        .text(function(d) { return d; });
+
+    var handle = slider.insert("circle", ".track-overlay")
+        .attr("class", "handle")
+        .attr("r", 9);
+
+    /*
+    slider.transition() // Gratuitous intro!
+        .duration(750)
+        .tween("hue", function() {
+            var i = d3.interpolate(0, 70);
+            return function(t) { hue(i(t)); };
+        });
+     */
+
+}
+
+
+
+
 async function create_view(){
+
+
+
     margin = {top: 20, right: 50, bottom: 50, left: 50};
     width = window.innerWidth - margin.left - margin.right;
-    height = window.innerHeight - margin.top - margin.bottom;
+    height = d3.select('.diag').node().getBoundingClientRect().height - margin.top - margin.bottom;
 
     // set the ranges
     x = d3.scaleLinear().range([0, width]);
@@ -27,7 +113,7 @@ async function create_view(){
     // append the svg obgect to the body of the page
     // appends a 'group' element to 'svg'
     // moves the 'group' element to the top left margin
-    svg = d3.select("body").append("svg")
+    svg = d3.select(".diag").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -37,13 +123,15 @@ async function create_view(){
 
     await update_view();
     await set_updater();
+
+    await create_menu(d3.select(".menu"));
 }
 
 async function set_updater() {
     clearInterval(update_interval);
     update_interval = setInterval(await async function() {
         await update_view();
-    }, 3*1000);
+    }, 500*1000);
 }
 
 async function update_view(){
@@ -121,16 +209,15 @@ async function update_view(){
 }
 
 async function get_data(){
-    result = await get('get_mu_results', {'mu_id': mu_id, 'mu_run': run});
-    result = JSON.parse(result);
-    result = result.result;
 
-    let i_dn = 0;
-    let i_ts = 0;
 
-    result = result.all_data;
+    result = await get('get_mu_results', {'mu_id': mu_id, 'mu_run': run, 'filter': {
+            'pp': ['all_data', 'power_plants', i_dn, i_ts],
+            'dn_id': ['all_data', 'distribution_networks', i_dn],
+            'd': ['all_data', 'demand', i_ts],
+            'price': ['all_data', 'market_price', i_dn, i_ts]}});
+    let pps = result.result.pp;
 
-    let pps = result.power_plants[0][0];
     let rect = [];
     for(let i = 0; i < pps.p.length; i++) {
         rect[i] = {};
@@ -148,9 +235,9 @@ async function get_data(){
     rect.colums = Object.keys(rect[0]);
 
     let data = {'rect': rect,
-        'dn_id': result.distribution_networks[i_dn],
-        'd': result.demand[i_dn],
-        'price': result.market_price[i_dn][i_ts]};
+        'dn_id': result.result.dn_id,
+        'd': result.result.d,
+        'price': result.result.price};
     return data
 }
 
@@ -162,7 +249,7 @@ async function get(query_name, data_dict){
         alert('GET request returned "false", check the request for the query "' + query_name + '"!');
         return false
     } else {
-        return data;
+        return JSON.parse(data);
     }
 }
 

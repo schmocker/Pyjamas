@@ -8,10 +8,14 @@ class Model(Supermodel):
     def __init__(self, uuid, name:str):
         super(Model, self).__init__(uuid,name)
         self.outputs['data'] = Output(name='Data')
+        self.inputs['n_kw'] = Input(name='n_kw')
+        self.inputs['n_dn'] = Input(name='n_dn')
 
     async def func_peri(self, prep_to_peri=None):
-        n_kw = 200
-        n_dist = 3
+        n_kw = await self.get_input("n_kw")
+        n_kw = int(n_kw)
+        n_dist = await self.get_input("n_dn")
+        n_dist = int(n_dist)
 
         pp_ids = [i for i in range(n_kw)]
         np.random.shuffle(pp_ids)

@@ -10,6 +10,8 @@ class Model(Supermodel):
     def __init__(self, uuid, name :str):
         super(Model, self).__init__(uuid,name)
 
+        self.inputs['fut'] = Input(name='Futures', unit='s', info='utc time array in seconds since epoch')
+
         self.inputs['demand'] = Input(name='European demand', unit='W',
                                       info='European power demand for each time step')
         self.inputs['power'] = Input(name='Power', unit='W',
@@ -32,10 +34,10 @@ class Model(Supermodel):
         powers = await self.get_input("power")  # f(time, pp)
         marginal_costs = await self.get_input("marginal_costs")  # f(time, pp)
         distance_costs = await self.get_input("distance_costs")  # f(pp, distNet)
-
+        times = await self.get_input("fut")
 
         data = {'distribution_networks': distance_costs['distribution_networks'],
-                'times': [],
+                'times': times,
                 'market_price': [],
                 'demand': demands,
                 'power_plants': []}
@@ -69,17 +71,15 @@ class Model(Supermodel):
                 c = m_c + d_c  # for each pp
                 p = p[sort_order]
 
-                price = c[np.where(np.cumsum(p) > d)[0][0]]
+                price = c[np.where(np.cumsum(p) >= d)[0][0]]
                 # plot_merit_order(m_c, d_c, p, d, price)
 
-                if i_dn is fil_dn and i_ts is fil_ts:
-                    pp = {'ids': pp_ids.tolist(),
-                          'm_c': m_c.tolist(),
-                          'd_c': d_c.tolist(),
-                          'c': c.tolist(),
-                          'p': p.tolist()}
-                else:
-                    pp = {}
+
+                pp = {'ids': pp_ids.tolist(),
+                      'm_c': m_c.tolist(),
+                      'd_c': d_c.tolist(),
+                      'c': c.tolist(),
+                      'p': p.tolist()}
                 data['power_plants'][i_dn].append(pp)
                 data['market_price'][i_dn].append(price)
 
