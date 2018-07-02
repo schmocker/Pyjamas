@@ -76,9 +76,9 @@ def web_sim_gui():
                 - result['output1']['times'][0] and stores it in result['t']
                 all other data will no be returned
                 '''
-                if filter:
+                if filter and results:
                     filtered_results = {}
-                    for k, v in data.get('filter').items():
+                    for k, v in filter.items():
                         filtered_results[k] = results['result']
                         for f in v:
                             filtered_results[k] = filtered_results[k][f]
