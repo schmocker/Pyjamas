@@ -80,6 +80,7 @@ class MarketPriceDiagram {
                 .attr("d", function(d) { return this.line(d.values); })
                 .style("stroke", function(d) { return this.z(d.id); });
 
+
             dist_net.append("text")
                 .datum(function(d) { return {id: d.id, value: d.values[d.values.length - 1]}; })
                 .attr("transform", function(d) { return "translate(" + this.x(d.value.date) + "," + this.y(d.value.y) + ")"; })
