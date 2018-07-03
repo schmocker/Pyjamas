@@ -2,7 +2,7 @@ body{
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template-rows: auto 500px 500px;
+    grid-template-rows: 200px 400px 400px;
 }
 .menu{
     background-color: #0095ff;
@@ -125,4 +125,7 @@ div.tooltip {
 
 .mp_diag{
     background-color: #c3c3c3;
+}
+.mp_diag .axis .title{
+    font-size: 12px;
 }

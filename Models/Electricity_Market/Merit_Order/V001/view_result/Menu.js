@@ -18,7 +18,7 @@ class Menu {
                 selectValue = parseInt(selectValue);
                 i_dn = obj.dns.indexOf(selectValue);
                 mo_diag.run = 0;
-                await mo_diag.update();
+                await updateAll(500);
             });
 
         this.dns = null;
@@ -52,20 +52,20 @@ class Menu {
             .select(function() { return this.parentNode.appendChild(this.cloneNode(true)); })
             .attr("class", "track-overlay")
             .call(d3.drag()
-                .on("start drag", function() {
+                .on("start drag", async function() {
                     let h = obj.x.invert(d3.event.x);
-                    h = Math.round(h);
-                    handle.attr("cx", obj.x(h));
-                    let t = obj.times[h]*1000;
+                    i_ts = Math.round(h);
+                    handle.attr("cx", obj.x(i_ts));
+                    let t = obj.times[i_ts]*1000;
                     obj.time_label.html(new Date(t));
-
+                    await mp_diag.updateTimeLine(0);
                 })
                 .on("end", async function() {
                     let h = obj.x.invert(d3.event.x);
                     i_ts = Math.round(h);
                     console.log(i_ts);
                     mo_diag.run = 0;
-                    await mo_diag.update();
+                    await updateAll(500);
                 }));
 
         this.ticks = this.slider.insert("g", ".track-overlay")
