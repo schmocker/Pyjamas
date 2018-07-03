@@ -1,7 +1,6 @@
 from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 
 

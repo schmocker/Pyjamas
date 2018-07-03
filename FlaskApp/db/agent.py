@@ -22,19 +22,36 @@ class Agent(db.Model):
         db.session.add(agent)
         db.session.commit()
 
+    @classmethod
+    def get_agent(cls, id):
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
+    def get_all_agents(cls):
+        return cls.query.order_by(Agent.name).all()
+
 
 
 
     @classmethod
-    def start_agent(cls,id):
+    def start_agent(cls, id):
         Agent.query.filter_by(id=id).first().start()
+
     @classmethod
-    def kill_agent(cls,id):
+    def pause_agent(cls, id):
+        Agent.query.filter_by(id=id).first().pause()
+
+    @classmethod
+    def stop_agent(cls, id):
+        Agent.query.filter_by(id=id).first().stop()
+
+    @classmethod
+    def kill_agent(cls, id):
         Agent.query.filter_by(id=id).first().kill()
 
     def start(self):
 
-        if not self.active:
+        if not self.active: # TODO: if application is started (run.py) and no agents are existing. If 'active' is True in the DB it tries to start a non existing agent (maybe set all 'active' in DB to False when application is starting?)
             self.add_full_agent()
 
         controller.start_agent(self.id)
@@ -90,12 +107,16 @@ class Agent(db.Model):
 
             controller.link_models(agent_id, output_model_id, output_name, input_model_id, input_name)
 
+    @classmethod
+    def dict_agent(cls, id):
+        return Agent.query.filter_by(id=id).first().dict
+
+
     @property
     def dict(self):
         agent = dict()
         agent['id'] = self.id
-        agent['active'] = self.active
-        # Todo: @ Simon & Tobias "get_status" ['running' || 'paused' || 'stopped'] from controller
+        agent['status'] = controller.get_agent_status(self.id)
 
         agent['model_used'] = list()
         agent['connection'] = list()

@@ -11,11 +11,11 @@ class Model(Supermodel):
     def __init__(self, uuid, name: str):
         super(Model, self).__init__(uuid,name)
 
-        self.inputs['input'] = Input({'name': 'Input', 'unit': '', 'dimensions': []})
+        self.inputs['input'] = Input(name='Input')
 
-        self.outputs['output'] = Output({'name': 'Output', 'unit': '', 'dimensions': []})
+        self.outputs['output'] = Output(name='Output')
 
-        self.properties['sleep_amount'] = Property(1,float, {'name': 'Sleep Amount', 'unit': 's', 'dimensions': []})
+        self.properties['sleep_amount'] = Property(1, float, name='Sleep Amount', unit='s')
 
     async def func_peri(self, prep_to_peri=None):
         inp = await self.get_input("input")

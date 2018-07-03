@@ -10,17 +10,17 @@ class Model(Supermodel):
         super(Model, self).__init__(model_id, name)
 
         # define inputs
-        self.inputs['v'] = Input({'name': 'wind speed'})
-        self.inputs['dir'] = Input({'name': 'wind direction'})
+        self.inputs['v'] = Input(name='wind speed')
+        self.inputs['dir'] = Input(name='wind direction')
 
         # define outputs
-        self.outputs['p_el'] = Output({'name': 'electrical power'})
-        self.outputs['f_rot'] = Output({'name': 'rotor frequency'})
+        self.outputs['p_el'] = Output(name='electrical power')
+        self.outputs['f_rot'] = Output(name='rotor frequency')
 
         # define properties
         # Property(<initial value>,<type>,<info dictionary>)
-        self.properties['h_hub'] = Property(10,float, {'name': 'hub height'})
-        self.properties['d'] = Property(10,float, {'name': 'diameter'})
+        self.properties['h_hub'] = Property(10, float, name='hub height')
+        self.properties['d'] = Property(10, float, name='diameter')
 
 
         # define persistent variables

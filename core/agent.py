@@ -4,6 +4,7 @@ import logging
 import concurrent
 import datetime
 from core.util import CreateDirFileHandler
+import traceback
 
 class Agent():
 
@@ -52,8 +53,18 @@ class Agent():
             self.logger.debug(f"[AGENT][{__name__}][{self.name}] : {msg}")
 
     def log_warning(self, msg):
+        print(f"[WARNING][AGENT][{__name__}][{self.name}] : {msg}")
+        print(traceback.format_exc())
         if self.logger:
             self.logger.warning(f"[AGENT][{__name__}][{self.name}] : {msg}")
+            self.logger.warning(f"[AGENT][{__name__}][{self.name}] : {traceback.format_exc()}")
+
+    def log_error(self, msg):
+        print(f"[ERROR][AGENT][{__name__}][{self.name}] : {msg}")
+        print(traceback.format_exc())
+        if self.logger:
+            self.logger.error(f"[AGENT][{__name__}][{self.name}] : {msg}")
+            self.logger.error(f"[AGENT][{__name__}][{self.name}] : {traceback.format_exc()}")
 
 #endregion logging
 
@@ -119,15 +130,18 @@ class Agent():
         if not self.prepare_models():
             return
 
-        # start the internal loop of all models
-        self.log_debug("starting internal loop of all models")
-        preps = [asyncio.ensure_future(model.internal_loop()) for i,model in self.models.items()]
+        # start the simulation loop of all models
+        self.log_debug("starting simulation loop of all models")
+        preps = [asyncio.ensure_future(model.simulation_loop()) for i,model in self.models.items()]
         preps.append(asyncio.ensure_future(self.read_queue()))
         try:
             # main loop
             self.loop.run_until_complete(asyncio.gather(*preps))
         except concurrent.futures._base.CancelledError:
             self.log_debug(f'all tasks killed')
+        except Exception:
+            self.log_error(f'an exeption was thrown during the simulation --> stopping simulation')
+            self.send_kill_order()
 
         self.running = False
 
@@ -146,6 +160,7 @@ class Agent():
         self.sync_counter_second = self.sync_counter_second + 1
         self.log_debug(f"second sync gate counter: {self.sync_counter_second}/{len(self.models)}")
         if self.sync_counter_second >= len(self.models):
+            await self.force_read_queue()
             await self.pause_gate.wait()
             self.sync_gate_first.clear()
             self.sync_gate_second.set()
@@ -237,6 +252,17 @@ class Agent():
                     self.log_debug("queue was empty")
             await asyncio.sleep(0)
 
+    async def force_read_queue(self):
+        while not self.agent_queue.empty():
+            try:
+                msg = self.agent_queue.get(False)
+                if self.id == msg["agent"]:
+                    await self.handle_order(msg) 
+            except KeyError:
+                self.log_debug("non valid message format")
+            except Exception:
+                self.log_debug("queue was empty")
+
     async def handle_order(self, msg):
         try:
             order = msg['order']
@@ -261,8 +287,7 @@ class Agent():
             else:
                 self.log_debug(f'recieved order could not be executed')
         except KeyError:
-            self.log_warning(f'message could not be handled correctly')
-            self.log_warning(f'message = {msg}')
+            self.log_warning(f'message does not have the right format')
 
     def pause(self):
         self.pause_gate.clear()
@@ -290,12 +315,26 @@ class Agent():
         order['agent'] = self.id
         self.controller_queue.put(order)
 
+    def send_kill_order(self):
+        order = {}
+        order['order'] = 'kill'
+        order['agent'] = self.id
+        self.controller_queue.put(order)
+
     def send_data_order(self, model_id, data):
         order = {}
         order['order'] = 'data'
         order['agent'] = self.id
         order['model'] = model_id
         order['text'] = data
+        self.controller_queue.put(order)
+
+    def send_cpro_order(self, model_id, props):
+        order = {}
+        order['order'] = 'cpro'
+        order['agent'] = self.id
+        order['model'] = model_id
+        order['text'] = props
         self.controller_queue.put(order)
 
 #endregion messaging

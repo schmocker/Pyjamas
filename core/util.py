@@ -3,11 +3,14 @@ import os
 import importlib
 import logging
 import errno
+import time
 
 class Port():
-    def __init__(self, info: dict):
+    def __init__(self, name='', unit='-', **kwargs):
         self.items = dict()
-        self.items['info'] = info
+        self.items['info'] = kwargs if kwargs is not None else dict()
+        self.items['info']['name'] = name
+        self.items['info']['unit'] = unit
 
     def get_port_info(self):
         return self.items['info']
@@ -30,6 +33,7 @@ class Input(Port):
         except KeyError:
             raise
 
+
 class Output(Port):
     
     def clean_output(self):
@@ -41,10 +45,11 @@ class Output(Port):
     def get_output(self):
         return self.items['value']
 
+
 class Property(Port):
 
-    def __init__(self, initial_value, property_type, info: dict):
-        super(Property, self).__init__(info)
+    def __init__(self, initial_value, property_type, name='', unit='-', **kwargs):
+        super(Property, self).__init__(name, unit, **kwargs)
         self.property_type = property_type
         self.amend_value = None
 
@@ -70,11 +75,14 @@ class Property(Port):
         if self.amend_value != None:
             try:
                 self.set_property(self.amend_value)
+                self.amend_value = None
                 return True
             except ValueError:
+                self.amend_value = None
                 raise
         self.amend_value = None
         return False
+
 
 class CreateDirFileHandler(logging.FileHandler):
     def __init__(self, filename, mode='a', encoding=None, delay=0):
@@ -93,34 +101,19 @@ class CreateDirFileHandler(logging.FileHandler):
                 else: raise
 
 
+def get_model_info(p, t, m, v):
+    def gen_dock(direction, in_out_puts):
+        orientation = "left" if direction == "input" else "right"
+        ports = [gen_port(key, in_out_put) for key, in_out_put in in_out_puts.items()]
+        return {'direction': direction, 'orientation': orientation, 'ports': ports}
 
-def get_models():
-    def _get_folders(path):
-        dirs = os.listdir(path)
-        dirs = filter(lambda x: os.path.isdir(path + '/' + x), dirs)
-        dirs = filter(lambda x: x[0] != '_', dirs)
-        return list(dirs)
+    def gen_port(key, in_out_put):
+        in_out_put['key'] = key
+        return in_out_put
 
-    path = "Models"
-    model_dict = dict()
-    for topic in _get_folders(path):
-        model_dict[topic] = dict()
-        for model in _get_folders(path + '/' + topic):
-            model_dict[topic][model] = dict()
-            for version in _get_folders(path + '/' + topic + '/' + model):
-
-
-                try:
-                    mod = importlib.import_module(f"Models.{topic}.{model}.{version}.model").Model(1, '')
-                    info = mod.get_info()
-                    docks = list()
-                    for direction in ['input', 'output']:
-                        for port_key, port in info[direction + "s"].items():
-                            port['key'] = port_key
-                        ports = [port for key, port in info[direction + "s"].items()]
-                        orientation = "left" if direction == "input" else "right"
-                        docks.append({'direction': direction, 'orientation': orientation, 'ports': ports})
-                    model_dict[topic][model][version] = {'docks': docks, 'properties': info["properties"]}
-                except Exception as e:
-                    print(f"Error in Models.{topic}.{model}.{version}.model ({e})")
-    return model_dict
+    try:
+        info = importlib.import_module(f"{p}.{t}.{m}.{v}.model").Model(1, '').get_info()
+        docks = [gen_dock(direction, info[direction + "s"]) for direction in ['input', 'output']]
+        return {'docks': docks, 'properties': info["properties"]}
+    except Exception as e:
+        print(f" --> Error updating {p}.{t}.{m}.{v}.model ({e})")

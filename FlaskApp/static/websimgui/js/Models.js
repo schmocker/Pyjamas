@@ -108,6 +108,8 @@ class Models {
             .classed("port_name", true)
             .call(await obj.onPortDrag());
 
+
+
         ////////////////////////////////////
         //////////// update all ////////////
         ////////////////////////////////////
@@ -344,10 +346,10 @@ class Models {
             .on("end", async function (d) {await connecting_end(this, d)});
 
         async function connecting_start(arrow, d){
+            d3.select(arrow.parentElement).select('.port_name').text(d.name + ' [' + d.unit + ']');
+
             d3.select(".main").append("line")
                 .classed("connecting_line", true)
-                .style("stroke", "black")
-                .style("stroke-dasharray", "5,5")
                 .attr("x1", d.linepoint[0])
                 .attr("y1", d.linepoint[1])
                 .attr("x2", d.linepoint[0])
@@ -356,7 +358,6 @@ class Models {
             let direction_1 = arrow.parentElement.parentElement.__data__.direction;
 
             d3.selectAll(".line").on("mouseover", null);
-
 
             d3.select(arrow)
                 .classed("connecting_from", true);
@@ -368,30 +369,36 @@ class Models {
 
             d3.selectAll('.port_selectable')
                 .filter(function(d, i) {return d.model === d3.select(".connecting_from").data()[0].model;})
-                .classed("port_inselectable", true)
                 .classed("port_selectable", false);
 
-
-
             d3.selectAll('.port_selectable')
-                .on("mouseover", function() { d3.select(this).classed("connecting_to", true);})
-                .on("mouseout", function() { d3.select(this).classed("connecting_to", false);});
+                .on("mouseover", function(d) {
+                    d3.select(this.parentElement).select('.port_name').text(d.name + ' [' + d.unit + ']');
+                    d3.select(this).classed("connecting_to", true);
+                })
+                .on("mouseout", function(d) {
+                    d3.select(this.parentElement).select('.port_name').text(d.name);
+                    d3.select(this).classed("connecting_to", false);
+                });
         }
 
         async function connecting_drag(arrow,d){
             if (d3.select(".connecting_to").empty()) {
                 let pos = d3.mouse(arrow);
                 d3.select(".connecting_line")
+                    .classed('active', false)
                     .attr("x2", pos[0])
                     .attr("y2", pos[1]);
             } else {
                 d3.select(".connecting_line")
+                    .classed('active', true)
                     .attr("x2", d3.select(".connecting_to").data()[0].linepoint[0])
                     .attr("y2", d3.select(".connecting_to").data()[0].linepoint[1]);
             }
         }
 
         async function connecting_end(arrow,d){
+            d3.select(arrow.parentElement).select('.port_name').text(d.name);
             d3.select(".connecting_line").remove();
 
             if (!d3.select(".connecting_to").empty()) {
@@ -399,6 +406,8 @@ class Models {
             }
 
             d3.selectAll('.connecting_to').classed("connecting_to", false);
+            d3.selectAll('.connecting_from').classed("connecting_from", false);
+
             d3.selectAll('.port_choice1').classed("port_choice1", false).classed("port", true);
             d3.selectAll('.port_inselectable').classed("port_inselectable", false).classed("port", true);
             d3.selectAll('.port_selectable').classed("port_selectable", false).classed("port", true);

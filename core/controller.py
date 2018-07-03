@@ -7,6 +7,7 @@ from threading import Thread
 import logging
 import datetime
 from core.util import CreateDirFileHandler
+import traceback
 
 class Controller():
 
@@ -54,8 +55,11 @@ class Controller():
             self.logger.debug(f"[CONTROLLER][{__name__}] : {msg}")
 
     def log_warning(self, msg):
+        print(f"[WARNING][CONTROLLER][{__name__}] : {msg}")
+        print(traceback.format_exc())
         if self.logger:
             self.logger.warning(f"[CONTROLLER][{__name__}] : {msg}")
+            self.logger.warning(f"[CONTROLLER][{__name__}] : {traceback.format_exc()}")
 
 #endregion logging
 
@@ -94,9 +98,19 @@ class Controller():
             if self.is_agent_running(agent_id):
                 self.log_debug(f'agent {agent_id} is running')
                 self.kill_agent(agent_id)
-            del self.agent_queues[agent_id]
-            del self.agents[agent_id]
-            del self.result_data[agent_id]
+            try:
+                del self.agent_queues[agent_id]
+            except KeyError:
+                pass
+            try:
+                del self.agents[agent_id]
+            except KeyError:
+                pass
+            try:
+                del self.result_data[agent_id]
+            except KeyError:
+                pass
+
             if self.is_agent_paused(agent_id):
                 self.agents_paused.remove(agent_id)
             self.log_debug(f'agent {agent_id} removed')
@@ -105,7 +119,7 @@ class Controller():
                 self.log_debug(f'stopped queue reading thread')
             return True
         except Exception:
-            self.log_debug(f'agent {agent_id} could not be removed')
+            self.log_warning(f'agent {agent_id} could not be removed')
         return False
 
     def get_agent_info(self, agent_id):
@@ -253,9 +267,12 @@ class Controller():
         if self.is_existing_agent(agent_id):
             if self.is_agent_running(agent_id):
                 self.agents_running[agent_id].terminate()
+                try:
+                    del self.agents_running[agent_id]
+                except KeyError:
+                    pass
                 if self.is_agent_paused(agent_id):
                     self.agents_paused.remove(agent_id)
-                del self.agents_running[agent_id]
                 return True
             else:
                 self.log_debug(f'agent {agent_id} is not running')
@@ -277,19 +294,27 @@ class Controller():
                 result = self.get_model_result(agent_id, model_id)
                 return {'run': cur_run, 'result': result}
         except KeyError:
-            self.log_warning(f'no model run found for {model_id} in {agent_id}')
+            self.log_warning(f'no model run found for model {model_id} in agent {agent_id}')
         return None
+
+    def get_model_properties(self, agent_id, model_id):
+        self.log_debug(f'starting get_model_properties')
+        try:
+            return self.property_data[agent_id][model_id]
+        except KeyError:
+            self.log_warning(f'no property data found for model {model_id} in agent {agent_id}')
+            return None
 
 #endregion simulation
 
 #region util
 
-    # Todo: @Simon: add function "get_status" to return ['running' || 'paused' || 'stopped']
+    # TODO: @Simon: add function "get_status" to return ['running' || 'paused' || 'stopped']
 
     def is_existing_agent(self, agent_id):
         if agent_id in self.agents:
             return True
-        self.log_debug(f'agent {agent_id} is not existing')
+        self.log_warning(f'agent {agent_id} is not existing')
         return False
 
     def is_agent_running(self, agent_id):
@@ -301,6 +326,13 @@ class Controller():
         if agent_id in self.agents_paused:
             return True
         return False
+
+    def get_agent_status(self, agent_id):
+        if self.is_agent_paused(agent_id):
+            return "paused"
+        if self.is_agent_running(agent_id):
+            return "running"
+        return "stopped"
 
     def get_agents_running(self):
         return list(self.agents_running)
@@ -340,9 +372,12 @@ class Controller():
                 self.handle_dead_order(msg)
             elif msg['order'] == 'data':
                 self.handle_data_order(msg)
+            elif msg['order'] == 'cpro':
+                self.handle_cpro_order(msg)
+            elif msg['order'] == 'kill':
+                self.handle_kill_order(msg)
         except KeyError:
-            self.log_warning(f'message could not be handled correctly')
-            self.log_warning(f'message = {msg}')
+            self.log_warning(f'message {msg} could not be handled correctly')
 
     def handle_dead_order(self, msg):
         agent_id = msg['agent']
@@ -353,6 +388,10 @@ class Controller():
         if self.is_agent_paused(agent_id):
             self.agents_paused.remove(agent_id)
         self.log_debug(f'agent {agent_id} removed from running list')
+
+    def handle_kill_order(self, msg):
+        agent_id = msg['agent']
+        self.kill_agent(agent_id)
 
     def handle_data_order(self, msg):
         agent_id = msg['agent']
@@ -370,6 +409,19 @@ class Controller():
         
         for name, result in data[1:]:
             self.result_data[agent_id][model_id][name] = result
+
+    def handle_cpro_order(self, msg):
+        agent_id = msg['agent']
+        model_id = msg['model']
+        props = msg['text']
+
+        if not agent_id in self.property_data:
+            self.property_data[agent_id] = {}
+        if not model_id in self.property_data[agent_id]:
+            self.property_data[agent_id][model_id] = {}
+
+        for key, prop in props.items():
+            self.property_data[agent_id][model_id][key] = prop
 
     # orders
 

@@ -3,7 +3,7 @@ import logging
 
 class TestAgent():
 
-    # TODO: OVERHAUL
+    # TODO: OVERHAUL OR DELETE
 
     def __init__(self):
         self.model = None

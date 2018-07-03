@@ -1,5 +1,6 @@
 :root {
-    --hover-color: darkturquoise;
+    --theme-color: deepskyblue;
+    --hover-color: #0095ff;
 }
 
 
@@ -26,7 +27,7 @@
     width: 100%;
     align-self: stretch;
 
-    background-color: cadetblue;
+    background-color: #ecfaff;
     border-style: solid;
     border-color: black;
     border-width: 1px;
@@ -36,7 +37,6 @@
     align-self: stretch;
     justify-self: stretch;
     grid-row: 2;
-    background-color: #4677f8;
 
     display: grid;
     grid-template-rows: auto 1fr;
@@ -48,27 +48,30 @@
 #wsg #view #view_title{
     grid-column: 1;
     align-self: center;
-    background-color: #4ca078;
+    background-color: var(--theme-color);
     padding: 10px;
     font-size: large;
 }
 #wsg #view #view_menu{
-    background-color: #7aa024;
+    background-color: var(--theme-color);
     justify-self: right;
 
     display: grid;
     grid-template-rows: 1fr;
-    grid-template-columns: repeat(11, auto);
+    grid-template-columns: repeat(11, auto) 1fr;
     grid-gap: 10px;
 }
 #wsg #view #view_menu .view_menu_item{
     align-self: center;
-    background-color: #63a096;
+    background-color: lightgrey;
     padding: 5px;
     cursor: pointer;
 }
+#wsg #view #view_menu .view_menu_item:hover{
+    background-color: grey;
+}
 #wsg #view #view_menu .view_menu_item.active{
-    background-color: #376056;
+    background-color: grey;
     color: #d4d4d4;
 }
 #wsg #view #view_content{
@@ -81,6 +84,9 @@
     #wsg #view{
         grid-template-rows: auto auto 1fr;
         grid-template-columns: 1fr;
+    }
+    #wsg #view #view_menu {
+        justify-self: normal;
     }
     #wsg #view #view_content{
         grid-column: 1;
@@ -137,20 +143,29 @@
 #wsg .main>.model .port>.arrow{
     cursor: crosshair;
 }
+#wsg .main>.model .port>.arrow.connecting_from{
+    fill: var(--hover-color);
+}
 #wsg .main>.model .port>.arrow:hover{
     fill: var(--hover-color);
 }
-#wsg .main>.model .port_choice1{
-    font-size: large;
+#wsg .main>.model .port>.arrow.port_selectable{
+    fill: var(--hover-color);
 }
-#wsg .main>.model .port_selectable{
-    fill: green;
-}
-#wsg .main>.model .port_selectable:hover{
+
+#wsg .main>.model .port>.arrow.port_selectable:hover{
     fill: var(--hover-color);
 }
 
 /* connections */
+#wsg .connecting_line{
+    stroke-dasharray: 5,5;
+    stroke: black;
+}
+#wsg .connecting_line.active{
+    stroke-dasharray: none;
+    stroke: var(--hover-color);
+}
 #wsg .connection .line{
     stroke: black;
     stroke-width: 2px;
@@ -189,75 +204,3 @@
 }
 
 
-
-
-
-/* Popups */
-#wsg  .popup {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
-    padding-top: 5vw; /* Location of the box */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-}
-#wsg  .popup .frame {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 10px;
-    border: 1px solid #888;
-    width: 90%;
-    height: 90%;
-}
-
-#wsg  .popup #popup_content{
-    height: 100%;
-    width: 100%;
-    display: grid;
-    align-content: stretch;
-    justify-content: stretch;
-    grid-template-rows: 35px auto;
-    grid-template-columns: auto auto 20px;
-    grid-column-gap: 10px;
-}
-
-
-
-#wsg .popup #popup_content>#popup_header{
-    align-self: center;
-    justify-self: start;
-}
-#wsg .popup #popup_content>#popup_buttons{
-    align-self: center;
-    justify-self: end;
-}
-#wsg .popup #popup_content>#popup_close{
-    align-self: center;
-    justify-self: right;
-}
-
-#wsg .popup #popup_content>#popup_buttons>img:hover,
-#wsg .popup #popup_content>#popup_buttons>a:hover,
-#wsg .popup #popup_content>#popup_close:hover,
-#wsg .popup #popup_content>#popup_close:focus{
-    color: #000;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-
-#wsg .popup #popup_content>#popup_body{
-    grid-column: 1 / span 3;
-    align-self: stretch;
-    justify-self: stretch;
-    border-top: solid 1.5px #ccc;
-    padding-top: 5px;
-}
-#wsg .popup #popup_content>#popup_body>iframe{
-    border: solid 1px #eee;
-}

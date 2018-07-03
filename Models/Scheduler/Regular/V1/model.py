@@ -2,6 +2,7 @@ import asyncio
 from core.util import Input, Output, Property
 from core.supermodel import Supermodel
 
+
 class Model(Supermodel):
     """
         schedules the func gates of the agent
@@ -12,12 +13,12 @@ class Model(Supermodel):
         super(Model, self).__init__(uuid,name)
         self.elapsed = 0
 
-        self.outputs['num_elapsed'] = Output({'name': 'Number Elapsed', 'unit': 'int', 'dimensions': []})
+        self.outputs['num_elapsed'] = Output(name='Number Elapsed', unit='int')
 
-        self.properties["number_of_exec"] = Property(-1,float, {'name': 'Number of Executions', 'unit': 'int', 'dimensions': []})
-        self.properties["peri_interval"] = Property(0,float, {'name': 'Peri Interval', 'unit': 'num', 'dimensions': []})
-        self.properties["prep_lead"] = Property(0,float, {'name': 'Prep lead', 'unit': 'num', 'dimensions': []})
-        self.properties["post_delay"] = Property(0,float, {'name': 'Post delay', 'unit': 'num', 'dimensions': []})
+        self.properties["number_of_exec"] = Property(-1, float, name='Number of Executions', unit='int')
+        self.properties["peri_interval"] = Property(0, float, name='Peri Interval', unit='num')
+        self.properties["prep_lead"] = Property(0, float, name='Prep lead', unit='num')
+        self.properties["post_delay"] = Property(0, float, name='Post delay', unit='num')
 
     def close_gates(self):
         if self.get_property('prep_lead') > 0:
