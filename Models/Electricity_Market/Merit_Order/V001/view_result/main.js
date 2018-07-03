@@ -7,8 +7,9 @@ let update_interval;
 
 let values;
 
-let mo_diag;
 let menu;
+let mo_diag;
+let mp_diag;
 
 
 let i_dn = 0;
@@ -18,25 +19,16 @@ let dns = null;
 
 
 window.onload = async function() {
-    mo_diag = new MeritOrderDiagram(d3.select(".diag"));
     menu = new Menu(d3.select(".menu"));
+    mo_diag = new MeritOrderDiagram(d3.select(".mo_diag"));
+    mp_diag = new MarketPriceDiagram(d3.select(".mp_diag"));
 
-    await mo_diag.update();
     await menu.update();
+    await mo_diag.update();
+    await mp_diag.update();
 
     await set_updater();
 };
-
-
-
-async function create_menu(parent) {
-
-
-}
-
-
-
-
 
 async function set_updater() {
     clearInterval(update_interval);
@@ -44,9 +36,6 @@ async function set_updater() {
         await mo_diag.update();
     }, 2*1000);
 }
-
-
-
 async function get(query_name, data_dict){
     let data = await $.get("/websimgui", {
         'fnc': query_name,

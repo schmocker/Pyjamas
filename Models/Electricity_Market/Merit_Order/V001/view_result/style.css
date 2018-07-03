@@ -72,7 +72,7 @@ body{
 
 
 
-.diag{
+.mo_diag{
     background-color: #666666;
 }
 
@@ -121,4 +121,8 @@ div.tooltip {
     pointer-events: none;
     text-align: left;
     opacity: 0;
+}
+
+.mp_diag{
+    background-color: #c3c3c3;
 }

@@ -60,8 +60,6 @@ async function create_view(){
 
     formatTime = d3.timeFormat("%Y-%m-%d %H:%M:%S");
 
-    // Add the scatterplot
-
 
 
     await update_view();
