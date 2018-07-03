@@ -22,8 +22,6 @@ class Model(Supermodel):
     async def func_peri(self, prep_to_peri=None):
         # get inputs
         weatherdata = await self.get_input('weather')
-
-
         kwDaten = await self.get_input('kwDaten')
 
         #auslastung = self.calc_load(weather, kwDaten)
