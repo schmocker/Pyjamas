@@ -167,9 +167,7 @@ def create_dummy_data(session):
     session.commit()
 
     for i in range(50):
-        co2p = Co2Preis(long=random.random() * 60 - 20,
-                        lat=random.random() * 60 + 20,
-                        datetime=datetime.datetime.now() + random.randint(0, 10) * datetime.timedelta(days=365),
+        co2p = Co2Preis(datetime=datetime.datetime.now() + random.randint(0, 10) * datetime.timedelta(days=365),
                         preis=random.randint(100, 200))
         session.add(co2p)
         try:
