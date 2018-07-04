@@ -1,11 +1,5 @@
 from core import Supermodel
 from core.util import Input, Output, Property
-import numpy as np
-from pytz import timezone
-import math
-from datetime import date, timedelta
-import json
-from os import path
 
 
 # define the model class and inherit from class "Supermodel"
@@ -16,8 +10,9 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['modus'] = Input(name='modus', unit='-', info="modus (live or simulation")
-        self.inputs['KW'] = Input(name='KW_info', unit='-', info="KW information (id, lat, lon)")
+        self.inputs['mode'] = Input(name='modus', unit='-', info="modus (live or simulation")
+        self.inputs['KW'] = Input(name='KW info', unit='-', info="KW information (id, lat, lon)")
+        self.inputs['date'] = Input(name='Time vector', unit='s', info="Time in utc")
 
         # define outputs
         self.outputs['weather_data'] = Output(name='weather data of KWs')
@@ -44,9 +39,12 @@ class Model(Supermodel):
 
 
     async def func_peri(self, prep_to_peri=None):
+
+        print("a")
         # get inputs
-        mode = await self.get_input('modus')
-        # KW_data = await self.get_input('KW')
+        mode = await self.get_input('mode')
+        KW_data = await self.get_input('KW')
+        dates = await self.get_input('date')
 
         # selection of weather model based on modus
         if mode=='live':
