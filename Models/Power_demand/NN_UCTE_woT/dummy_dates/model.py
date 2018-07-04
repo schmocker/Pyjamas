@@ -1,7 +1,7 @@
 from core import Supermodel
 from core.util import Input, Output
 from datetime import datetime, timedelta
-from Models import datetime2utc_time
+from Models._utils.time import datetime2utc_time
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
