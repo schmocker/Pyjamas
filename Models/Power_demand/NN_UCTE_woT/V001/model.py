@@ -6,7 +6,6 @@ import math
 from datetime import date, timedelta
 import json
 from os import path
-from Models._utils.time import *
 
 
 # define the model class and inherit from class "Supermodel"
@@ -20,7 +19,7 @@ class Model(Supermodel):
         self.inputs['date'] = Input(name='date', unit='s', info="time array in utc")
 
         # define outputs
-        self.outputs['p_dem'] = Output(name='power demand')
+        self.outputs['p_dem'] = Output(name='power demand', unit='W', info="power demand of UCTE in W")
 
         # define properties
         self.properties['offset'] = Property(0, float, name='demand offset', unit='%', info="offset of demand in %")
