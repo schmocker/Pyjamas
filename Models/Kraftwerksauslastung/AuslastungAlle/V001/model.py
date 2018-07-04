@@ -10,12 +10,12 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['WTAuslastung'] = Input({'name': 'LoadWT'})
-        self.inputs['PVAuslastung'] = Input({'name': 'LoadPV'})
-        self.inputs['KWDaten'] = Input({'name': 'PowerPlantsData'})
+        self.inputs['WTAuslastung'] = Input(name='LoadWT')
+        self.inputs['PVAuslastung'] = Input(name='LoadPV')
+        self.inputs['KWDaten'] = Input(name='PowerPlantsData')
 
         # define outputs
-        self.outputs['GemeinsameAuslastung'] = Output({'name': 'LoadMatrix'})
+        self.outputs['GemeinsameAuslastung'] = Output(name='LoadMatrix')
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs

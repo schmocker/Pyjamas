@@ -2,6 +2,7 @@ from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
 import math
+import matplotlib as plt
 
 
 # define the model class and inherit from class "Supermodel"
@@ -12,11 +13,12 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input({'name': 'WeatherData'})
-        self.inputs['kwDaten'] = Input({'name': 'PowerPlantsData'})
+        self.inputs['weather'] = Input(name='WeatherData')
+        self.inputs['kwDaten'] = Input(name='PowerPlantsData')
 
         # define outputs
-        self.outputs['load'] = Output({'name': 'Load'})
+        self.outputs['load'] = Output(name='Load')
+
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -37,12 +39,6 @@ class Model(Supermodel):
         # set output
         self.set_output("load", auslastung)
 
-
-
-    # define additional methods (normal)
-    def calc_load(self, weather_data, kw_data):
-        load = weather_data + kw_data
-        return load
 
 
     def hubheightVSdiameter(self, Nabenhoehe):
@@ -206,12 +202,15 @@ class Model(Supermodel):
             wind = np.array(wind_for_kwid)
 
             auslastung = self.windturbine(wind, NH, Z0, wind_messhoehe)
+            plt.plot(auslastung)
+            plt.show()
             return auslastung.tolist()
 
         id = [kw[0] for kw in KraftwerksDaten]
         load = [make_load_for_one_wt(kw[0], kw[2]['NH'], kw[2]['Z0']) for kw in KraftwerksDaten]
 
         WTAuslastung = {'id': id, 'load': load}
+
 
         #NH = [kw[3]['NH'] for kw in KraftwerksDaten]
         #Z0 = [kw[3]['Z0'] for kw in KraftwerksDaten]
