@@ -96,7 +96,7 @@ class Model(Supermodel):
         demand_GW = np.sum(demand_reshape, axis=1)
 
         # offset
-        demand_GW = demand_GW*(1+self.get_property('offset')/100)
+        demand_GW = np.multiply(demand_GW,(1+self.get_property('offset')/100))
 
         # convert GW to W
         demand = np.multiply(demand_GW, 10e9)
