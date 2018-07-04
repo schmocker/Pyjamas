@@ -10,11 +10,11 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['load'] = Input({'name': 'LoadMatrix'})
-        self.inputs['power'] = Input({'name': 'PowerPlantsData'})
+        self.inputs['load'] = Input(name='LoadMatrix')
+        self.inputs['power'] = Input(name='PowerPlantsData')
 
         # define outputs
-        self.outputs['scaled_power'] = Output({'name': 'Power'})
+        self.outputs['scaled_power'] = Output(name='Power')
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs

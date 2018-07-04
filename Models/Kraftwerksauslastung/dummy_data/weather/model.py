@@ -10,7 +10,7 @@ class Model(Supermodel):
         # instantiate supermodel
         super(Model, self).__init__(id, name)
         # define outputs
-        self.outputs['weather'] = Output({'name': 'WeatherData'})
+        self.outputs['weather'] = Output(name='WeatherData')
 
 
         # define persistent variables
@@ -142,6 +142,8 @@ class Model(Supermodel):
 
         # set output
         self.set_output("weather", self.WeatherData)
+
+
 
 
 
