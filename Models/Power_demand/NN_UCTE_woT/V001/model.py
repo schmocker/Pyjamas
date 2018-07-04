@@ -6,6 +6,7 @@ import math
 from datetime import date, timedelta
 import json
 from os import path
+from Models._utils.time import *
 
 
 # define the model class and inherit from class "Supermodel"
