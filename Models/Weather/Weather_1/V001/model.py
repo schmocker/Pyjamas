@@ -52,6 +52,9 @@ class Model(Supermodel):
         out_T = []
         out_u = []
         out_P = []
+        T_it = []
+        u_it = []
+        P_it = []
         len_id = KW_data["ID"].__len__()
 
         # - loop
@@ -63,19 +66,24 @@ class Model(Supermodel):
 
             # selection of weather model based on mode
             if mode == 'live':
-                w_data = 1
+                #w_data = 1
                 w_data_it = [self.weather_API(long, lat, tt) for tt in dates]
+                T_it = [item[0] for item in w_data_it]
+                u_it = [item[1] for item in w_data_it]
+                P_it = [item[2] for item in w_data_it]
 
             else:
-                w_data = 2
+                #w_data = 2
                 w_data_it = [self.weather_historic(long, lat, tt, self.get_property('ref_year')) for tt in dates]
-
+                T_it = [item[0] for item in w_data_it]
+                u_it = [item[1] for item in w_data_it]
+                P_it = [item[2] for item in w_data_it]
 
             # append data
             out_ids.append(id_it)
-            out_T.append(w_data_it[0][0])
-            out_u.append(w_data_it[0][1])
-            out_P.append(w_data_it[0][2])
+            out_T.append(T_it)
+            out_u.append(u_it)
+            out_P.append(P_it)
 
         # create dict
         weather_data = dict(zip(["ID", "Temperature", "Wind_speed", "Radiation"], [out_ids, out_T, out_u, out_P]))
@@ -86,14 +94,20 @@ class Model(Supermodel):
 
     def weather_API(self, long, lat, date):
 
+        # API
+        # data = http://my.meteoblue.com/packages/basic-1h?lat=47.5584&lon=7.57327&format=JSON&timeformat=timestamp_utc
+        # no &tz= => data in local including daylight saving for europe
+        # timeformat timestamp in utc
+
+        # dummy
         T_it = 20
         u_it = 10
         P_it = 1000
 
         # offset
-        T_it = T_it*(1+self.get_property("T_offset")/100)
-        u_it = u_it * (1 + self.get_property("u_offset") / 100)
-        P_it = P_it * (1 + self.get_property("P_offset") / 100)
+        # T_it = T_it*(1+self.get_property("T_offset")/100)
+        # u_it = u_it * (1 + self.get_property("u_offset")/100)
+        # P_it = P_it * (1 + self.get_property("P_offset")/100)
 
         w_data_it = [T_it, u_it, P_it]
 
@@ -107,8 +121,8 @@ class Model(Supermodel):
 
         # offset
         T_it = T_it*(1+self.get_property("T_offset")/100)
-        u_it = u_it * (1 + self.get_property("u_offset") / 100)
-        P_it = P_it * (1 + self.get_property("P_offset") / 100)
+        u_it = u_it * (1 + self.get_property("u_offset")/100)
+        P_it = P_it * (1 + self.get_property("P_offset")/100)
 
         w_data_it = [T_it, u_it, P_it]
 
