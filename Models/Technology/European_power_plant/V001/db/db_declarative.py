@@ -103,7 +103,5 @@ class Co2Preis(Base):
     __tablename__ = 'co2preis'
     # declare columns
     id = Column(Integer, primary_key=True)
-    long = Column(Float, nullable=False)
-    lat = Column(Float, nullable=False)
     datetime = Column(DateTime, nullable=False)
     preis = Column(Float, nullable=False)

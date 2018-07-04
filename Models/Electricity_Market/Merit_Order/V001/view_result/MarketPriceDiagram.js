@@ -1,39 +1,65 @@
 class MarketPriceDiagram {
     constructor(parent) {
+        let obj = this;
         this.run = 0;
+
+
+
+
+        this.data = null;
 
         this.filter = {'t': ['all_data', 'times'], 'p': ['market_prices']};
 
         this.div = parent.append("div").attr("class", "tooltip");
 
-        this.margin = {top: 20, right: 50, bottom: 50, left: 50};
+        this.margin = {top: 50, right: 50, bottom: 100, left: 50};
         this.width = window.innerWidth - this.margin.left - this.margin.right;
         this.height = parent.node().getBoundingClientRect().height - this.margin.top - this.margin.bottom;
 
-        // set the ranges
-        this.x = d3.scaleTime().range([0, this.width]);
-        this.y = d3.scaleLinear().range([this.height, 0]);
-        this.z = d3.scaleOrdinal(d3.schemeCategory10);
+        this.xScale = d3.scaleTime().range([0, this.width]);
+        this.yScale = d3.scaleLinear().range([this.height, 0]);
+        this.zScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+        this.formatTime = d3.timeFormat("%Y-%m-%d %H:%M:%S");
 
         this.line = d3.line()
-            .curve(d3.curveBasis)
-            .x(function(d) { return x(d.date); })
-            .y(function(d) { return y(d.y); });
+            .x(function(d) { return obj.xScale(d.date); })
+            .y(function(d) { return obj.yScale(d.y); });
 
-        // append the svg obgect to the body of the page
-        // appends a 'group' element to 'svg'
-        // moves the 'group' element to the top left margin
-        this.svg = parent.append("svg")
+
+        // append elements
+        this.g = parent.append("svg")
             .attr("width", this.width + this.margin.left + this.margin.right)
             .attr("height", this.height + this.margin.top + this.margin.bottom)
             .append("g").attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
 
-        this.formatTime = d3.timeFormat("%Y-%m-%d %H:%M:%S");
+        this.g.append('text').text('Marktpreisverlauf für die einzelnen Verteilnetze')
+            .style("text-anchor", "middle")
+            .attr("transform", "translate(" + this.width/2 + ",-20)");
+
+        this.timeLine = this.createTimeLine(this.g);
+
+        this.xAxis = this.g.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + this.height + ")");
+
+        this.yAxis = this.g.append("g")
+            .attr("class", "axis axis--y");
+
+        this.yAxis.append("text")
+            .attr('class', 'title')
+            .attr("transform", "rotate(-90)")
+            .attr("y", -30)
+            .attr("fill", "#000")
+            .text("Marktpreis [CHF/MWh]");
+
+        this.legend = this.createLegend(this.g);
     }
 
-    async update(){
+    async updateView(updateSpeed){
+
         let obj = this;
-        let data = await this.get_data();
+        let data = this.data;
 
         if (data){
             let ids = data.columns.filter(function(item) { return item !== 'date' });
@@ -46,54 +72,128 @@ class MarketPriceDiagram {
                 };
             });
 
-            this.x.domain(d3.extent(data, function(d) { return d.date; }));
-
-            this.y.domain([
-                d3.min(dist_nets, function(c) { return d3.min(c.values, function(d) { return d.y; }); }),
+            this.xScale.domain(d3.extent(data, function(d) { return d.date; }));
+            this.yScale.domain([
+                0, //d3.min(dist_nets, function(c) { return d3.min(c.values, function(d) { return d.y; }); }),
                 d3.max(dist_nets, function(c) { return d3.max(c.values, function(d) { return d.y; }); })
             ]);
+            this.zScale.domain(dist_nets.map(function(c) { return c.id; }));
 
-            this.z.domain(dist_nets.map(function(c) { return c.id; }));
+            // set new data
+            let dist_net = this.g.selectAll(".dist_net").data(dist_nets);
 
-            this.svg.append("g")
-                .attr("class", "axis axis--x")
-                .attr("transform", "translate(0," + this.height + ")")
-                .call(d3.axisBottom(this.x));
+            // remove unused
+            dist_net.exit().remove();
 
-            this.svg.append("g")
-                .attr("class", "axis axis--y")
-                .call(d3.axisLeft(this.y))
-                .append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", 6)
-                .attr("dy", "0.71em")
-                .attr("fill", "#000")
-                .text("Temperature, ºF");
+            // add new if required
+            let new_dist_net = dist_net.enter().append("g").attr("class", "dist_net");
+            new_dist_net.append("path").attr("class", "line");
+            new_dist_net.append("text").attr("x", 3).attr("dy", "0.35em");
 
-            let dist_net = g.selectAll(".dist_net")
-                .data(dist_nets)
-                .enter().append("g")
-                .attr("class", "dist_net");
+            // update all
+            dist_net = this.g.selectAll(".dist_net");
 
-            dist_net.append("path")
-                .attr("class", "line")
-                .attr("d", function(d) { return this.line(d.values); })
-                .style("stroke", function(d) { return this.z(d.id); });
+            dist_net.select('path')
+                .transition().duration(updateSpeed)
+                .attr("d", function(d) { return obj.line(d.values); })
+                .style("stroke", function(d) { return obj.zScale(d.id); });
 
-            dist_net.append("text")
+            dist_net.select("text")
                 .datum(function(d) { return {id: d.id, value: d.values[d.values.length - 1]}; })
-                .attr("transform", function(d) { return "translate(" + this.x(d.value.date) + "," + this.y(d.value.y) + ")"; })
-                .attr("x", 3)
-                .attr("dy", "0.35em")
-                .style("font", "10px sans-serif")
+                .transition().duration(updateSpeed)
+                .attr("transform", function(d) { return "translate(" + obj.xScale(d.value.date) + "," + obj.yScale(d.value.y) + ")"; })
                 .text(function(d) { return d.id; });
 
 
+            // update axis
+            this.xAxis
+                .transition().duration(updateSpeed)
+                .call(d3.axisBottom(this.xScale).tickFormat(this.formatTime))
+                .selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "0em").attr("dy", "1em")
+                .attr("transform", "rotate(-15)");
+
+            this.yAxis
+                .transition().duration(updateSpeed)
+                .call(d3.axisLeft(this.yScale));
+
+            this.updateTimeLine(updateSpeed);
+            this.updateLegend(updateSpeed);
+
+
+
+            ////////////////////////////////
+/*
+
+            let legend5 = d3.select('.legend').selectAll("legend").data(['a','b']);
+
+            legend5.enter().append("div")
+                .attr("class","legends5");
+
+            let p = legend5.append("p").attr("class","country-name");
+            p.append("span").attr("class","key-dot").style("background",function(d,i) { return color(i) } );
+            p.insert("text").text(function(d,i) { return d } )
+*/
         }
     }
 
+    // Legend
+    createLegend(parent){
+        let g = parent.append("g").attr('class', 'legend');
+        return g;
+    }
+    async updateLegend(updateSpeed){
+        let obj = this;
+        let items = this.data.columns.filter(function(item) { return item !== 'date' });
+        let legend = this.legend.selectAll('.legend_item').data(items);
 
-    async get_data(){
+        // exit
+        legend.exit().remove();
+
+        // enter
+        let new_legend = legend.enter().append('g').attr('class', 'legend_item');
+
+        let size = 10;
+        new_legend.append('rect').attr('x', 0).attr('y', -size/2).attr('width', size).attr('height', size);
+        new_legend.append('text').style('alignment-baseline','central').attr('x', size+5);
+
+        // update
+        legend = this.legend.selectAll('.legend_item');
+        legend.attr("transform", function (d, i) {
+            return "translate(" + 100*i + "," + 330 + ")"
+        });
+        legend.select('rect').style('fill', function(d) { return obj.zScale(d); });
+        legend.select('text').text(function (d) { return d });
+    }
+
+
+
+
+
+    createTimeLine(parent){
+        let g = parent.append("g");
+        g.append("line");
+        g.append("text").style("font-size", "10px").attr('x', 5).attr('y', -5);
+        return g;
+    }
+
+    async updateTimeLine(updateSpeed){
+        let obj = this;
+        this.timeLine.select('line')
+            .transition().duration(updateSpeed)
+            .attr("x1", function () { return obj.xScale(obj.data[i_ts].date)})
+            .attr("x2", function () { return obj.xScale(obj.data[i_ts].date)})
+            .attr("y1", function () { return obj.yScale(0)})
+            .attr("y2", function () { return obj.yScale(obj.yScale.domain()[1])});
+
+        this.timeLine.select('text')
+            .text(function () { return obj.formatTime(obj.data[i_ts].date) })
+            .attr("transform", function() { return "translate(" + obj.xScale(obj.data[i_ts].date) + "," + obj.yScale(0) + ")"; })
+    }
+
+
+    async updateData(){
         let data = await get('get_mu_results', {'mu_id': mu_id, 'mu_run': this.run, 'filter': this.filter});
         if (data){
             this.run = data.run;
@@ -114,7 +214,8 @@ class MarketPriceDiagram {
             d.columns = Object.keys(d[0]);
 
             data = d;
+
         }
-        return data
+        this.data = data
     }
 }

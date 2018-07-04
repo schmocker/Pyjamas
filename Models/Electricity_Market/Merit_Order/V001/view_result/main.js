@@ -24,17 +24,25 @@ window.onload = async function() {
     mp_diag = new MarketPriceDiagram(d3.select(".mp_diag"));
 
     await menu.update();
-    await mo_diag.update();
-    await mp_diag.update();
+
+    await updateAll(0);
 
     await set_updater();
 };
 
+async function updateAll(updateSpeed) {
+    await mo_diag.updateData();
+    await mp_diag.updateData();
+
+    mo_diag.updateView(updateSpeed);
+    mp_diag.updateView(updateSpeed);
+}
+
 async function set_updater() {
     clearInterval(update_interval);
     update_interval = setInterval(await async function() {
-        await mo_diag.update();
-    }, 2*1000);
+        await updateAll(500);
+    }, 10*1000);
 }
 async function get(query_name, data_dict){
     let data = await $.get("/websimgui", {
@@ -46,4 +54,18 @@ async function get(query_name, data_dict){
         return JSON.parse(data);
     }
 }
+
+d3.selection.prototype.moveToFront = function() {
+    return this.each(function(){
+        this.parentNode.appendChild(this);
+    });
+};
+d3.selection.prototype.moveToBack = function() {
+    return this.each(function() {
+        let firstChild = this.parentNode.firstChild;
+        if (firstChild) {
+            this.parentNode.insertBefore(this, firstChild);
+        }
+    });
+};
 
