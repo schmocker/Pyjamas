@@ -14,6 +14,10 @@ The output of this model is:
 
 1. european (UCTE) power demand in [W]
 
+## Properties
+The property of this model is:
+
+1. offset of the demand in % 
 
 ## Remarks
 

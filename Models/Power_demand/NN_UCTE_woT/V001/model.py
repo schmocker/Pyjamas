@@ -17,16 +17,13 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        #self.inputs['date'] = Input({'name': 'date'})
-        self.inputs['date'] = Input(name='date')
+        self.inputs['date'] = Input(name='date', unit='s', info="time array in utc")
 
         # define outputs
-        #self.outputs['p_dem'] = Output({'name': 'power demand'})
         self.outputs['p_dem'] = Output(name='power demand')
 
         # define properties
-        #self.properties['offset'] = Property(10, float, {'name': 'demand offset'})
-        self.properties['offset'] = Property(10, float, name='demand offset')
+        self.properties['offset'] = Property(0, float, name='demand offset', unit='%', info="offset of demand in %")
 
         # define persistent variables
         self.model_pars = None
@@ -98,10 +95,13 @@ class Model(Supermodel):
         demand_reshape = demand_GW_i.reshape((1, num_country.size))
         demand_GW = np.sum(demand_reshape, axis=1)
 
+        # offset
+        demand_GW = demand_GW*(1+self.get_property('offset')/100)
+
         # convert GW to W
         demand = np.multiply(demand_GW, 10e9)
 
-        return demand
+        return demand.tolist()[0]
 
     def func_NeuralNetwork(self, x1):
         model_para = self.model_para
