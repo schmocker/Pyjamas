@@ -29,16 +29,40 @@ The output of this model is:
   * download from website as xlsx-file
   * remark in glossary, time: local time of Brussels
   * hourly values
+  * https://www.entsoe.eu/data/data-portal/
  
 * 2016-2017 
   * manually from transparency ENTSO-e site
   * time: CET/CEST
   * every quarter of an hour values
+  * https://transparency.entsoe.eu/
   
 * UCTE countries (24)
+  * Austria
+  * Bosnia-Herzegovina
+  * Belgium
+  * Bulgaria
+  * Switzerland
+  * Czech Republic
+  * Germany
+  * Denmark
+  * Spain
+  * France
+  * Greece
+  * Croatia
+  * Hungray
+  * Italy
+  * Luxembourg
+  * Montenegro
+  * Makedonija
+  * Netherland
+  * Poland
+  * Portugal
+  * Romania
+  * Serbia
+  * Slovenia
+  * Slovak Republic  
 
-* Reference !!!!!!!!!!!!!!!!!!
-  
   
 ### Neural network
 

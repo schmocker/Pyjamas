@@ -6,6 +6,7 @@ import math
 from datetime import date, timedelta
 import json
 from os import path
+from Models._utils.time import *
 
 
 # define the model class and inherit from class "Supermodel"
@@ -16,13 +17,16 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['date'] = Input({'name': 'date'})
+        #self.inputs['date'] = Input({'name': 'date'})
+        self.inputs['date'] = Input(name='date')
 
         # define outputs
-        self.outputs['p_dem'] = Output({'name': 'power demand'})
+        #self.outputs['p_dem'] = Output({'name': 'power demand'})
+        self.outputs['p_dem'] = Output(name='power demand')
 
         # define properties
-        self.properties['offset'] = Property(10, float, {'name': 'demand offset'})
+        #self.properties['offset'] = Property(10, float, {'name': 'demand offset'})
+        self.properties['offset'] = Property(10, float, name='demand offset')
 
         # define persistent variables
         self.model_pars = None
@@ -66,7 +70,8 @@ class Model(Supermodel):
 
         # Date
         l_date = 1
-        date_UTC = dates.replace(tzinfo=timezone('UTC'))
+        date_datetime = utc_time2datetime(dates)
+        date_UTC = date_datetime.replace(tzinfo=timezone('UTC'))
         date_local = date_UTC.astimezone(timezone('Europe/Brussels'))
         year = date_local.year
         weekend = int((date_local.isoweekday() == 6 | date_local.isoweekday() == 7) == True)
