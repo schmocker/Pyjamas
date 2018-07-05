@@ -198,7 +198,7 @@ class View {
         if (menu_item){ // menu_item = X
             menu_sel = d3.select(menu_item)
         } else if (!mu){ // menu_item = null && mu = null
-            menu_sel = this.menu.select("#add")
+            menu_sel = this.menu.select("#add");
         } else  if (new_mu && this.menu.select("#add").classed("active")){ // menu_item = null && mu = X && new_mu = false
             menu_sel = this.menu.select("#properties");
         } else {
@@ -258,8 +258,13 @@ class View {
 
         // update view
         switch(menu_sel.attr('id')) {
-            case 'add': await this.update_add_model(); break;
-            case 'docu': await this.update_docu(); break;
+            case 'add':
+                models.deactivate_all();
+                await this.update_add_model();
+                break;
+            case 'docu':
+                await this.update_docu();
+                break;
             case 'properties':
                 if (menu_sel.classed("custom")){ await this.update_custom_property_view(); }
                 else { await this.update_default_property_view(); }
@@ -268,7 +273,8 @@ class View {
                 if (menu_sel.classed("custom")){ await this.update_custom_result_view(); }
                 else { await this.update_default_result_view(); }
                 break;
-            default: this.content.html("");
+            default:
+                this.content.html("");
         }
     }
 
@@ -390,11 +396,57 @@ class View {
         let prop_data = await get('get_model_properties', {'model': obj.mu.id});
         prop_data = JSON.parse(prop_data);
 
-        let prop_div = this.content.append('div');
+        let set_div = this.content.append('div').attr('id', 'settings');
+        set_div.append('h3').text('Settings');
 
+        let set_table = set_div.append('table');
+		let set_thead = set_table.append('thead');
+		let	set_tbody = set_table.append('tbody');
+		set_thead.append('tr').selectAll('th').data(['Name','Direction Inputs','Direction Outputs']).enter()
+            .append('th').text(function (column) { return column; });
+
+		let set_row = set_tbody.append("tr");
+        set_row.append('td').append("input").attr("type", "text").attr("value", this.mu.name)
+            .on('keyup', function (d) {
+                if (d3.event.keyCode === 13) { post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true) }
+            })
+            .on('blur', function (d) {
+                post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true)
+            });
+
+        set_row.append('td').append("select").attr('id', 'input');
+        set_row.append('td').append("select").attr('id', 'output');
+        let options = ['top','bottom','left','right'];
+        set_row.selectAll("select").selectAll('option')
+            .data(options).enter().append('option')
+            .attr("value", function (d) { return d })
+            .text(function (d) { return d });
+        set_row.selectAll("select").property('value',function (d) {
+                let direction = d3.select(this).attr('id');
+
+                let or_in = obj.mu.input_orientation;
+                let or_out = obj.mu.output_orientation;
+                or_in = (or_in) ? or_in : 'left';
+                or_out = (or_out) ? or_out : 'right';
+
+                return (direction === 'input') ? or_in : or_out;
+        });
+        set_row.selectAll("select").on('change', function (d) {
+            let or_in = set_row.select('#input').property('value');
+            let or_out = set_row.select('#output').property('value');
+            if (or_in === or_out){
+                d3.select(this).style('background-color', 'red');
+            } else {
+                d3.select(this).style('background-color', 'white');
+                let direction = d3.select(this).attr('id');
+                let val = set_row.select('#'+direction).property('value');
+                post('set_model_dock_orientation', {'mu_id': obj.mu.id, 'dock': direction, 'orientation': val}, true);
+            }
+        });
+
+        // properties
+        let prop_div = this.content.append('div').attr('id', 'properties');
         prop_div.append('h3').text('Properties');
-
-
 
         let prop_table = prop_div.append('table');
 		let prop_thead = prop_table.append('thead');
@@ -425,7 +477,7 @@ class View {
 
         // Inputs & Outputs
         let docks = this.content.selectAll(".docks").data(this.mu.model.info.docks);
-        docks = docks.enter().append("div").classed("docks", true);
+        docks = docks.enter().append("div").classed("docks", true).attr('id', function (d) { return d.direction });
         docks.append('h3').text(function (d) {
             switch (d.direction){
                 case 'input': return 'Inputs';
@@ -466,6 +518,7 @@ class View {
 
 
     async update_add_model() {
+        let obj = this;
         // Title
         this.content.html("");
         this.content.append("h2").text("Add Model");
@@ -528,7 +581,9 @@ class View {
                 name_inp.style("background-color","white");
                 let v = v_sel.property("selectedOptions")[0].__data__;
                 await models.add(name, v.value.id);
-                name_inp.property("value", "");
+
+                let mu = agent_data.model_used[agent_data.model_used.length-1];
+                models.activate(mu.id);
             });
         // trigger first change
         t_sel.dispatch('change');

@@ -1,4 +1,8 @@
 from .db_main import db, controller
+
+from .model_used import Model_used
+from .connection import Connection
+
 import json
 
 class Agent(db.Model):
@@ -19,6 +23,58 @@ class Agent(db.Model):
         agent = cls(name=name)
         db.session.add(agent)
         db.session.commit()
+
+    @classmethod
+    def rename(cls, id, name):
+        obj = cls.query.filter_by(id=id).first()
+        obj.name = name
+        db.session.commit()
+
+    @classmethod
+    def copy_agent(cls, id, name):
+        old_obj = cls.query.filter_by(id=id).first()
+
+
+        new_obj = cls(name=name)
+        db.session.add(new_obj)
+        db.session.commit()
+
+        mu_ids = {}
+        for old_mu in old_obj.models_used:
+            new_mu = Model_used(old_mu.name, old_mu.model.id, new_obj.id)
+            db.session.add(new_mu)
+            db.session.commit()
+            mu_ids[old_mu.id] = new_mu.id
+
+            new_mu.width = old_mu.width
+            new_mu.height = old_mu.height
+            new_mu.x = old_mu.x
+            new_mu.y = old_mu.y
+            new_mu.properties = old_mu.properties
+            new_mu.input_orientation = old_mu.input_orientation
+            new_mu.output_orientation = old_mu.output_orientation
+            new_mu.settings = old_mu.settings
+
+            db.session.commit()
+
+        for old_mu in old_obj.models_used:
+            for old_con in old_mu.connections_from:
+                # fk_model_used
+                old_id_from = old_con.fk_model_used_from
+                old_id_to = old_con.fk_model_used_to
+                new_mu_id_from = mu_ids[old_id_from]
+                new_mu_id_to = mu_ids[old_id_to]
+
+                # port_id
+                port_id_from = old_con.port_id_from.replace("m"+str(old_id_from), "m"+str(new_mu_id_from))
+                port_id_to = old_con.port_id_to.replace("m"+str(old_id_to), "m"+str(new_mu_id_to))
+
+                new_con = Connection(fk_model_used_from=new_mu_id_from,
+                                     port_id_from=port_id_from,
+                                     fk_model_used_to=new_mu_id_to,
+                                     port_id_to=port_id_to)
+                db.session.add(new_con)
+                db.session.commit()
 
     @classmethod
     def get_agent(cls, id):

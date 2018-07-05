@@ -28,6 +28,10 @@ class Model_used(db.Model):
         self.fk_agent = fk_agent
         self.width = 120
         self.height = 60
+        self.x = 50
+        self.y = 50
+        self.input_orientation = 'left'
+        self.output_orientation = 'right'
         self.settings = json.dumps(None)
 
     @property
@@ -46,6 +50,7 @@ class Model_used(db.Model):
         obj = cls(name=name, fk_model=fk_model,  fk_agent=fk_agent)
         db.session.add(obj)
         db.session.commit()
+        return obj.id
 
     @classmethod
     def remove(cls, id):
@@ -81,6 +86,21 @@ class Model_used(db.Model):
             props = json.loads(obj.properties)
         props[key] = value
         obj.properties = json.dumps(props)
+        db.session.commit()
+
+    @classmethod
+    def set_name(cls, id, name):
+        obj = cls.query.filter_by(id=id).first()
+        obj.name = name
+        db.session.commit()
+
+    @classmethod
+    def set_dock_orientation(cls, id, dock, orientation):
+        obj = cls.query.filter_by(id=id).first()
+        if dock == 'input':
+            obj.input_orientation = orientation
+        elif dock == 'output':
+            obj.output_orientation = orientation
         db.session.commit()
 
     @classmethod
