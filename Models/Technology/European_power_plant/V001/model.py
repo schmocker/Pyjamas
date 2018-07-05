@@ -1,26 +1,21 @@
 # imports for core
-from numpy.lib.tests.test__datasource import valid_baseurl
 from core import Supermodel
 from core.util import Input, Output, Property
 
 # imports for database
-from sqlalchemy import create_engine, exc
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
+from Models import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
     Kraftwerksleistung, Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, create_dummy_data
 
 # general imports
 import datetime
-import random
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d # is used even if warning says otherwise!
 from scipy.interpolate import griddata
 from pytz import timezone
 
-from Models._utils.time import utc_time2datetime
-from Models._utils.time import datetime2utc_time
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):

@@ -1,8 +1,7 @@
 from core import Supermodel
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp,Brennstofftyp,\
-    Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, create_dummy_data
+from Models import Base, Kraftwerk, create_dummy_data
 
-from sqlalchemy import create_engine, exc
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 

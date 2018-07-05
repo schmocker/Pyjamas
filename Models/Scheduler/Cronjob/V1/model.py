@@ -1,8 +1,7 @@
 import asyncio
-from core.util import Input, Output, Property
+from core.util import Output, Property
 from core.supermodel import Supermodel
 import time
-from Models._utils.time import utc_time2datetime
 import calendar as cal
 
 class Model(Supermodel):
@@ -40,7 +39,6 @@ class Model(Supermodel):
     async def func_birth(self):
 
         sim_start = cal.timegm(time.strptime(self.get_property("sim_start"), '%Y-%m-%d %H:%M'))
-        print(utc_time2datetime(sim_start))
 
         now = time.time()
 
