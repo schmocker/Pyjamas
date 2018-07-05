@@ -390,20 +390,27 @@ class View {
         let prop_data = await get('get_model_properties', {'model': obj.mu.id});
         prop_data = JSON.parse(prop_data);
 
-        let form = this.content.selectAll(".propertiesForm").data([obj.mu]);
-        form = form.enter().append("g").classed("properties", true).attr("name", "properties");
+        let prop_div = this.content.append('div');
 
-        let props = form.selectAll(".property")
-            .data(function (mu) { return d3.entries(mu.model.info.properties) });
-        props = props.enter().append("g").classed("property", true);
-        props.append("span").html(function (d, i) {
-            let brake = (i === 0 ? '' : '<br>');
-            brake += (d.value.name + ' ['+ d.value.unit +']:<br>');
+        prop_div.append('h3').text('Properties');
 
-            return brake
-        });
-        props.append("input")
-            .attr("id", function (d) { return d.key; })
+
+
+        let prop_table = prop_div.append('table');
+		let prop_thead = prop_table.append('thead');
+		let	prop_tbody = prop_table.append('tbody');
+		prop_thead.append('tr').selectAll('th').data(['Name','Value','Unit','Info','Example']).enter()
+            .append('th').text(function (column) { return column; });
+
+		let prop_row = prop_tbody.selectAll("tr").data(d3.entries(this.mu.model.info.properties));
+        prop_row = prop_row.enter().append("tr");
+        prop_row.append('td').text(function (d) { return d.value.name });
+        let prop_input = prop_row.append('td').append("input");
+        prop_row.append('td').text(function (d) { return d.value.unit });
+        prop_row.append('td').text(function (d) { return d.value.info });
+        prop_row.append('td').text(function (d) { return d.value.example });
+
+        prop_input.attr("id", function (d) { return d.key; })
             .attr("name", function (d) { return d.key; })
             .attr("type", "text")
             .attr("value", function (d) { return prop_data[d.key] })
@@ -415,7 +422,34 @@ class View {
             .on('blur', function (d) {
                 post('set_model_property', {'model': obj.mu.id, 'property': d.key, 'value': this.value})
             });
-        props.append("br");
+
+        // Inputs & Outputs
+        let docks = this.content.selectAll(".docks").data(this.mu.model.info.docks);
+        docks = docks.enter().append("div").classed("docks", true);
+        docks.append('h3').text(function (d) {
+            switch (d.direction){
+                case 'input': return 'Inputs';
+                case 'output': return 'Outputs';
+                default: return 'Invalid dock';
+            }
+        });
+
+        let table = docks.append('table');
+		let thead = table.append('thead');
+		let	tbody = table.append('tbody');
+
+		thead.append('tr').selectAll('th').data(['Name','Unit','Info','Example']).enter()
+            .append('th').text(function (column) { return column; });
+
+        let ports = tbody.selectAll("tr").data(function (d) { return d.ports });
+        ports = ports.enter().append("tr");
+        ports.append('td').text(function (d) { return d.name });
+        ports.append('td').text(function (d) { return d.unit });
+        ports.append('td').text(function (d) { return d.info });
+        ports.append('td').text(function (d) { return d.example });
+
+
+
     }
 
     async update_custom_property_view() {
@@ -439,7 +473,7 @@ class View {
         let form = this.content.selectAll("form").data([all_models]).enter().append("from").attr("name", "addBoxForm");
         // Name
         form.append("span").html('Model Name:<br>');
-        form.append("input")
+        let name_inp = form.append("input")
             .attr("id", "model_name")
             .attr("name", "model_name")
             .attr("type", "text")
@@ -448,47 +482,56 @@ class View {
         form.append("span").html('<br>Topic:<br>');
         let t_sel = form.append("select").attr("id", "topic_selection").attr("name", "topic_selection")
             .on('change', function (d) {
-                form.select("#model_selection").selectAll("option").remove();
-                form.select("#model_selection").selectAll("option").data(d3.entries(d[this.value]))
+                m_sel.selectAll("option").remove();
+                m_sel.selectAll("option").data(d3.entries(d[this.value]))
                     .enter().append("option")
                     .attr("value", function (m) {return m.key})
                     .text(function (m) {return m.key});
-                form.select("#model_selection").dispatch('change');
+                m_sel.dispatch('change');
             });
         t_sel.selectAll(".topic_option").data(d3.entries(all_models))
             .enter().append("option")
             .attr("value", function (t) { return t.key })
             .text(function (t) { return t.key })
         // Model
+        let m_sel_value;
         form.append("span").html('<br>Model:<br>');
-        form.append("select").attr("id", "model_selection").attr("name", "model_selection")
+        let m_sel = form.append("select").attr("id", "model_selection").attr("name", "model_selection")
             .on('change', function (d) {
+                let name_value = name_inp.property("value");
+                let changeName = (name_value === m_sel_value || name_value === "");
+                m_sel_value = m_sel.property("value");
+                if(changeName){ name_inp.property("value", m_sel_value); }
+
                 let t_val = t_sel.property("value");
                 let vs = d[t_val][this.value];
-                form.select("#version_selection").selectAll("option").remove();
-                form.select("#version_selection").selectAll("option").data(d3.entries(vs))
+                v_sel.selectAll("option").remove();
+                v_sel.selectAll("option").data(d3.entries(vs))
                     .enter().append("option")
                     .attr("value", function (m) {return m.key})
                     .text(function (m) {return m.key});
-                form.select("#version_selection").dispatch('change');
+                v_sel.dispatch('change');
             });
+
         // Version
         form.append("span").html('<br>Version:<br>');
-        form.append("select").attr("id", "version_selection").attr("name", "version_selection");
+        let v_sel = form.append("select").attr("id", "version_selection").attr("name", "version_selection");
+
+        // submit
         form.append("span").html('<br>');
         form.append("input")
             .attr("type", "submit")
-            .attr("value", "Submit")
+            .attr("value", "Add")
             .on("click", async function () {
-                let boxName = form.select("#model_name").property("value");
-                if (boxName === "") {form.select("#model_name").style("background-color","red"); return}
-                d3.select("#model_name").style("background-color","white");
-                let v = form.select("#version_selection").property("selectedOptions")[0].__data__;
-                await models.add(boxName, v.value.id);
-                form.select("#model_name").node().value = "";
+                let name = name_inp.property("value");
+                if (name === "") {name_inp.style("background-color","red"); return; }
+                name_inp.style("background-color","white");
+                let v = v_sel.property("selectedOptions")[0].__data__;
+                await models.add(name, v.value.id);
+                name_inp.property("value", "");
             });
         // trigger first change
-        d3.select("#topic_selection").dispatch('change');
+        t_sel.dispatch('change');
     }
 }
 
