@@ -4,11 +4,9 @@ import json
 class Agent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
-    active = db.Column(db.Boolean, nullable=False)
 
     def __init__(self, name):
         self.name = name
-        self.active = False
 
     @classmethod
     def remove(cls, id):
@@ -50,29 +48,19 @@ class Agent(db.Model):
         Agent.query.filter_by(id=id).first().kill()
 
     def start(self):
-
-        if not self.active: # TODO: if application is started (run.py) and no agents are existing. If 'active' is True in the DB it tries to start a non existing agent (maybe set all 'active' in DB to False when application is starting?)
+        if not controller.is_agent_running(self.id):
             self.add_full_agent()
-
         controller.start_agent(self.id)
-        self.active = True
-
-        db.session.commit()
 
     def kill(self):
         print("kill")
         controller.kill_agent(self.id)
-        self.active = False
-        db.session.commit()
 
     def pause(self):
         controller.pause_agent(self.id)
 
     def stop(self):
         controller.stop_agent(self.id)
-
-        self.active = False
-        db.session.commit()
 
     def set_property(self, mu_id, key, value):
         controller.set_property(self.id, mu_id, key, value)
