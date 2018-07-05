@@ -1,11 +1,5 @@
 from core import Supermodel
 from core.util import Input, Output, Property
-import numpy as np
-from pytz import timezone
-import math
-from datetime import date, timedelta
-import json
-from os import path
 
 
 # define the model class and inherit from class "Supermodel"
@@ -16,17 +10,18 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['modus'] = Input(name='modus', unit='-', info="modus (live or simulation")
-        self.inputs['KW'] = Input(name='KW_info', unit='-', info="KW information (id, lat, lon)")
+        self.inputs['mode'] = Input(name='modus', unit='-', info="modus (live or simulation")
+        self.inputs['KW'] = Input(name='KW info', unit='-', info="KW information (id, lat, lon)")
+        self.inputs['date'] = Input(name='Time vector', unit='s', info="Time in utc")
 
         # define outputs
         self.outputs['weather_data'] = Output(name='weather data of KWs')
 
         # define properties
-        self.properties['T_offset'] = Property(0, float, name='temperature offset', unit='%', info="offset of temperature in %")
-        self.properties['w_offset'] = Property(0, float, name='wind speed offset', unit='%', info="offset of wind speed in %")
-        self.properties['P_offset'] = Property(0, float, name='radiation offset', unit='%', info="offset of radiation in %")
-        self.properties['ref_year'] = Property(0, float, name='reference year', unit='%', info="reference year for modeled weather")
+        self.properties['T_offset'] = Property(0., float, name='temperature offset', unit='%', info="offset of temperature in %")
+        self.properties['u_offset'] = Property(0., float, name='wind speed offset', unit='%', info="offset of wind speed in %")
+        self.properties['P_offset'] = Property(0., float, name='radiation offset', unit='%', info="offset of radiation in %")
+        self.properties['ref_year'] = Property(0., float, name='reference year', unit='%', info="reference year for modeled weather")
 
         # define persistent variables
         self.model_pars = None
@@ -44,17 +39,90 @@ class Model(Supermodel):
 
 
     async def func_peri(self, prep_to_peri=None):
+
         # get inputs
-        mode = await self.get_input('modus')
-        # KW_data = await self.get_input('KW')
+        mode = await self.get_input('mode')
+        KW_data = await self.get_input('KW')
+        dates = await self.get_input('date')
 
-        # selection of weather model based on modus
-        if mode=='live':
-            weather_data = 1
-        else:
-            weather_data = 2
+        # loop over KW's
+        # - initialization
+        out_ids = []
+        out_T = []
+        out_u = []
+        out_P = []
+        T_it = []
+        u_it = []
+        P_it = []
+        len_id = KW_data["ID"].__len__()
 
+        # - loop
+        for it in range(0,len_id):
+
+            id_it = KW_data["ID"][it]
+            long = KW_data["Longitude"][it]
+            lat = KW_data["Latitude"][it]
+
+            # selection of weather model based on mode
+            if mode == 'live':
+                #w_data = 1
+                w_data_it = [self.weather_API(long, lat, tt) for tt in dates]
+                T_it = [item[0] for item in w_data_it]
+                u_it = [item[1] for item in w_data_it]
+                P_it = [item[2] for item in w_data_it]
+
+            else:
+                #w_data = 2
+                w_data_it = [self.weather_historic(long, lat, tt, self.get_property('ref_year')) for tt in dates]
+                T_it = [item[0] for item in w_data_it]
+                u_it = [item[1] for item in w_data_it]
+                P_it = [item[2] for item in w_data_it]
+
+            # append data
+            out_ids.append(id_it)
+            out_T.append(T_it)
+            out_u.append(u_it)
+            out_P.append(P_it)
+
+        # create dict
+        weather_data = dict(zip(["ID", "Temperature", "Wind_speed", "Radiation"], [out_ids, out_T, out_u, out_P]))
 
         # set output
         self.set_output("weather_data", weather_data)
 
+
+    def weather_API(self, long, lat, date):
+
+        # API
+        # data = http://my.meteoblue.com/packages/basic-1h?lat=47.5584&lon=7.57327&format=JSON&timeformat=timestamp_utc
+        # no &tz= => data in local including daylight saving for europe
+        # timeformat timestamp in utc
+
+        # dummy
+        T_it = 20
+        u_it = 10
+        P_it = 1000
+
+        # offset
+        # T_it = T_it*(1+self.get_property("T_offset")/100)
+        # u_it = u_it * (1 + self.get_property("u_offset")/100)
+        # P_it = P_it * (1 + self.get_property("P_offset")/100)
+
+        w_data_it = [T_it, u_it, P_it]
+
+        return w_data_it
+
+    def weather_historic(self, long, lat, date, year):
+
+        T_it = 21
+        u_it = 11
+        P_it = 1001
+
+        # offset
+        T_it = T_it*(1+self.get_property("T_offset")/100)
+        u_it = u_it * (1 + self.get_property("u_offset")/100)
+        P_it = P_it * (1 + self.get_property("P_offset")/100)
+
+        w_data_it = [T_it, u_it, P_it]
+
+        return w_data_it
