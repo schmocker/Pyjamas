@@ -48,12 +48,12 @@ class Output(Port):
 
 class Property(Port):
 
-    def __init__(self, initial_value, property_type, name='', unit='-', **kwargs):
-        super(Property, self).__init__(name, unit, **kwargs)
-        self.property_type = property_type
+    def _init_(self, default='', data_type=str, name='', unit='-', example='-', **kwargs):
+        super(Property, self).__init__(name=name, unit=unit, example=example, **kwargs)
+        self.property_type = data_type
         self.amend_value = None
 
-        self.set_property(initial_value)
+        self.set_property(default)
 
     def get_property(self):
         return self.items['value']
