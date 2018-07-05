@@ -18,10 +18,10 @@ class Model(Supermodel):
         self.outputs['weather_data'] = Output(name='weather data of KWs')
 
         # define properties
-        self.properties['T_offset'] = Property(0, float, name='temperature offset', unit='%', info="offset of temperature in %")
-        self.properties['u_offset'] = Property(0, float, name='wind speed offset', unit='%', info="offset of wind speed in %")
-        self.properties['P_offset'] = Property(0, float, name='radiation offset', unit='%', info="offset of radiation in %")
-        self.properties['ref_year'] = Property(0, float, name='reference year', unit='%', info="reference year for modeled weather")
+        self.properties['T_offset'] = Property(0., float, name='temperature offset', unit='%', info="offset of temperature in %")
+        self.properties['u_offset'] = Property(0., float, name='wind speed offset', unit='%', info="offset of wind speed in %")
+        self.properties['P_offset'] = Property(0., float, name='radiation offset', unit='%', info="offset of radiation in %")
+        self.properties['ref_year'] = Property(0., float, name='reference year', unit='%', info="reference year for modeled weather")
 
         # define persistent variables
         self.model_pars = None
@@ -40,7 +40,6 @@ class Model(Supermodel):
 
     async def func_peri(self, prep_to_peri=None):
 
-        print("a")
         # get inputs
         mode = await self.get_input('mode')
         KW_data = await self.get_input('KW')
