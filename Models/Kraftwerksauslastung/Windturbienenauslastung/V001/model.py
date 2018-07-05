@@ -2,7 +2,7 @@ from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
 import math
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 
 # define the model class and inherit from class "Supermodel"
@@ -183,33 +183,30 @@ class Model(Supermodel):
         #   4    array(96)
         #   6    array(96)
         ###################################################################################################################
-        ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
+        KWBezeichnung = 'WT' #ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
 
-
-        KWDaten = np.array([ KWDaten['id'], KWDaten['fk_kwt'], KWDaten['spez_info']]).transpose()
+        KWDaten = np.array([ KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
         # Wetter = np.array([ WetterDaten['id'], WetterDaten['wetter']]).transpose()
 
-
-
         # Extracting data corresponding solely to wind turbines, by selecting rows of KWDaten where Foreign-Key= 2
-        KraftwerksDaten = KWDaten[KWDaten[:, 1] == ForeignKeyKWTyp]
+        KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
 
         def make_load_for_one_wt(kw_id, NH, Z0):
-
+            kw_id = int(kw_id)
             index_of_kwid_in_wetter = WetterDaten['id'].index(kw_id)
             wind_for_kwid = WetterDaten['windspeed'][index_of_kwid_in_wetter]
             wind_messhoehe = WetterDaten['windmesshoehe'][index_of_kwid_in_wetter]
             wind = np.array(wind_for_kwid)
 
             auslastung = self.windturbine(wind, NH, Z0, wind_messhoehe)
-            plt.plot(auslastung)
-            plt.show()
+            #plt.plot(auslastung)
+            #plt.show()
             return auslastung.tolist()
 
-        id = [kw[0] for kw in KraftwerksDaten]
+        KWid = [kw[0] for kw in KraftwerksDaten]
         load = [make_load_for_one_wt(kw[0], kw[2]['NH'], kw[2]['Z0']) for kw in KraftwerksDaten]
 
-        WTAuslastung = {'id': id, 'load': load}
+        WTAuslastung = {'id': KWid, 'load': load}
 
 
         #NH = [kw[3]['NH'] for kw in KraftwerksDaten]
