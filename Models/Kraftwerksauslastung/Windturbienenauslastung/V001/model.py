@@ -199,52 +199,12 @@ class Model(Supermodel):
             wind = np.array(wind_for_kwid)
 
             auslastung = self.windturbine(wind, NH, Z0, wind_messhoehe)
-            #plt.plot(auslastung)
-            #plt.show()
             return auslastung.tolist()
 
         KWid = [kw[0] for kw in KraftwerksDaten]
         load = [make_load_for_one_wt(kw[0], kw[2]['NH'], kw[2]['Z0']) for kw in KraftwerksDaten]
 
         WTAuslastung = {'id': KWid, 'load': load}
-
-
-        #NH = [kw[3]['NH'] for kw in KraftwerksDaten]
-        #Z0 = [kw[3]['Z0'] for kw in KraftwerksDaten]
-
-        #NH = np.array([NH]).transpose()
-        #KraftwerksDaten = np.append(KraftwerksDaten, NH, axis=1)
-
-        #Z0 = np.array([Z0]).transpose()
-        #KraftwerksDaten = np.append(KraftwerksDaten, Z0, axis=1)
-
-        # Selecting KWIDs of filtered wind turbines
-        ####KWID_WT = KraftwerksDaten[:, 0]
-        ####print("KWID_WT: ", KWID_WT)
-        # Extracting weather data corresponding solely to wind turbines, by selecting rows of incoming WetterDaten where
-        # KWID of WetterDaten = KWID_PV
-        ####BoolWeather = np.in1d(WetterDaten[:, 0],
-        #                  KWID_WT)  # 1D vector holding TRUE/FALSE, TRUE values corresponds to PV data
-        ######WTWetterDaten = WetterDaten[BoolWeather == True]
-
-        #########WTAuslastung = np.zeros(WTWetterDaten.shape)
-
-
-
-        '''
-        for i in range(0, WTWetterDaten.shape[0]):
-            WindDaten = WTWetterDaten[i, 1:]
-            BodenRauhigkeit = KraftwerksDaten[i, 3]['Z0']
-            #print("BodenRauhigkeit: ", BodenRauhigkeit)
-            Nabenhoehe = KraftwerksDaten[i, 3]['NH']
-            Auslastung = self.windturbine(WindDaten, Nabenhoehe, BodenRauhigkeit)
-            # PVAuslastung[KWID(i), Auslastung(0:96)]
-            WTAuslastung[i] = np.hstack((KraftwerksDaten[i, 0], Auslastung))
-            #plt.plot(Auslastung)
-            #plt.show()
-        '''
-
-        #print("Load all PPs: ", WTAuslastung)
         return WTAuslastung
 
 
