@@ -117,6 +117,10 @@ def web_sim_gui():
             elif fnc == 'set_model_name':
                 Model_used.set_name(data['mu_id'], data['name'])
 
+            elif fnc == 'set_model_name_position':
+                Model_used.set_name_position(data['mu_id'], data['position'])
+
+
             elif fnc == 'set_model_dock_orientation':
                 Model_used.set_dock_orientation(data['mu_id'], data['dock'], data['orientation'])
 

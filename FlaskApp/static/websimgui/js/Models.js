@@ -144,9 +144,43 @@ class Models {
             .attr("width", function(d){ return d.width })
             .attr("height", function(d){ return d.height });
         models.select(".model_name")
-            .attr("x", function(d){ return d.x + d.width / 2 })
-            .attr("y", function(d){ return d.y - 4 })
-            .text( function(d){ return d.name });
+            .text( function(d){ return d.name })
+            .attr("x", function(d){
+                switch (d.name_position){
+                    case 'left outside': return d.x - 4;
+                    case 'left inside': return d.x + 4;
+                    case 'center': return d.x + d.width / 2;
+                    case 'right inside': return d.x + d.width - 4;
+                    case 'right outside': return d.x + d.width + 4;
+                    default: return d.x + d.width / 2;
+                }})
+            .attr("text-anchor", function (d) {
+                switch (d.name_position){
+                    case 'left outside': return 'end';
+                    case 'left inside': return 'start';
+                    case 'center': return 'middle';
+                    case 'right inside': return 'end';
+                    case 'right outside': return 'start';
+                    default: return 'middle';
+                }})
+            .attr("y", function(d){
+                switch (d.name_position){
+                    case 'top outside': return d.y - 4;
+                    case 'top inside': return d.y + 4;
+                    case 'center': return d.y + d.height/2;
+                    case 'bottom inside': return d.y + d.height - 4;
+                    case 'bottom outside': return d.y + d.height + 4;
+                    default: return d.y - 4;
+                }})
+            .attr("alignment-baseline", function (d) {
+                switch (d.name_position){
+                    case 'top outside': return 'baseline';
+                    case 'top inside': return 'hanging';
+                    case 'center': return 'middle';
+                    case 'bottom inside': return 'baseline';
+                    case 'bottom outside': return 'hanging';
+                    default: return 'baseline';
+                }});
         models.select(".sizer")
             .attr("x", function(d){ return d.x + d.width - obj.sizer.size / 2 })
             .attr("y", function(d){ return d.y + d.height - obj.sizer.size / 2 })
