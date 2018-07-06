@@ -20,22 +20,19 @@ class Model(Supermodel):
         self.outputs['time'] = Output(name='Time', unit='s', info='utc time in seconds since epoch')
         self.outputs['step'] = Output(name='Step', unit='-', info='step number, starts with 0')
 
-        self.properties["mode"] = Property(default='live',
-                                            data_type=str,
-                                            name='Mode',
-                                            unit='-',
-                                            info='live or simulation')
-        self.properties["time_increase"] = Property(default=1,
-                                                    data_type=float,
+        self.properties["mode"] = Property('live', str,
+                                           name='Mode',
+                                           unit='-',
+                                           info='live or simulation')
+        self.properties["time_increase"] = Property(1, float,
                                                     name='Time increase',
                                                     unit='s',
                                                     info='Time increase with each iteration')
         # Live
         # Simulation
-        self.properties["sim_speed"] = Property(default=0, data_type=float, name='Simulation speed', unit='s',
+        self.properties["sim_speed"] = Property(0, float, name='Simulation speed', unit='s',
                                                 info='Time between iteration, simulation mode only, 0 = as fast as possible')
-        self.properties["sim_start"] = Property(default="2018-01-01 00:00", 
-                                                data_type=str,
+        self.properties["sim_start"] = Property("2018-01-01 00:00", str,
                                                 name='Simulation Start (UTC)',
                                                 unit='YYYY-MM-DD hh:mm')
 
