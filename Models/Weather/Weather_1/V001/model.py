@@ -16,7 +16,7 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['mode'] = Input(name='modus', unit='-', info="modus (live or simulation")
+        self.inputs['mode'] = Input(name='modus', unit='-', info="modus (live or simulation)")
         self.inputs['KW'] = Input(name='KW info', unit='-', info="KW information (id, lat, lon)")
         self.inputs['date'] = Input(name='Time vector', unit='s', info="Time in utc")
 
@@ -27,13 +27,52 @@ class Model(Supermodel):
         self.properties['T_offset'] = Property(0., float, name='temperature offset', unit='%', info="offset of temperature in %")
         self.properties['u_offset'] = Property(0., float, name='wind speed offset', unit='%', info="offset of wind speed in %")
         self.properties['P_offset'] = Property(0., float, name='radiation offset', unit='%', info="offset of radiation in %")
-        self.properties['ref_year'] = Property(0., float, name='reference year', unit='%', info="reference year for modeled weather")
+        self.properties['ref_year'] = Property(2000, int, name='reference year', unit='-', info="reference year for modeled weather")
 
         # define persistent variables
         self.model_pars = None
 
-    # async def func_birth(self):
-    #     pass
+    async def func_birth(self):
+        # select file to be read
+        filename = self.historic_file_selection(long=0, lat=0)
+
+        # read file
+        with open(filename, 'r') as f:
+            reader = csv.reader(f)
+            next(reader)
+            data = list(reader)
+            # data = [r for r in reader]
+            # print(data)
+
+        # formatting
+        data_t = list(map(list, zip(*data)))
+        date = [datetime.strptime(x, '%Y-%m-%d %H:%M') for x in data_t[0]]
+        date_s = np.asarray(date)
+        date_s = date_s[np.newaxis, :]
+        date_s = date_s.transpose()
+
+        T_vec = np.asarray([float(x) for x in data_t[1]])
+        u_vec = np.asarray([float(x) for x in data_t[2]])
+        P_vec = np.asarray([float(x) for x in data_t[3]])
+
+        T_vec = T_vec[np.newaxis, :]
+        T_vec = T_vec.transpose()
+        u_vec = u_vec[np.newaxis, :]
+        u_vec = u_vec.transpose()
+        P_vec = P_vec[np.newaxis, :]
+        P_vec = P_vec.transpose()
+
+        data_con = np.concatenate((date_s, T_vec, u_vec, P_vec), axis=1)
+        dataframe = pd.DataFrame(data_con, columns=['Date', 'Temperature', 'Wind_speed', 'Radiation'])
+        dataframe.sort_values(by=['Date'])
+
+        # select year
+        year_vec = [x.year for x in dataframe['Date']]
+        dataframe['Year'] = year_vec
+        data_sel = dataframe.loc[dataframe['Year'] == self.get_property('ref_year')]
+        data_sel = data_sel.drop('Year', axis=1)
+
+        self.data_hist_self = data_sel
 
 
     # async def func_prep(self):
@@ -79,7 +118,8 @@ class Model(Supermodel):
 
             else:
                 #w_data = 2
-                w_data_it = [self.weather_historic(self, long, lat, tt, self.get_property('ref_year')) for tt in dates]
+                ref_year = self.get_property('ref_year')
+                w_data_it = [self.weather_historic(long, lat, tt, ref_year) for tt in dates]
                 T_it = [item[0] for item in w_data_it]
                 u_it = [item[1] for item in w_data_it]
                 P_it = [item[2] for item in w_data_it]
@@ -121,7 +161,8 @@ class Model(Supermodel):
 
         # read weather data dependent on long and lat
         # and select data of reference year
-        data_hist = self.historic_data_read(self, long, lat, ref_year)
+        # data_hist = self.historic_data_read(long, lat, ref_year)
+        data_hist = self.data_hist_self
 
         # read or interpolate weather data dependent on date
         d_weather = self.historic_interpolation(data_hist, date, ref_year)
@@ -143,54 +184,54 @@ class Model(Supermodel):
 
         return w_data_it
 
-    def historic_data_read(self, long, lat, ref_year=2000):
-
-        # select file to be read
-        filename = self.historic_file_selection(long, lat)
-
-        # read file
-        with open(filename, 'r') as f:
-            reader = csv.reader(f)
-            next(reader)
-            data = list(reader)
-            #data = [r for r in reader]
-            #print(data)
-
-        # formatting
-        data_t = list(map(list, zip(*data)))
-        date = [datetime.strptime(x, '%Y-%m-%d %H:%M') for x in data_t[0]]
-        date_s = np.asarray(date)
-        date_s = date_s[np.newaxis, :]
-        date_s = date_s.transpose()
-
-        T_vec = np.asarray([float(x) for x in data_t[1]])
-        u_vec = np.asarray([float(x) for x in data_t[2]])
-        P_vec = np.asarray([float(x) for x in data_t[3]])
-
-        T_vec = T_vec[np.newaxis, :]
-        T_vec = T_vec.transpose()
-        u_vec = u_vec[np.newaxis, :]
-        u_vec = u_vec.transpose()
-        P_vec = P_vec[np.newaxis, :]
-        P_vec = P_vec.transpose()
-
-        data_con = np.concatenate((date_s, T_vec, u_vec, P_vec), axis = 1)
-        dataframe = pd.DataFrame(data_con, columns=['Date', 'Temperature', 'Wind_speed', 'Radiation'])
-        dataframe.sort_values(by=['Date'])
-
-        # select year
-        year_vec = [x.year for x in dataframe['Date']]
-        dataframe['Year'] = year_vec
-        data_sel = dataframe.loc[dataframe['Year'] == ref_year]
-        data_sel = data_sel.drop('Year', axis=1)
-
-        return data_sel
+    # def historic_data_read(self, long, lat, ref_year):
+#
+    #     # select file to be read
+    #     filename = self.historic_file_selection(long, lat)
+#
+    #     # read file
+    #     with open(filename, 'r') as f:
+    #         reader = csv.reader(f)
+    #         next(reader)
+    #         data = list(reader)
+    #         #data = [r for r in reader]
+    #         #print(data)
+#
+    #     # formatting
+    #     data_t = list(map(list, zip(*data)))
+    #     date = [datetime.strptime(x, '%Y-%m-%d %H:%M') for x in data_t[0]]
+    #     date_s = np.asarray(date)
+    #     date_s = date_s[np.newaxis, :]
+    #     date_s = date_s.transpose()
+#
+    #     T_vec = np.asarray([float(x) for x in data_t[1]])
+    #     u_vec = np.asarray([float(x) for x in data_t[2]])
+    #     P_vec = np.asarray([float(x) for x in data_t[3]])
+#
+    #     T_vec = T_vec[np.newaxis, :]
+    #     T_vec = T_vec.transpose()
+    #     u_vec = u_vec[np.newaxis, :]
+    #     u_vec = u_vec.transpose()
+    #     P_vec = P_vec[np.newaxis, :]
+    #     P_vec = P_vec.transpose()
+#
+    #     data_con = np.concatenate((date_s, T_vec, u_vec, P_vec), axis = 1)
+    #     dataframe = pd.DataFrame(data_con, columns=['Date', 'Temperature', 'Wind_speed', 'Radiation'])
+    #     dataframe.sort_values(by=['Date'])
+#
+    #     # select year
+    #     year_vec = [x.year for x in dataframe['Date']]
+    #     dataframe['Year'] = year_vec
+    #     data_sel = dataframe.loc[dataframe['Year'] == ref_year]
+    #     data_sel = data_sel.drop('Year', axis=1)
+#
+    #     return data_sel
 
     @staticmethod
     def historic_file_selection(long, lat):
 
         # Point 1: Europe - onshore
-        filename = '../dummy_historic/Weather_2000.csv'
+        filename = 'Models/Weather/Weather_1/dummy_historic/Weather_2000.csv'
 
         return filename
 
@@ -205,7 +246,7 @@ class Model(Supermodel):
         # - manipulate year of date to ref_year
         # ------------
         date = 1530801794.9515              # 05.07.2018 16:43 local
-        #date = 1530802800.0                 # 05.07.2018 17:00 local
+        date = 1530802800.0                 # 05.07.2018 17:00 local
         date = int(date)
         # ------------
         date = utc_time2datetime(date)
@@ -220,15 +261,16 @@ class Model(Supermodel):
             weather_data = data_hist.loc[data_hist['Date'] == date]
             print('IN LIST')
         else:
-            data_around = data_hist.iloc[(data_hist['Date'] - date).abs().argsort()[:2]]
-            data_inter = data_around
-            data_inter.loc[-1, 'Date'] = date
-            data_inter = data_inter.sort_values('Date').reset_index(drop=True)
-            data_inter['Temperature'] = pd.to_numeric(data_inter['Temperature'], errors='coerce')
-            data_inter['Wind_speed'] = pd.to_numeric(data_inter['Wind_speed'], errors='coerce')
-            data_inter['Radiation'] = pd.to_numeric(data_inter['Radiation'], errors='coerce')
-            data_inter = data_inter.interpolate(method='linear')    #(method='time')
-            weather_data = data_inter.iloc[[1]]
+            ## data_around = data_hist.iloc[(data_hist['Date'] - date).abs().argsort()[:2]]
+            ## data_inter = data_around
+            ## data_inter.loc[-1, 'Date'] = date
+            ## data_inter = data_inter.sort_values('Date').reset_index(drop=True)
+            ## data_inter['Temperature'] = pd.to_numeric(data_inter['Temperature'], errors='coerce')
+            ## data_inter['Wind_speed'] = pd.to_numeric(data_inter['Wind_speed'], errors='coerce')
+            ## data_inter['Radiation'] = pd.to_numeric(data_inter['Radiation'], errors='coerce')
+            ## data_inter = data_inter.interpolate(method='linear')    #(method='time')
+            ## weather_data = data_inter.iloc[[1]]
             print('NOT IN LIST -> INTERPOLATION')
+            weather_data = data_hist.iloc[(data_hist['Date'] - date).abs().argsort()[:1]]
 
         return weather_data
