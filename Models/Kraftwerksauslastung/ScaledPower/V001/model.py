@@ -11,8 +11,8 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['CombinedLoad'] = Input(name='CombinedLoad', unit='value[0-1]')
-        self.inputs['KWDaten'] = Input(name='PowerPlantsData', unit='W')
+        self.inputs['CombinedLoad'] = Input(name='CombinedLoad', info='value[0-1]')
+        self.inputs['KWDaten'] = Input(name='PowerPlantsData', unit='W', info='Power extracted from PowerPlantData')
 
         # define outputs
         self.outputs['scaled_power'] = Output(name='Power', unit='W')
