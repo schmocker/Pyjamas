@@ -21,7 +21,7 @@ from .connection import Connection
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
-'''
+
 @app.before_first_request
 def create_all():
     db.create_all()
@@ -30,10 +30,10 @@ def create_all():
 # Create a default user
 @app.before_first_request
 def create_user():
-    for user in User.query.all():
-        user_datastore.delete_user(user)
+    default_user = User.query.filter_by(email=app.config.get('FLASK_USER_EMAIL')).first()
+    user_datastore.delete_user(default_user)
     db.session.commit()
+
     user_datastore.create_user(email=app.config.get('FLASK_USER_EMAIL'),
                                password=app.config.get('FLASK_USER_PASSWORD'))
     db.session.commit()
-'''

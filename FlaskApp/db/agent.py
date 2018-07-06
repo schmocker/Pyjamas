@@ -34,7 +34,6 @@ class Agent(db.Model):
     def copy_agent(cls, id, name):
         old_obj = cls.query.filter_by(id=id).first()
 
-
         new_obj = cls(name=name)
         db.session.add(new_obj)
         db.session.commit()
