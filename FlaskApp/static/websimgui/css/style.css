@@ -202,6 +202,9 @@
     background-color: #4677f8;
     color: #fefefe;
 }
+
+
+
 /***** View ****/
 #wsg #view #view_content table{
     width: 100%;
@@ -216,6 +219,14 @@
 }
 #wsg #view #view_content table td:first-child{
     font-weight: bold;
+}
+#wsg #view #view_content #properties table td:nth-child(2){
+    padding-top: 5px;
+    padding-bottom: 5px;
+    white-space: nowrap;
+}
+#wsg #view #view_content #properties table td input{
+    width: 100%;
 }
 
 #wsg #view #view_content table tr:nth-child(even){background-color: #f2f2f2;}
