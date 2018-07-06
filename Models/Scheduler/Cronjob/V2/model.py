@@ -21,7 +21,7 @@ class Model(Supermodel):
         self.outputs['step'] = Output('Step', unit='-', info='step number, starts with 0')
         self.outputs['times'] = Output('Futures', unit='s', info='utc time array in seconds since epoch')
 
-        self.properties["future_steps"] = Property('Number of intervals', default=1, data_type=int,
+        self.properties["future_steps"] = Property(name='Number of intervals', default=1, data_type=int,
                                                    unit='-',  info='Number of time stamps')
         self.properties["mode"] = Property('Mode', default='live', data_type=str,
                                            unit='-',
