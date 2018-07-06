@@ -10,7 +10,8 @@ class Model(Supermodel):
     def __init__(self, uuid, name :str):
         super(Model, self).__init__(uuid,name)
 
-        self.inputs['fut'] = Input(name='Futures', unit='s', info='utc time array in seconds since epoch')
+        self.inputs['fut'] = Input(name='Futures', unit='s', info='utc time array in seconds since epoch',
+                                   example='[1530792535, 1530792540, 1530792545]')
 
         self.inputs['demand'] = Input(name='European demand', unit='W',
                                       info='European power demand for each time step')
@@ -21,8 +22,9 @@ class Model(Supermodel):
         self.inputs['distance_costs'] = Input(name='Distance costs', unit='$/J',
                                               info='Distance costs for each power plant and distribution network')
 
-        self.properties["filter_ts"] = Property(0, int, name='Filter time step for view')
-        self.properties["filter_dn"] = Property(0, int, name='Filter distribution network for view')
+        self.properties["filter_ts"] = Property(default=0, data_type=int, name='Filter time step for view', info='Filter info', example='exampl')
+        self.properties["filter_dn"] = Property(default=0, data_type=int, name='Filter distribution network for view')
+        self.properties["filter_dn"] = Property(default=0, data_type=int, name='Filter distribution network for view')
 
         self.outputs['market_prices'] = Output(name='Market prices', unit='$',
                                                info='Market prices for each distribution network and time step')

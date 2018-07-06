@@ -2,6 +2,7 @@ from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 
 # define the model class and inherit from class "Supermodel"
@@ -12,11 +13,32 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input({'name': 'WeatherData'})
-        self.inputs['kwDaten'] = Input({'name': 'PowerPlantsData'})
+        self.inputs['weather'] = Input(name='WeatherData', info='dict')
+        self.inputs['kwDaten'] = Input(name='PowerPlantsData', info='dict')
 
         # define outputs
-        self.outputs['load'] = Output({'name': 'Load'})
+        self.outputs['load'] = Output(name='Load', info='value[0-1]')
+
+    '''   
+        # define properties
+        # Property(<initial value>,<type>,<info dictionary>)
+        self.properties['Nabenhoehe'] = Property(10, float, name='hub height', unit='m')
+        self.properties['Bodenrauigkeit'] = Property(10, float, name='Surface Roughness', unit='m')
+
+        self.nabenhoehe = None
+        self.bodenrauhigkeit = None
+
+    async  def func_birth(self):
+        await self.func_amend(['Nabenhoehe', 'Bodenrauigkeit'])
+
+    async def func_amend(self, keys=[]):
+        if 'Nabenhoehe' in keys:
+            self.nabenhoehe = self.get_property('Nabenhoehe')
+
+        if 'Bodenrauigkeit' in keys:
+            self.nabenhoehe = self.get_property('Bodenrauigkeit')
+    '''
+
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -37,12 +59,6 @@ class Model(Supermodel):
         # set output
         self.set_output("load", auslastung)
 
-
-
-    # define additional methods (normal)
-    def calc_load(self, weather_data, kw_data):
-        load = weather_data + kw_data
-        return load
 
 
     def hubheightVSdiameter(self, Nabenhoehe):
@@ -187,19 +203,16 @@ class Model(Supermodel):
         #   4    array(96)
         #   6    array(96)
         ###################################################################################################################
-        ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
+        KWBezeichnung = 'WT' #ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
 
-
-        KWDaten = np.array([ KWDaten['id'], KWDaten['fk_kwt'], KWDaten['spez_info']]).transpose()
+        KWDaten = np.array([ KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
         # Wetter = np.array([ WetterDaten['id'], WetterDaten['wetter']]).transpose()
 
-
-
         # Extracting data corresponding solely to wind turbines, by selecting rows of KWDaten where Foreign-Key= 2
-        KraftwerksDaten = KWDaten[KWDaten[:, 1] == ForeignKeyKWTyp]
+        KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
 
         def make_load_for_one_wt(kw_id, NH, Z0):
-
+            kw_id = int(kw_id)
             index_of_kwid_in_wetter = WetterDaten['id'].index(kw_id)
             wind_for_kwid = WetterDaten['windspeed'][index_of_kwid_in_wetter]
             wind_messhoehe = WetterDaten['windmesshoehe'][index_of_kwid_in_wetter]
@@ -208,47 +221,10 @@ class Model(Supermodel):
             auslastung = self.windturbine(wind, NH, Z0, wind_messhoehe)
             return auslastung.tolist()
 
-        id = [kw[0] for kw in KraftwerksDaten]
+        KWid = [kw[0] for kw in KraftwerksDaten]
         load = [make_load_for_one_wt(kw[0], kw[2]['NH'], kw[2]['Z0']) for kw in KraftwerksDaten]
 
-        WTAuslastung = {'id': id, 'load': load}
-
-        #NH = [kw[3]['NH'] for kw in KraftwerksDaten]
-        #Z0 = [kw[3]['Z0'] for kw in KraftwerksDaten]
-
-        #NH = np.array([NH]).transpose()
-        #KraftwerksDaten = np.append(KraftwerksDaten, NH, axis=1)
-
-        #Z0 = np.array([Z0]).transpose()
-        #KraftwerksDaten = np.append(KraftwerksDaten, Z0, axis=1)
-
-        # Selecting KWIDs of filtered wind turbines
-        ####KWID_WT = KraftwerksDaten[:, 0]
-        ####print("KWID_WT: ", KWID_WT)
-        # Extracting weather data corresponding solely to wind turbines, by selecting rows of incoming WetterDaten where
-        # KWID of WetterDaten = KWID_PV
-        ####BoolWeather = np.in1d(WetterDaten[:, 0],
-        #                  KWID_WT)  # 1D vector holding TRUE/FALSE, TRUE values corresponds to PV data
-        ######WTWetterDaten = WetterDaten[BoolWeather == True]
-
-        #########WTAuslastung = np.zeros(WTWetterDaten.shape)
-
-
-
-        '''
-        for i in range(0, WTWetterDaten.shape[0]):
-            WindDaten = WTWetterDaten[i, 1:]
-            BodenRauhigkeit = KraftwerksDaten[i, 3]['Z0']
-            #print("BodenRauhigkeit: ", BodenRauhigkeit)
-            Nabenhoehe = KraftwerksDaten[i, 3]['NH']
-            Auslastung = self.windturbine(WindDaten, Nabenhoehe, BodenRauhigkeit)
-            # PVAuslastung[KWID(i), Auslastung(0:96)]
-            WTAuslastung[i] = np.hstack((KraftwerksDaten[i, 0], Auslastung))
-            #plt.plot(Auslastung)
-            #plt.show()
-        '''
-
-        #print("Load all PPs: ", WTAuslastung)
+        WTAuslastung = {'id': KWid, 'load': load}
         return WTAuslastung
 
 

@@ -1,8 +1,7 @@
-from Models.Technology.European_power_plant.V001.db.db_declarative import Base, Kraftwerk, Kraftwerkstyp, \
+from Models import Kraftwerk, Kraftwerkstyp, \
     Kraftwerksleistung, Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis
 
-from sqlalchemy import create_engine, exc
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import exc
 import datetime
 import random
 

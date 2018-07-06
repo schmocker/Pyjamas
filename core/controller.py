@@ -284,8 +284,8 @@ class Controller():
         try:
             return self.result_data[agent_id][model_id]
         except KeyError:
-            self.log_warning(f'no result data found for model {model_id} in agent {agent_id}')
-            return None
+            pass
+        return None
     
     def get_model_results_newer_than(self, agent_id, model_id, run):
         try:
@@ -294,7 +294,7 @@ class Controller():
                 result = self.get_model_result(agent_id, model_id)
                 return {'run': cur_run, 'result': result}
         except KeyError:
-            self.log_warning(f'no model run found for model {model_id} in agent {agent_id}')
+            pass
         return None
 
     def get_model_properties(self, agent_id, model_id):

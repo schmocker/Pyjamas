@@ -48,6 +48,18 @@
     justify-self: end;
     align-self: start;
 }
+.duplicate{
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: start;
+    align-self: start;
+}
+.rename{
+    grid-row: 1;
+    grid-column: 1;
+    justify-self: start;
+    align-self: end;
+}
 
 
 .name{

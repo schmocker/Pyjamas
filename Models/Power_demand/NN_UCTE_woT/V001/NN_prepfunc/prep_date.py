@@ -8,7 +8,8 @@ def prep_date(date_country):
 
     # date_i = datetime.strptime(date_i, '%d.%m.%Y %H:%M')
     # date_local = date_UTC_to_local(date_i)
-    date_local = date_UTC_to_local(date_country[:, 0])
+    # date_local = date_UTC_to_local(date_country[:, 0])
+
     weekend = date_local.isoweekday() == 6 | date_local.isoweekday() == 7
     if weekend == True:
         weekend = 1

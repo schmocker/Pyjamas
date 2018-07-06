@@ -10,9 +10,9 @@ class Model(Supermodel):
 
         self.inputs['data'] = Input(name='Data', unit='any', info='Data to be published must be convertible to json')
 
-        self.properties['host'] = Property('iot.eclipse.org', str, name='Broker Address', unit='-', info='string')
-        self.properties['port'] = Property(1883, int, name='Broker Port', unit='-', info='int, usually 1883 for MQTT')
-        self.properties['topic'] = Property('pyjamas', str, name='Topic', unit='-', info='string')
+        self.properties['host'] = Property(default='iot.eclipse.org', data_type=str, name='Broker Address', unit='-', info='string')
+        self.properties['port'] = Property(default=1883, data_type=int, name='Broker Port', unit='-', info='int, usually 1883 for MQTT')
+        self.properties['topic'] = Property(default='pyjamas', data_type=str, name='Topic', unit='-', info='string')
 
         self.client = None
         self.host = None

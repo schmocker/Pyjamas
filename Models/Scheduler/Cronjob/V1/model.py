@@ -1,8 +1,7 @@
 import asyncio
-from core.util import Input, Output, Property
+from core.util import Output, Property
 from core.supermodel import Supermodel
 import time
-from Models._utils.time import utc_time2datetime
 import calendar as cal
 
 class Model(Supermodel):
@@ -18,29 +17,26 @@ class Model(Supermodel):
         self.future = 0
         self.async_future = None
 
-        self.outputs['time'] = Output(name='Time', unit='s', info='utc time in seconds since epoch')
-        self.outputs['step'] = Output(name='Step', unit='-', info='step number, starts with 0')
+        self.outputs['time'] = Output('Time', unit='s', info='utc time in seconds since epoch')
+        self.outputs['step'] = Output('Step', unit='-', info='step number, starts with 0')
 
-        self.properties["mode"] = Property('live', str,
-                                           name='Mode',
+        self.properties["mode"] = Property(name='Mode', default='live',
+                                           data_type=str,
                                            unit='-',
                                            info='live or simulation')
-        self.properties["time_increase"] = Property(1, float,
-                                                    name='Time increase',
+        self.properties["time_increase"] = Property('Time increase', default=1, data_type=float,
                                                     unit='s',
                                                     info='Time increase with each iteration')
         # Live
         # Simulation
-        self.properties["sim_speed"] = Property(0, float, name='Simulation speed', unit='s',
+        self.properties["sim_speed"] = Property('Simulation speed', default=0, data_type=float, unit='s',
                                                 info='Time between iteration, simulation mode only, 0 = as fast as possible')
-        self.properties["sim_start"] = Property("2018-01-01 00:00", str,
-                                                name='Simulation Start (UTC)',
+        self.properties["sim_start"] = Property('Simulation Start (UTC)', default="2018-01-01 00:00", data_type=str,
                                                 unit='YYYY-MM-DD hh:mm')
 
     async def func_birth(self):
 
         sim_start = cal.timegm(time.strptime(self.get_property("sim_start"), '%Y-%m-%d %H:%M'))
-        print(utc_time2datetime(sim_start))
 
         now = time.time()
 

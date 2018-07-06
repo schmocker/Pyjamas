@@ -1,5 +1,5 @@
 from core.test_agent import TestAgent
-from Models.Math.Add.V1.model import Model
+from Models import Model
 
 t = TestAgent()
 

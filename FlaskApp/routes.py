@@ -33,9 +33,21 @@ def agents():
             Agent.remove(agent_id)
             return redirect(url_for('.agents'))
 
-        if fnc == 'add_agent':
+        elif fnc == 'add_agent':
             name = request.form.get('agent_name', None, str)
             Agent.add(name)
+            return redirect(url_for('.agents'))
+
+        elif fnc == 'rename_agent':
+            id = request.form.get('agent_id', None, int)
+            name = request.form.get('agent_name', None, str)
+            Agent.rename(id, name)
+            return redirect(url_for('.agents'))
+
+        elif fnc == 'copy_agent':
+            id = request.form.get('agent_id', None, int)
+            name = request.form.get('agent_name', None, str)
+            Agent.copy_agent(id, name)
             return redirect(url_for('.agents'))
 
 
@@ -91,6 +103,7 @@ def web_sim_gui():
             fnc = request.form.get('fnc', None, str)
             data = request.form.get('data', None, str)
             data = json.loads(data) if data else data
+            request_return = None
 
             if fnc == 'set_model_pos':
                 Model_used.set_position(data['model'], data['x'], data['y'])
@@ -101,12 +114,23 @@ def web_sim_gui():
             elif fnc == 'set_model_property':
                 Model_used.set_property(data['model'], data['property'], data['value'])
 
+            elif fnc == 'set_model_name':
+                Model_used.set_name(data['mu_id'], data['name'])
+
+            elif fnc == 'set_model_name_position':
+                Model_used.set_name_position(data['mu_id'], data['axis'], data['position'])
+
+
+            elif fnc == 'set_model_dock_orientation':
+                Model_used.set_dock_orientation(data['mu_id'], data['dock'], data['orientation'])
+
             elif fnc == 'add_connection':
                 Connection.add(data['fk_model_used_from'], data['port_id_from'],
                                data['fk_model_used_to'], data['port_id_to'])
 
             elif fnc == 'add_model_used':
-                Model_used.add(data['name'], data['fk_model'], data['agent'])
+                id = Model_used.add(data['name'], data['fk_model'], data['agent'])
+                request_return = id
 
             elif fnc == 'remove_connection':
                 Connection.remove(data['connection'])
@@ -135,6 +159,7 @@ def web_sim_gui():
 
             if 'agent' in data.keys():
                 data = Agent.dict_agent(data['agent'])
+                data['request_return'] = request_return
                 return json.dumps(data)
             else:
                 return json.dumps(True)

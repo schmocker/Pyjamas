@@ -6,6 +6,7 @@ import math
 from datetime import date, timedelta
 import json
 from os import path
+from Models._utils.time import datetime2utc_time, utc_time2datetime
 
 
 # define the model class and inherit from class "Supermodel"
@@ -16,13 +17,13 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['date'] = Input({'name': 'date'})
+        self.inputs['date'] = Input(name='date', unit='s', info="time array in utc")
 
         # define outputs
-        self.outputs['p_dem'] = Output({'name': 'power demand'})
+        self.outputs['p_dem'] = Output(name='power demand', unit='W', info="power demand of UCTE in W")
 
         # define properties
-        self.properties['offset'] = Property(10, float, {'name': 'demand offset'})
+        self.properties['offset'] = Property(default=0, data_type=float, name='demand offset', unit='%', info="offset of demand in %")
 
         # define persistent variables
         self.model_pars = None
@@ -66,7 +67,8 @@ class Model(Supermodel):
 
         # Date
         l_date = 1
-        date_UTC = dates.replace(tzinfo=timezone('UTC'))
+        date_datetime = utc_time2datetime(dates)
+        date_UTC = date_datetime.replace(tzinfo=timezone('UTC'))
         date_local = date_UTC.astimezone(timezone('Europe/Brussels'))
         year = date_local.year
         weekend = int((date_local.isoweekday() == 6 | date_local.isoweekday() == 7) == True)
@@ -93,10 +95,13 @@ class Model(Supermodel):
         demand_reshape = demand_GW_i.reshape((1, num_country.size))
         demand_GW = np.sum(demand_reshape, axis=1)
 
+        # offset
+        demand_GW = np.multiply(demand_GW,(1+self.get_property('offset')/100))
+
         # convert GW to W
         demand = np.multiply(demand_GW, 10e9)
 
-        return demand
+        return demand.tolist()[0]
 
     def func_NeuralNetwork(self, x1):
         model_para = self.model_para
