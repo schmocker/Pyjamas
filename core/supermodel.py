@@ -257,6 +257,9 @@ class Supermodel:
         self.log_debug("starting func_birth")
         await self.func_birth()
 
+        keys = list(self.properties.keys())
+        await self.func_amend(keys)
+
     async def _internal_prep(self):
 
         self.log_debug("waiting at prep gate")
