@@ -11,11 +11,11 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['CombinedLoad'] = Input(name='CombinedLoad')
-        self.inputs['KWDaten'] = Input(name='PowerPlantsData')
+        self.inputs['CombinedLoad'] = Input(name='CombinedLoad', unit='value[0-1]')
+        self.inputs['KWDaten'] = Input(name='PowerPlantsData', unit='W')
 
         # define outputs
-        self.outputs['scaled_power'] = Output(name='Power')
+        self.outputs['scaled_power'] = Output(name='Power', unit='W')
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
