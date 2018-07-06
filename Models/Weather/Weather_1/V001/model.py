@@ -21,7 +21,7 @@ class Model(Supermodel):
         self.inputs['date'] = Input(name='Time vector', unit='s', info="Time in utc")
 
         # define outputs
-        self.outputs['weather_data'] = Output(name='weather data of KWs')
+        self.outputs['weather_data'] = Output(name='weather data of KWs', unit='date, °C, m/s, ???', info='????')
 
         # define properties
         self.properties['T_offset'] = Property(0., float, name='temperature offset', unit='%', info="offset of temperature in %")
@@ -30,49 +30,16 @@ class Model(Supermodel):
         self.properties['ref_year'] = Property(2000, int, name='reference year', unit='-', info="reference year for modeled weather")
 
         # define persistent variables
-        self.model_pars = None
+        self.data_hist_self = None
 
     async def func_birth(self):
-        # select file to be read
-        filename = self.historic_file_selection(long=0, lat=0)
+        await self.func_amend(['ref_year'])
 
-        # read file
-        with open(filename, 'r') as f:
-            reader = csv.reader(f)
-            next(reader)
-            data = list(reader)
-            # data = [r for r in reader]
-            # print(data)
+    async def func_amend(self, keys=[]):
 
-        # formatting
-        data_t = list(map(list, zip(*data)))
-        date = [datetime.strptime(x, '%Y-%m-%d %H:%M') for x in data_t[0]]
-        date_s = np.asarray(date)
-        date_s = date_s[np.newaxis, :]
-        date_s = date_s.transpose()
-
-        T_vec = np.asarray([float(x) for x in data_t[1]])
-        u_vec = np.asarray([float(x) for x in data_t[2]])
-        P_vec = np.asarray([float(x) for x in data_t[3]])
-
-        T_vec = T_vec[np.newaxis, :]
-        T_vec = T_vec.transpose()
-        u_vec = u_vec[np.newaxis, :]
-        u_vec = u_vec.transpose()
-        P_vec = P_vec[np.newaxis, :]
-        P_vec = P_vec.transpose()
-
-        data_con = np.concatenate((date_s, T_vec, u_vec, P_vec), axis=1)
-        dataframe = pd.DataFrame(data_con, columns=['Date', 'Temperature', 'Wind_speed', 'Radiation'])
-        dataframe.sort_values(by=['Date'])
-
-        # select year
-        year_vec = [x.year for x in dataframe['Date']]
-        dataframe['Year'] = year_vec
-        data_sel = dataframe.loc[dataframe['Year'] == self.get_property('ref_year')]
-        data_sel = data_sel.drop('Year', axis=1)
-
-        self.data_hist_self = data_sel
+        if 'ref_year' in keys:
+            ref_year = self.get_property('ref_year')
+            self.data_hist_self = self.historic_data_read(ref_year, 0, 0)
 
 
     # async def func_prep(self):
@@ -184,48 +151,48 @@ class Model(Supermodel):
 
         return w_data_it
 
-    # def historic_data_read(self, long, lat, ref_year):
-#
-    #     # select file to be read
-    #     filename = self.historic_file_selection(long, lat)
-#
-    #     # read file
-    #     with open(filename, 'r') as f:
-    #         reader = csv.reader(f)
-    #         next(reader)
-    #         data = list(reader)
-    #         #data = [r for r in reader]
-    #         #print(data)
-#
-    #     # formatting
-    #     data_t = list(map(list, zip(*data)))
-    #     date = [datetime.strptime(x, '%Y-%m-%d %H:%M') for x in data_t[0]]
-    #     date_s = np.asarray(date)
-    #     date_s = date_s[np.newaxis, :]
-    #     date_s = date_s.transpose()
-#
-    #     T_vec = np.asarray([float(x) for x in data_t[1]])
-    #     u_vec = np.asarray([float(x) for x in data_t[2]])
-    #     P_vec = np.asarray([float(x) for x in data_t[3]])
-#
-    #     T_vec = T_vec[np.newaxis, :]
-    #     T_vec = T_vec.transpose()
-    #     u_vec = u_vec[np.newaxis, :]
-    #     u_vec = u_vec.transpose()
-    #     P_vec = P_vec[np.newaxis, :]
-    #     P_vec = P_vec.transpose()
-#
-    #     data_con = np.concatenate((date_s, T_vec, u_vec, P_vec), axis = 1)
-    #     dataframe = pd.DataFrame(data_con, columns=['Date', 'Temperature', 'Wind_speed', 'Radiation'])
-    #     dataframe.sort_values(by=['Date'])
-#
-    #     # select year
-    #     year_vec = [x.year for x in dataframe['Date']]
-    #     dataframe['Year'] = year_vec
-    #     data_sel = dataframe.loc[dataframe['Year'] == ref_year]
-    #     data_sel = data_sel.drop('Year', axis=1)
-#
-    #     return data_sel
+    def historic_data_read(self, ref_year, long=0, lat=0):
+
+        # select file to be read
+        filename = self.historic_file_selection(long, lat)
+
+        # read file
+        with open(filename, 'r') as f:
+            reader = csv.reader(f)
+            next(reader)
+            data = list(reader)
+            #data = [r for r in reader]
+            #print(data)
+
+        # formatting
+        data_t = list(map(list, zip(*data)))
+        date = [datetime.strptime(x, '%Y-%m-%d %H:%M') for x in data_t[0]]
+        date_s = np.asarray(date)
+        date_s = date_s[np.newaxis, :]
+        date_s = date_s.transpose()
+
+        T_vec = np.asarray([float(x) for x in data_t[1]])
+        u_vec = np.asarray([float(x) for x in data_t[2]])
+        P_vec = np.asarray([float(x) for x in data_t[3]])
+
+        T_vec = T_vec[np.newaxis, :]
+        T_vec = T_vec.transpose()
+        u_vec = u_vec[np.newaxis, :]
+        u_vec = u_vec.transpose()
+        P_vec = P_vec[np.newaxis, :]
+        P_vec = P_vec.transpose()
+
+        data_con = np.concatenate((date_s, T_vec, u_vec, P_vec), axis = 1)
+        dataframe = pd.DataFrame(data_con, columns=['Date', 'Temperature', 'Wind_speed', 'Radiation'])
+        dataframe.sort_values(by=['Date'])
+
+        # select year
+        year_vec = [x.year for x in dataframe['Date']]
+        dataframe['Year'] = year_vec
+        data_sel = dataframe.loc[dataframe['Year'] == ref_year]
+        data_sel = data_sel.drop('Year', axis=1)
+
+        return data_sel
 
     @staticmethod
     def historic_file_selection(long, lat):
