@@ -42,7 +42,7 @@ async function set_updater() {
     clearInterval(update_interval);
     update_interval = setInterval(await async function() {
         await updateAll(500);
-    }, 10*1000);
+    }, 1*1000);
 }
 async function get(query_name, data_dict){
     let data = await $.get("/websimgui", {
