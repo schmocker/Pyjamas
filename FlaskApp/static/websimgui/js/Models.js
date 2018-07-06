@@ -50,7 +50,7 @@ class Models {
             });
         models.append("rect")
             .classed("box", true)
-            .on("click", async function (mu) { await obj.activate(this, mu); })
+            .on("click", async function (mu) { await obj.activate(mu.id); })
             .call(await obj.onModelDrag());
         models.append("text")
             .classed("model_name", true)
@@ -234,6 +234,10 @@ class Models {
         });
     }
 
+    async get_model_by_id(mu_id){
+        return main.select("#mu_"+mu_id)
+    }
+
 
     async add(name, fk_model){
         await post("add_model_used",
@@ -244,10 +248,15 @@ class Models {
             }, true);
     }
 
-    async activate(rect, mu){
-        d3.selectAll(".box").classed("active", false);
-        d3.select(rect).classed("active", true);
-        view.set_mu(mu);
+    async activate(mu_id){
+        let g = await this.get_model_by_id(mu_id);
+        await this.deactivate_all();
+        g.select(".box").classed("active", true);
+
+        view.set_mu(g.data()[0]);
+    }
+    async deactivate_all(){
+        main.selectAll(".box").classed("active", false);
     }
 
     async remove(mu){

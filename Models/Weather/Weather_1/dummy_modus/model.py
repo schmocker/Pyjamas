@@ -18,8 +18,8 @@ class Model(Supermodel):
 
     async def func_peri(self, prep_to_peri=None):
 
-        mode = "live"
-        # mode = "simulation"
+        # mode = "live"
+        mode = "simulation"
 
         # set output
         self.set_output("modus", mode)

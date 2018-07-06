@@ -15,7 +15,7 @@ class Model(Supermodel):
         self.inputs['KWDaten'] = Input(name='PowerPlantsData')
 
         # define outputs
-        self.outputs['GemeinsameAuslastung'] = Output(name='LoadMatrix')
+        self.outputs['GemeinsameAuslastung'] = Output(name='CombinedLoad')
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs

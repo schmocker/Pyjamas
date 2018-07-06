@@ -101,57 +101,23 @@ class Model(Supermodel):
         ###################################################################################################################
         ###################################################################################################################
         KWBezeichnung = 'PV' #ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
-
-        #KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung']]).transpose()
         KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
-
 
         # Extracting data corresponding solely to wind turbines, by selecting rows of KWDaten where Foreign-Key= 2
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
 
         def make_load_for_one_pv(kw_id):
-            index_of_kwid_in = WetterDaten['id'].index(kw_id)
-            radiation_for_kwid = WetterDaten['radiation'][index_of_kwid_in]
+            index_of_kwid_in_wetter = WetterDaten['id'].index(kw_id)
+            radiation_for_kwid = WetterDaten['radiation'][index_of_kwid_in_wetter]
             radiation = np.array(radiation_for_kwid)
 
             auslastung = self.pvpowergenerator(radiation)
-            #plt.plot(auslastung)
-            #plt.show()
             return auslastung.tolist()
 
         KWid = [kw[0] for kw in KraftwerksDaten]
         load = [make_load_for_one_pv(kw[0]) for kw in KraftwerksDaten]
 
         PVAuslastung = {'id': KWid, 'load': load}
-
-
-        '''
-        ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
-
-        # Extracting data corresponding solely to PV-Plant, by selecting rows of KWDaten where Foreign-Key= 1
-        KraftwerksDaten = KWDaten[KWDaten[:, 1] == ForeignKeyKWTyp]
-
-        # Selecting KWIDs of filtered PV plants
-        KWID_PV = KraftwerksDaten[:, 0]
-
-        # Extracting weather data corresponding solely to PV-Plant, by selecting rows of incoming WetterDaten where
-        # KWID of WetterDaten = KWID_PV
-        BoolWeather = np.in1d(WetterDaten[:, 0],
-                              KWID_PV)  # 1D vector holding TRUE/FALSE, TRUE values corresponds to PV data
-        PVWetterDaten = WetterDaten[BoolWeather == True]
-
-        PVAuslastung = np.zeros(PVWetterDaten.shape)
-        PVrowIndex = 0
-
-        for i in range(0, PVWetterDaten.shape[0]):
-            WetterDaten = PVWetterDaten[i, 1:97]
-            Auslastung = self.pvpowergenerator(WetterDaten)
-            # PVAuslastung[KWID(i), Auslastung(0:96)]
-            PVAuslastung[PVrowIndex] = np.hstack((PVWetterDaten[i, 0], Auslastung[0:96]))
-            PVrowIndex = PVrowIndex + 1
-            # plt.plot(Auslastung)
-            # plt.show()
-        '''
         return PVAuslastung
 
 

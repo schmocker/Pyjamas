@@ -17,6 +17,8 @@
         <div class="agent agents-grid-item">
             <img src="static/images/icons/remove.png" class="remove" onclick="remove_agent({{agent.id}});">
             <img src="static/images/icons/edit.png" class="edit" onclick="edit_agent({{agent.id}});">
+            <img src="static/images/icons/rename.png" class="rename" onclick="rename('{{agent.id}}', '{{agent.name}}');">
+            <img src="static/images/icons/duplicate.png" class="duplicate" onclick="duplicate('{{agent.id}}', '{{agent.name}}');">
             <div class="name">{{agent.name}}</div>
 
         </div>
