@@ -17,10 +17,10 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define outputs
-        self.outputs['t'] = Output({'name': 'Zeitarray'})
+        self.outputs['t'] = Output(name='Zeitarray')
 
         # define properties
-        self.properties['dt'] = Property(900, {'name': 'Zeitschritt [s]'})
+        self.properties['dt'] = Property(default=900, name='Zeitschritt [s]')
 
     async def func_birth(self):
         pass
@@ -52,6 +52,7 @@ class Model(Supermodel):
 
 if __name__ == "__main__":
     dt = 100
+    inputs = {}
     properties = {'dt': dt}
 
     outputs = Model.test(inputs, properties)
