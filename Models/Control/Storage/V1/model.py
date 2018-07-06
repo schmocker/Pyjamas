@@ -10,8 +10,8 @@ class Model(Supermodel):
     def __init__(self, uuid, name: str):
         super(Model, self).__init__(uuid, name)
 
-        self.inputs['to_store'] = Input(name='To Store')
-        self.outputs['stored'] = Output(name='Stored')
+        self.inputs['to_store'] = Input('To Store')
+        self.outputs['stored'] = Output('Stored')
 
         self.stored = 0
     

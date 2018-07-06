@@ -17,23 +17,21 @@ class Model(Supermodel):
         self.future = 0
         self.async_future = None
 
-        self.outputs['time'] = Output(name='Time', unit='s', info='utc time in seconds since epoch')
-        self.outputs['step'] = Output(name='Step', unit='-', info='step number, starts with 0')
+        self.outputs['time'] = Output('Time', unit='s', info='utc time in seconds since epoch')
+        self.outputs['step'] = Output('Step', unit='-', info='step number, starts with 0')
 
-        self.properties["mode"] = Property('live', str,
-                                           name='Mode',
-                                           unit='-',
-                                           info='live or simulation')
-        self.properties["time_increase"] = Property(1, float,
-                                                    name='Time increase',
+        self.properties["mode"] = Property('Mode', default='live',
+                                            data_type=str,
+                                            unit='-',
+                                            info='live or simulation')
+        self.properties["time_increase"] = Property('Time increase', default=1, data_type=float,
                                                     unit='s',
                                                     info='Time increase with each iteration')
         # Live
         # Simulation
-        self.properties["sim_speed"] = Property(0, float, name='Simulation speed', unit='s',
+        self.properties["sim_speed"] = Property('Simulation speed', default=0, data_type=float, unit='s',
                                                 info='Time between iteration, simulation mode only, 0 = as fast as possible')
-        self.properties["sim_start"] = Property("2018-01-01 00:00", str,
-                                                name='Simulation Start (UTC)',
+        self.properties["sim_start"] = Property('Simulation Start (UTC)', default="2018-01-01 00:00", data_type=str,
                                                 unit='YYYY-MM-DD hh:mm')
 
     async def func_birth(self):

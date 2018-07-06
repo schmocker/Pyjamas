@@ -18,25 +18,22 @@ class Model(Supermodel):
         self.time_of_next_run = 0
         self.async_future = None
 
-        self.outputs['step'] = Output(name='Step', unit='-', info='step number, starts with 0')
-        self.outputs['times'] = Output(name='Futures', unit='s', info='utc time array in seconds since epoch')
+        self.outputs['step'] = Output('Step', unit='-', info='step number, starts with 0')
+        self.outputs['times'] = Output('Futures', unit='s', info='utc time array in seconds since epoch')
 
-        self.properties["future_steps"] = Property(1, int, name='Number of intervals',
+        self.properties["future_steps"] = Property('Number of intervals', default=1, data_type=int,
                                                    unit='-',  info='Number of time stamps')
-        self.properties["mode"] = Property('live', str,
-                                           name='Mode',
+        self.properties["mode"] = Property('Mode', default='live', data_type=str,
                                            unit='-',
                                            info='live or simulation')
-        self.properties["time_increase"] = Property(1, float,
-                                                    name='Time increase',
+        self.properties["time_increase"] = Property('Time increase', default=1, data_type=float,
                                                     unit='s',
                                                     info='Time increase with each iteration')
 
         # Simulation
-        self.properties["sim_speed"] = Property(0, float, name='Simulation speed', unit='s',
+        self.properties["sim_speed"] = Property('Simulation speed', default=0, data_type=float, unit='s',
                                                 info='Time between iteration, simulation mode only, 0 = as fast as possible')
-        self.properties["sim_start"] = Property("2018-01-01 00:00", str,
-                                                name='Simulation Start (UTC)',
+        self.properties["sim_start"] = Property('Simulation Start (UTC)', default="2018-01-01 00:00", data_type=str,
                                                 unit='YYYY-MM-DD hh:mm')
 
     async def func_birth(self):
