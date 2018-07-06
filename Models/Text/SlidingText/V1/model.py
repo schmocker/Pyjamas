@@ -7,10 +7,10 @@ class Model(Supermodel):
     def __init__(self, uuid, name: str):
         super(Model, self).__init__(uuid,name)
 
-        self.outputs['text'] = Output({'name': 'Text'})
-        self.properties['slide_amount'] = Property(1,int, {'name':'Slide Amount'})
-        self.properties['window_size'] = Property(10,int, {'name':'Window Size'})
-        self.properties['full_text'] = Property("Hello World! ",str, {'name': 'Text'})
+        self.outputs['text'] = Output('Text')
+        self.properties['slide_amount'] = Property('Slide Amount', default=1, data_type=int)
+        self.properties['window_size'] = Property('Window Size', default=10, data_type=int)
+        self.properties['full_text'] = Property('Text', default="Hello World! ", data_type=str)
 
         self.curr_pos = 0
 

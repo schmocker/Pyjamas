@@ -12,7 +12,7 @@ class Model(Supermodel):
         super(Model,self).__init__(uuid,name)
         self.number = -1
 
-        self.outputs['num'] = Output(name='Number', unit='int')
+        self.outputs['num'] = Output('Number', unit='int')
 
     async def func_prep(self):
         self.number = self.number + 1

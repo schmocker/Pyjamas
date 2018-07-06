@@ -12,12 +12,12 @@ class Model(Supermodel):
     def __init__(self, uuid, name :str):
         super(Model, self).__init__(uuid,name)
 
-        self.inputs['dividend'] = Input(name='Dividend', unit='num')
-        self.inputs['divisor'] = Input(name='Divisor', unit='num')
+        self.inputs['dividend'] = Input('Dividend', unit='num')
+        self.inputs['divisor'] = Input('Divisor', unit='num')
 
-        self.outputs['quotient'] = Output(name='Quotient', unit='num')
-        self.outputs['floor_quotient'] = Output(name='Floor Quotient', unit='num')
-        self.outputs['floor_modulus'] = Output(name='Floor Modulus', unit='num')
+        self.outputs['quotient'] = Output('Quotient', unit='num')
+        self.outputs['floor_quotient'] = Output('Floor Quotient', unit='num')
+        self.outputs['floor_modulus'] = Output('Floor Modulus', unit='num')
 
     async def func_peri(self, prep_to_peri=None):
 
