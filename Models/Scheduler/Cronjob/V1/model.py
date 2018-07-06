@@ -20,10 +20,10 @@ class Model(Supermodel):
         self.outputs['time'] = Output('Time', unit='s', info='utc time in seconds since epoch')
         self.outputs['step'] = Output('Step', unit='-', info='step number, starts with 0')
 
-        self.properties["mode"] = Property('Mode', default='live',
-                                            data_type=str,
-                                            unit='-',
-                                            info='live or simulation')
+        self.properties["mode"] = Property(name='Mode', default='live',
+                                           data_type=str,
+                                           unit='-',
+                                           info='live or simulation')
         self.properties["time_increase"] = Property('Time increase', default=1, data_type=float,
                                                     unit='s',
                                                     info='Time increase with each iteration')

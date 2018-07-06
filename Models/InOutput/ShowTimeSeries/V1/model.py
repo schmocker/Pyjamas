@@ -18,7 +18,7 @@ class Model(Supermodel):
         self.outputs['times_out'] = Output(name='Times', unit='times]', info='utc time arry')
         self.outputs['values_out'] = Output(name='Filtered values', unit='values', info='filtered value array')
 
-        self.properties["filter"] = Property('', str, name='Filter',
+        self.properties["filter"] = Property(default='', data_type=str, name='Filter',
                                              unit='-', info='comma separated dict keys and array indexes',
                                              example='"speed", 2')
 

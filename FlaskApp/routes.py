@@ -103,7 +103,7 @@ def web_sim_gui():
             fnc = request.form.get('fnc', None, str)
             data = request.form.get('data', None, str)
             data = json.loads(data) if data else data
-            request_return = None;
+            request_return = None
 
             if fnc == 'set_model_pos':
                 Model_used.set_position(data['model'], data['x'], data['y'])

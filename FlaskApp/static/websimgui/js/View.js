@@ -459,7 +459,7 @@ class View {
         let set_table = set_div.append('table');
         let set_thead = set_table.append('thead');
         let	set_tbody = set_table.append('tbody');
-        set_thead.append('tr').selectAll('th').data(['Name','Name Position','Inputs orientation','Outputs Orientation']).enter()
+        set_thead.append('tr').selectAll('th').data(['Name','Name Vertical Position','Name Horizontal Position','Inputs orientation','Outputs Orientation']).enter()
             .append('th').text(function (column) { return column; });
 
         let set_row = set_tbody.append("tr");
@@ -476,18 +476,30 @@ class View {
                 await post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true);
                 models.activate(obj.mu.id);
             });
-
-        let set_name_pos = set_row.append('td').append("select")
+        // vertical position
+        let set_name_v_pos = set_row.append('td').append("select")
             .attr('id', 'name_pos')
             .on('change', function (d) {
                 let pos = d3.select(this).property('value');
                 post('set_model_name_position', {'mu_id': obj.mu.id, 'axis': 'vertical', 'position': pos}, true);
             });
-        set_name_pos.selectAll('option').data(['top outside', 'top inside', 'center', 'bottom inside', 'bottom outside'])
+        set_name_v_pos.selectAll('option').data(['top outside', 'top inside', 'center', 'bottom inside', 'bottom outside'])
             .enter().append('option')
             .attr("value", function (d) { return d })
             .text(function (d) { return d });
-        set_name_pos.property('value',function (d) { return obj.mu.name_position  });
+        set_name_v_pos.property('value',function (d) { return obj.mu.name_v_position  });
+        // horizontal position
+        let set_name_h_pos = set_row.append('td').append("select")
+            .attr('id', 'name_pos')
+            .on('change', function (d) {
+                let pos = d3.select(this).property('value');
+                post('set_model_name_position', {'mu_id': obj.mu.id, 'axis': 'horizontal', 'position': pos}, true);
+            });
+        set_name_h_pos.selectAll('option').data(['left outside', 'left inside', 'center', 'right inside', 'right outside'])
+            .enter().append('option')
+            .attr("value", function (d) { return d })
+            .text(function (d) { return d });
+        set_name_h_pos.property('value',function (d) { return obj.mu.name_h_position  });
 
         set_row.append('td').append("select").attr('id', 'input').classed('orientation',true);
         set_row.append('td').append("select").attr('id', 'output').classed('orientation',true);
