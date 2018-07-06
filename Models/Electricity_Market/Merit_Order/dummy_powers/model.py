@@ -20,7 +20,7 @@ class Model(Supermodel):
         pp_ids_p = [i for i in range(n_kw)]
         np.random.shuffle(pp_ids_p)
 
-        powers = [(np.random.rand(n_ts) * 50 + 3).tolist() for i in pp_ids_p]
+        powers = [((np.random.rand(n_ts) * -2E12 + 5E12)/n_kw).tolist() for i in pp_ids_p]
 
         data = {'power_plants': pp_ids_p,
                   'powers': powers}

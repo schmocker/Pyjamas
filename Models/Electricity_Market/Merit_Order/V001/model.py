@@ -72,8 +72,10 @@ class Model(Supermodel):
                 d_c = d_c[sort_order]
                 c = m_c + d_c  # for each pp
                 p = p[sort_order]
-
-                price = c[np.where(np.cumsum(p) >= d)[0][0]]
+                try:
+                    price = c[np.where(np.cumsum(p) >= d)[0][0]]
+                except Exception as E:
+                    price = np.max(c)
                 # plot_merit_order(m_c, d_c, p, d, price)
 
 

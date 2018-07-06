@@ -9,7 +9,7 @@ class Model(Supermodel):
         super(Model, self).__init__(uuid,name)
         self.outputs['data'] = Output(name='Data')
         self.inputs['n_kw'] = Input(name='n_kw')
-        self.inputs['n_dn'] = Input(name='n_dn')
+        self.inputs['dns'] = Input(name='DistNets')
 
     async def func_peri(self, prep_to_peri=None):
         n_kw = await self.get_input("n_kw")
