@@ -481,7 +481,7 @@ class View {
             .attr('id', 'name_pos')
             .on('change', function (d) {
                 let pos = d3.select(this).property('value');
-                post('set_model_name_position', {'mu_id': obj.mu.id, 'position': pos}, true);
+                post('set_model_name_position', {'mu_id': obj.mu.id, 'axis': 'vertical', 'position': pos}, true);
             });
         set_name_pos.selectAll('option').data(['top outside', 'top inside', 'center', 'bottom inside', 'bottom outside'])
             .enter().append('option')

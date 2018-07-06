@@ -8,7 +8,8 @@ class Model_used(db.Model):
     fk_model = db.Column(db.Integer, db.ForeignKey('model.id', ondelete="CASCADE"), nullable=False)
     fk_agent = db.Column(db.Integer, db.ForeignKey('agent.id', ondelete="CASCADE"), nullable=False)
     name = db.Column(db.String(80), nullable=False)
-    name_position = db.Column(db.String(80), nullable=False, default='top')
+    name_v_position = db.Column(db.String(80), nullable=False, default='top outside')
+    name_h_position = db.Column(db.String(80), nullable=False, default='center')
     settings = db.Column(db.Text, nullable=False, default=json.dumps({}))
     x = db.Column(db.Integer, default=50)
     y = db.Column(db.Integer, default=50)
@@ -89,10 +90,14 @@ class Model_used(db.Model):
         db.session.commit()
 
     @classmethod
-    def set_name_position(cls, id, position):
+    def set_name_position(cls, id, axis, position):
         obj = cls.query.filter_by(id=id).first()
-        obj.name_position = position
-        db.session.commit()
+        if axis == 'vertical':
+            obj.name_v_position = position
+            db.session.commit()
+        elif axis == 'horizontal':
+            obj.name_h_position = position
+            db.session.commit()
 
     @classmethod
     def set_dock_orientation(cls, id, dock, orientation):

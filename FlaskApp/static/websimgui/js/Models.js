@@ -146,7 +146,7 @@ class Models {
         models.select(".model_name")
             .text( function(d){ return d.name })
             .attr("x", function(d){
-                switch (d.name_position){
+                switch (d.name_h_position){
                     case 'left outside': return d.x - 4;
                     case 'left inside': return d.x + 4;
                     case 'center': return d.x + d.width / 2;
@@ -155,7 +155,7 @@ class Models {
                     default: return d.x + d.width / 2;
                 }})
             .attr("text-anchor", function (d) {
-                switch (d.name_position){
+                switch (d.name_h_position){
                     case 'left outside': return 'end';
                     case 'left inside': return 'start';
                     case 'center': return 'middle';
@@ -164,7 +164,7 @@ class Models {
                     default: return 'middle';
                 }})
             .attr("y", function(d){
-                switch (d.name_position){
+                switch (d.name_v_position){
                     case 'top outside': return d.y - 4;
                     case 'top inside': return d.y + 4;
                     case 'center': return d.y + d.height/2;
@@ -173,7 +173,7 @@ class Models {
                     default: return d.y - 4;
                 }})
             .attr("alignment-baseline", function (d) {
-                switch (d.name_position){
+                switch (d.name_v_position){
                     case 'top outside': return 'baseline';
                     case 'top inside': return 'hanging';
                     case 'center': return 'middle';
