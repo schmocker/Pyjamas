@@ -13,12 +13,12 @@ class Model(Supermodel):
         super(Model, self).__init__(uuid,name)
         self.elapsed = 0
 
-        self.outputs['num_elapsed'] = Output(name='Number Elapsed', unit='int')
+        self.outputs['num_elapsed'] = Output('Number Elapsed', unit='int')
 
-        self.properties["number_of_exec"] = Property(-1, float, name='Number of Executions', unit='int')
-        self.properties["peri_interval"] = Property(0, float, name='Peri Interval', unit='num')
-        self.properties["prep_lead"] = Property(0, float, name='Prep lead', unit='num')
-        self.properties["post_delay"] = Property(0, float, name='Post delay', unit='num')
+        self.properties["number_of_exec"] = Property('Number of Executions', default=-1, data_type=float, unit='int')
+        self.properties["peri_interval"] = Property('Peri Interval', default=0, data_type=float, unit='num')
+        self.properties["prep_lead"] = Property('Prep lead', default=0, data_type=float, unit='num')
+        self.properties["post_delay"] = Property('Post delay', default=0, data_type=float, unit='num')
 
     def close_gates(self):
         if self.get_property('prep_lead') > 0:

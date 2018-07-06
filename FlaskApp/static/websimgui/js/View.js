@@ -396,65 +396,17 @@ class View {
         let prop_data = await get('get_model_properties', {'model': obj.mu.id});
         prop_data = JSON.parse(prop_data);
 
-        let set_div = this.content.append('div').attr('id', 'settings');
-        set_div.append('h3').text('Settings');
-
-        let set_table = set_div.append('table');
-		let set_thead = set_table.append('thead');
-		let	set_tbody = set_table.append('tbody');
-		set_thead.append('tr').selectAll('th').data(['Name','Direction Inputs','Direction Outputs']).enter()
-            .append('th').text(function (column) { return column; });
-
-		let set_row = set_tbody.append("tr");
-        set_row.append('td').append("input").attr("type", "text").attr("value", this.mu.name)
-            .on('keyup', function (d) {
-                if (d3.event.keyCode === 13) { post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true) }
-            })
-            .on('blur', function (d) {
-                post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true)
-            });
-
-        set_row.append('td').append("select").attr('id', 'input');
-        set_row.append('td').append("select").attr('id', 'output');
-        let options = ['top','bottom','left','right'];
-        set_row.selectAll("select").selectAll('option')
-            .data(options).enter().append('option')
-            .attr("value", function (d) { return d })
-            .text(function (d) { return d });
-        set_row.selectAll("select").property('value',function (d) {
-                let direction = d3.select(this).attr('id');
-
-                let or_in = obj.mu.input_orientation;
-                let or_out = obj.mu.output_orientation;
-                or_in = (or_in) ? or_in : 'left';
-                or_out = (or_out) ? or_out : 'right';
-
-                return (direction === 'input') ? or_in : or_out;
-        });
-        set_row.selectAll("select").on('change', function (d) {
-            let or_in = set_row.select('#input').property('value');
-            let or_out = set_row.select('#output').property('value');
-            if (or_in === or_out){
-                d3.select(this).style('background-color', 'red');
-            } else {
-                d3.select(this).style('background-color', 'white');
-                let direction = d3.select(this).attr('id');
-                let val = set_row.select('#'+direction).property('value');
-                post('set_model_dock_orientation', {'mu_id': obj.mu.id, 'dock': direction, 'orientation': val}, true);
-            }
-        });
-
         // properties
         let prop_div = this.content.append('div').attr('id', 'properties');
         prop_div.append('h3').text('Properties');
 
         let prop_table = prop_div.append('table');
-		let prop_thead = prop_table.append('thead');
-		let	prop_tbody = prop_table.append('tbody');
-		prop_thead.append('tr').selectAll('th').data(['Name','Value','Unit','Info','Example']).enter()
+        let prop_thead = prop_table.append('thead');
+        let	prop_tbody = prop_table.append('tbody');
+        prop_thead.append('tr').selectAll('th').data(['Name','Value','Unit','Info','Example']).enter()
             .append('th').text(function (column) { return column; });
 
-		let prop_row = prop_tbody.selectAll("tr").data(d3.entries(this.mu.model.info.properties));
+        let prop_row = prop_tbody.selectAll("tr").data(d3.entries(this.mu.model.info.properties));
         prop_row = prop_row.enter().append("tr");
         prop_row.append('td').text(function (d) { return d.value.name });
         let prop_input = prop_row.append('td').append("input");
@@ -487,10 +439,10 @@ class View {
         });
 
         let table = docks.append('table');
-		let thead = table.append('thead');
-		let	tbody = table.append('tbody');
+        let thead = table.append('thead');
+        let	tbody = table.append('tbody');
 
-		thead.append('tr').selectAll('th').data(['Name','Unit','Info','Example']).enter()
+        thead.append('tr').selectAll('th').data(['Name','Unit','Info','Example']).enter()
             .append('th').text(function (column) { return column; });
 
         let ports = tbody.selectAll("tr").data(function (d) { return d.ports });
@@ -500,7 +452,88 @@ class View {
         ports.append('td').text(function (d) { return d.info });
         ports.append('td').text(function (d) { return d.example });
 
+        // settings
+        let set_div = this.content.append('div').attr('id', 'settings');
+        set_div.append('h3').text('Settings');
 
+        let set_table = set_div.append('table');
+        let set_thead = set_table.append('thead');
+        let	set_tbody = set_table.append('tbody');
+        set_thead.append('tr').selectAll('th').data(['Name','Name Vertical Position','Name Horizontal Position','Inputs orientation','Outputs Orientation']).enter()
+            .append('th').text(function (column) { return column; });
+
+        let set_row = set_tbody.append("tr");
+        set_row.append('td').append("input").attr("type", "text").attr("value", this.mu.name)
+            .on('keyup', async function (d) {
+                if (d3.event.keyCode === 13) {
+                    await post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true);
+                    models.activate(obj.mu.id);
+                }
+                obj.title.select('b').property('textContent', this.value);
+                main.select('#mu_'+obj.mu.id).select(".model_name").text(this.value);
+            })
+            .on('blur', async function (d) {
+                await post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true);
+                models.activate(obj.mu.id);
+            });
+        // vertical position
+        let set_name_v_pos = set_row.append('td').append("select")
+            .attr('id', 'name_pos')
+            .on('change', function (d) {
+                let pos = d3.select(this).property('value');
+                post('set_model_name_position', {'mu_id': obj.mu.id, 'axis': 'vertical', 'position': pos}, true);
+            });
+        set_name_v_pos.selectAll('option').data(['top outside', 'top inside', 'center', 'bottom inside', 'bottom outside'])
+            .enter().append('option')
+            .attr("value", function (d) { return d })
+            .text(function (d) { return d });
+        set_name_v_pos.property('value',function (d) { return obj.mu.name_v_position  });
+        // horizontal position
+        let set_name_h_pos = set_row.append('td').append("select")
+            .attr('id', 'name_pos')
+            .on('change', function (d) {
+                let pos = d3.select(this).property('value');
+                post('set_model_name_position', {'mu_id': obj.mu.id, 'axis': 'horizontal', 'position': pos}, true);
+            });
+        set_name_h_pos.selectAll('option').data(['left outside', 'left inside', 'center', 'right inside', 'right outside'])
+            .enter().append('option')
+            .attr("value", function (d) { return d })
+            .text(function (d) { return d });
+        set_name_h_pos.property('value',function (d) { return obj.mu.name_h_position  });
+
+        set_row.append('td').append("select").attr('id', 'input').classed('orientation',true);
+        set_row.append('td').append("select").attr('id', 'output').classed('orientation',true);
+        let set_orientation =  set_row.selectAll(".orientation");
+
+        set_orientation
+            .on('change', function (d) {
+                let or_in = set_row.select('#input').property('value');
+                let or_out = set_row.select('#output').property('value');
+                if (or_in === or_out){
+                    d3.select(this).style('background-color', 'red');
+                } else {
+                    d3.select(this).style('background-color', 'white');
+                    let direction = d3.select(this).attr('id');
+                    let val = set_row.select('#'+direction).property('value');
+                    post('set_model_dock_orientation', {'mu_id': obj.mu.id, 'dock': direction, 'orientation': val}, true);
+                }
+            })
+            .selectAll('option').data(['top','bottom','left','right']).enter()
+            .append('option')
+            .attr("value", function (d) { return d })
+            .text(function (d) { return d });
+
+        set_orientation
+            .property('value',function (d) {
+                let direction = d3.select(this).attr('id');
+
+                let or_in = obj.mu.input_orientation;
+                let or_out = obj.mu.output_orientation;
+                or_in = (or_in) ? or_in : 'left';
+                or_out = (or_out) ? or_out : 'right';
+
+                return (direction === 'input') ? or_in : or_out;
+            })
 
     }
 

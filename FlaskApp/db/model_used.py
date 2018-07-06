@@ -8,14 +8,16 @@ class Model_used(db.Model):
     fk_model = db.Column(db.Integer, db.ForeignKey('model.id', ondelete="CASCADE"), nullable=False)
     fk_agent = db.Column(db.Integer, db.ForeignKey('agent.id', ondelete="CASCADE"), nullable=False)
     name = db.Column(db.String(80), nullable=False)
-    settings = db.Column(db.Text, nullable=False)
-    x = db.Column(db.Integer)
-    y = db.Column(db.Integer)
-    width = db.Column(db.Integer)
-    height = db.Column(db.Integer)
-    properties = db.Column(db.Text)
-    input_orientation = db.Column(db.String(80))  # top, left, bottom, right
-    output_orientation = db.Column(db.String(80))
+    name_v_position = db.Column(db.String(80), nullable=False, default='top outside')
+    name_h_position = db.Column(db.String(80), nullable=False, default='center')
+    settings = db.Column(db.Text, nullable=False, default=json.dumps({}))
+    x = db.Column(db.Integer, default=50)
+    y = db.Column(db.Integer, default=50)
+    width = db.Column(db.Integer, default=120)
+    height = db.Column(db.Integer, default=60)
+    properties = db.Column(db.Text, default=json.dumps({}))
+    input_orientation = db.Column(db.String(80), default='left')  # top, left, bottom, right
+    output_orientation = db.Column(db.String(80), default='right')
     ###
     model = db.relationship("Model", foreign_keys=[fk_model],
                             backref=db.backref("models_used",cascade="all, delete-orphan", lazy=True))
@@ -26,13 +28,6 @@ class Model_used(db.Model):
         self.name = name
         self.fk_model = fk_model
         self.fk_agent = fk_agent
-        self.width = 120
-        self.height = 60
-        self.x = 50
-        self.y = 50
-        self.input_orientation = 'left'
-        self.output_orientation = 'right'
-        self.settings = json.dumps(None)
 
     @property
     def dict(self):
@@ -93,6 +88,16 @@ class Model_used(db.Model):
         obj = cls.query.filter_by(id=id).first()
         obj.name = name
         db.session.commit()
+
+    @classmethod
+    def set_name_position(cls, id, axis, position):
+        obj = cls.query.filter_by(id=id).first()
+        if axis == 'vertical':
+            obj.name_v_position = position
+            db.session.commit()
+        elif axis == 'horizontal':
+            obj.name_h_position = position
+            db.session.commit()
 
     @classmethod
     def set_dock_orientation(cls, id, dock, orientation):

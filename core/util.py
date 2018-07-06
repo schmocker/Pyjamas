@@ -6,11 +6,13 @@ import errno
 import time
 
 class Port():
-    def __init__(self, name='', unit='-', **kwargs):
+    def __init__(self, name, unit='undefined', info='-', example='-', **kwargs):
         self.items = dict()
         self.items['info'] = kwargs if kwargs is not None else dict()
         self.items['info']['name'] = name
         self.items['info']['unit'] = unit
+        self.items['info']['info'] = info
+        self.items['info']['example'] = example
 
     def get_port_info(self):
         return self.items['info']
@@ -48,12 +50,15 @@ class Output(Port):
 
 class Property(Port):
 
-    def __init__(self, initial_value, property_type, name='', unit='-', **kwargs):
-        super(Property, self).__init__(name, unit, **kwargs)
-        self.property_type = property_type
+    def __init__(self, name, default=0, data_type=int, unit='undefined', info='-', example='-', **kwargs):
+        super(Property, self).__init__(name, unit=unit, info=info, example=example, **kwargs)
+        self.property_type = data_type
         self.amend_value = None
 
-        self.set_property(initial_value)
+        self.items['info']['default'] = default
+        self.items['info']['data_type'] = str(data_type)
+
+        self.set_property(default)
 
     def get_property(self):
         return self.items['value']
