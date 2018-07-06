@@ -15,10 +15,10 @@
     <div class="agents agents-grid-container">
         {% for agent in agents %}
         <div class="agent agents-grid-item">
-            <img src="static/images/icons/remove.png" class="remove" onclick="remove_agent({{agent.id}});">
-            <img src="static/images/icons/edit.png" class="edit" onclick="edit_agent({{agent.id}});">
-            <img src="static/images/icons/rename.png" class="rename" onclick="rename('{{agent.id}}', '{{agent.name}}');">
-            <img src="static/images/icons/duplicate.png" class="duplicate" onclick="duplicate('{{agent.id}}', '{{agent.name}}');">
+            <img src="static/images/icons/remove.png" class="remove" title="remove" onclick="remove_agent({{agent.id}});">
+            <img src="static/images/icons/edit.png" class="edit" title="edit" onclick="edit_agent({{agent.id}});">
+            <img src="static/images/icons/rename.png" class="rename" title="rename" onclick="rename('{{agent.id}}', '{{agent.name}}');">
+            <img src="static/images/icons/duplicate.png" class="duplicate" title="duplicate" onclick="duplicate('{{agent.id}}', '{{agent.name}}');">
             <div class="name">{{agent.name}}</div>
 
         </div>
@@ -28,7 +28,7 @@
                 <label>Add Agent:</label>
                 <input type="hidden" name="fnc" value="add_agent" />
                 <input id="agent_name" name="agent_name" type="text" placeholder="agent_name" required/>
-                <input type="submit">
+                <input id="submit" type="submit" value="Add Agent">
             </form>
         </div>
         </ul>

@@ -41,8 +41,15 @@ class Model_used(db.Model):
 
 
     @classmethod
-    def add(cls, name, fk_model, fk_agent):
-        obj = cls(name=name, fk_model=fk_model,  fk_agent=fk_agent)
+    def add(cls, name, model, agent):
+        obj = cls(name=name, fk_model=model.id,  fk_agent=agent.id)
+        props = json.loads(model.info)['properties']
+        for key, prop in props.items():
+            props[key] = prop['default']
+        obj.properties = json.dumps(props)
+
+
+
         db.session.add(obj)
         db.session.commit()
         return obj.id

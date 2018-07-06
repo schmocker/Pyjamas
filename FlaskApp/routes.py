@@ -129,7 +129,9 @@ def web_sim_gui():
                                data['fk_model_used_to'], data['port_id_to'])
 
             elif fnc == 'add_model_used':
-                id = Model_used.add(data['name'], data['fk_model'], data['agent'])
+                agent = Agent.get_agent(data['agent'])
+                model = Model.get_model(data['fk_model'])
+                id = Model_used.add(data['name'], model, agent)
                 request_return = id
 
             elif fnc == 'remove_connection':

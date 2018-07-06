@@ -68,7 +68,21 @@
     justify-self: center;
     align-self: center;
 }
-
-#agent_name{
+#add_agent_form{
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+}
+#add_agent_form #agent_name{
     width: 100%;
+    justify-self: center;
+    align-self: center;
+    text-align: center;
+}
+#add_agent_form label{
+    justify-self: center;
+    align-self: end;
+}
+#add_agent_form #submit{
+    justify-self: center;
+    align-self: start;
 }
