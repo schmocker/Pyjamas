@@ -31,8 +31,9 @@ def create_all():
 @app.before_first_request
 def create_user():
     default_user = User.query.filter_by(email=app.config.get('FLASK_USER_EMAIL')).first()
-    user_datastore.delete_user(default_user)
-    db.session.commit()
+    if default_user:
+        user_datastore.delete_user(default_user)
+        db.session.commit()
 
     user_datastore.create_user(email=app.config.get('FLASK_USER_EMAIL'),
                                password=app.config.get('FLASK_USER_PASSWORD'))
