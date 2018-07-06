@@ -32,7 +32,7 @@ class Model(Supermodel):
 
         # define properties
         # Property(<initial value>,<type>,<info dictionary>)
-        self.properties['prop1'] = Property(10, float, name='property1')
+        self.properties['prop1'] = Property(default=10, data_type=float, name='property1')
 
         # define persistent variables
         self.pers_variable_0 = 5
