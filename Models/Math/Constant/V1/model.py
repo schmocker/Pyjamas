@@ -9,9 +9,9 @@ class Model(Supermodel):
 
     def __init__(self, uuid, name :str):
         super(Model,self).__init__(uuid,name)
-        self.outputs['const'] = Output(name='Number', unit='float')
+        self.outputs['const'] = Output('Number', unit='float')
         
-        self.properties['number'] = Property(0, float, name='Number', unit='float')
+        self.properties['number'] = Property('Number', default=0, data_type=float, unit='float')
 
     async def func_peri(self, prep_to_peri=None):
 
