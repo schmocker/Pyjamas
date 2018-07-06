@@ -13,16 +13,31 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input(name='WeatherData', unit='dict')
-        self.inputs['kwDaten'] = Input(name='PowerPlantsData', unit='dict')
+        self.inputs['weather'] = Input(name='WeatherData', info='dict')
+        self.inputs['kwDaten'] = Input(name='PowerPlantsData', info='dict')
 
         # define outputs
-        self.outputs['load'] = Output(name='Load', unit='value[0-1]')
+        self.outputs['load'] = Output(name='Load', info='value[0-1]')
 
+    '''   
         # define properties
         # Property(<initial value>,<type>,<info dictionary>)
         self.properties['Nabenhoehe'] = Property(10, float, name='hub height', unit='m')
         self.properties['Bodenrauigkeit'] = Property(10, float, name='Surface Roughness', unit='m')
+
+        self.nabenhoehe = None
+        self.bodenrauhigkeit = None
+
+    async  def func_birth(self):
+        await self.func_amend(['Nabenhoehe', 'Bodenrauigkeit'])
+
+    async def func_amend(self, keys=[]):
+        if 'Nabenhoehe' in keys:
+            self.nabenhoehe = self.get_property('Nabenhoehe')
+
+        if 'Bodenrauigkeit' in keys:
+            self.nabenhoehe = self.get_property('Bodenrauigkeit')
+    '''
 
 
     async def func_peri(self, prep_to_peri=None):
