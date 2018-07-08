@@ -29,11 +29,10 @@ window.onload = async function() {
         .classed("main",true);
 
 
-    await update_all_models();
     view = new View(d3.select("#wsg"));
 
     // Extras
-    contextMenu =                   new ContextMenu(d3.select("#wsg"));
+    contextMenu = new ContextMenu(d3.select("#wsg"));
 
 
 
@@ -59,18 +58,10 @@ async function update_all(){
     console.log("UPDATE DONE")
 }
 
-async function update_all_models(){
-    all_models = await $.get("/websimgui", {
-        'fnc': 'get_model_selection',
-        'data': JSON.stringify({})
-    });
-    all_models = JSON.parse(all_models);
-}
 
 async function get_data(){
     let url = new URL(document.URL);
     let agent_id = url.searchParams.get("agent");
-    //let data = await $.getJSON("/websimgui/data?agent=" + agent_id);
 
     let data = await $.get("/websimgui", {
         'agent': agent_id,
@@ -79,25 +70,6 @@ async function get_data(){
     data = JSON.parse(data);
 
 
-    await setData(data);
-}
-
-
-
-async function setData(data) {
-    let models_used = data.model_used;
-    for (let i = 0; i < models_used.length; i++) {
-        let model_used = models_used[i];
-        let docks = model_used.model.info.docks;
-        for (let j = 0; j < docks.length; j++) {
-            let direction = docks[j].direction;
-            let orientation = model_used[direction+"_orientation"];
-            if (orientation != null) {
-                data.model_used[i].model.info.docks[j].orientation = orientation;
-            }
-        }
-    }
-
-    agent_data = data
+    agent_data = data;
 }
 

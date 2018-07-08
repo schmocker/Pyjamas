@@ -13,7 +13,7 @@ class View {
         let icon_size = 20;
 
         this.update_interval = null;
-        this.interval_speed = 1;
+        this.interval_speed = 5;
         this.run = 0;
 
         let h_start;
@@ -49,7 +49,6 @@ class View {
                     .style("width", "100%").style("height", "100%")
                     .style("fill", "white").style("opacity", 0.5);
                 await post("update", {}, true);
-                await update_all_models();
                 await obj.update_view();
                 shadow.remove();
             });
@@ -159,6 +158,7 @@ class View {
             .attr('id', 'view_content');
 
         this.mu = null;
+        this.m = null;
         this.set_mu(null);
 
         obj.status();
@@ -191,6 +191,7 @@ class View {
     async update_view(menu_item, new_mu){
         let obj = this;
         let mu = this.mu;
+        let m = this.m;
         await this.status();
         clearInterval(this.update_interval);
 
@@ -213,13 +214,13 @@ class View {
         let items = ["properties", "results"];
         for (let i in items){
             let item = items[i];
-            if (menu_sel.attr("id") === item && this.mu){
+            if (menu_sel.attr("id") === item && mu){
                 log(item);
                 log(menu_sel.attr("id") === item);
 
                 let has = (item === "properties") ? "has_property_view" :  "has_result_view";
 
-                if (this.mu.model[has]){
+                if (m[has]){
                     if (!menu_sel.classed("custom") && menu_sel.classed("default")){
                         menu_sel.classed("custom", true);
                         menu_sel.classed("default", false);
@@ -253,7 +254,7 @@ class View {
 
         // set title
         if (menu_sel.attr('id') === 'add'){ this.title.html("Add model"); }
-        else if (mu){ this.title.html(`Model <b>${mu.name}</b> (${mu.model.topic}/${mu.model.name}/${mu.model.version})`); }
+        else if (mu){ this.title.html(`Model <b>${mu.name}</b> (${m.topic}/${m.name}/${m.version})`); }
         else { this.title.html("no model selected" ); }
 
         // update view
@@ -280,6 +281,7 @@ class View {
 
     async set_mu(mu) {
         this.mu = mu;
+        this.m = mu ? agent_data.models[mu.fk_model] : null;
         await this.update_view(null, true);
     }
 
@@ -289,8 +291,8 @@ class View {
         this.content.html("");
         if (!this.mu) { return }
         let obj = this;
-        let html = await get('get_model_readme', {'mu_id': obj.mu.id});
-        this.content.html(html);
+        let data = await get('get_model_readme', {'mu_id': obj.mu.id});
+        this.content.html(data.html);
     }
 
     async update_default_result_view() {
@@ -317,11 +319,10 @@ class View {
         this.content.append('br');
         this.content.append('br');
 
-        let outputs = obj.mu.model.info.docks[1].ports;
 
-        let result_obj = obj.content.selectAll('.result').data(outputs);
+        let result_obj = obj.content.selectAll('.result').data(d3.entries(obj.m.outputs));
         let new_result_obj = result_obj.enter().append('div').classed('result', true);
-        new_result_obj.append('b').text(function(d){return d.name + " [" + d.unit + "]" + ":";});
+        new_result_obj.append('b').text(function(d){return d.value.name + " [" + d.value.unit + "]" + ":";});
         new_result_obj.append('div').classed('value', true)
             .attr('style', 'overflow-y: scroll; max-height:200px;')
             .style('border', '1px solid');
@@ -344,7 +345,6 @@ class View {
 
         async function update(obj){
             let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
-            result = JSON.parse(result);
 
             if (result){
                 obj.content.selectAll('.value')
@@ -379,7 +379,7 @@ class View {
     async update_custom_result_view(){
         if (!this.mu) { this.content.html(""); return }
         this.content.html("");
-        let src = '/model_view?MU_id=' + this.mu.id + '&view=result';
+        let src = '/model_view?mu_id=' + this.mu.id + '&view=result';
         this.menu.select("#results").append("img")
             .attr("src", "static/images/icons/open.png")
             .style("width", "14px").style("height", "14px").style("margin-left", "15px")
@@ -393,154 +393,136 @@ class View {
         let obj = this;
         this.content.html("");
 
-        let prop_data = await get('get_model_properties', {'model': obj.mu.id});
-        prop_data = JSON.parse(prop_data);
+        ////
+        let data = [
+            {'name': 'Properties',
+                'columns': ['Name','Value','Unit','Info','Example'],
+                'data': d3.entries(this.m.properties)},
+            {'name': 'Inputs',
+                'columns': ['Name','Unit','Info','Example'],
+                'data': d3.values(this.m.inputs)},
+            {'name': 'Outputs',
+                'columns': ['Name','Unit','Info','Example'],
+                'data': d3.values(this.m.outputs)},
+            {'name': 'Settings',
+                'columns': ['Name','Name Vertical Position','Name Horizontal Position','Inputs orientation','Outputs Orientation'],
+                'data': [this.mu]}];
 
-        // properties
-        let prop_div = this.content.append('div').attr('id', 'properties');
-        prop_div.append('h3').text('Properties');
-
-        let prop_table = prop_div.append('table');
-        let prop_thead = prop_table.append('thead');
-        let	prop_tbody = prop_table.append('tbody');
-        prop_thead.append('tr').selectAll('th').data(['Name','Value','Unit','Info','Example']).enter()
-            .append('th').text(function (column) { return column; });
-
-        let prop_row = prop_tbody.selectAll("tr").data(d3.entries(this.mu.model.info.properties));
-        prop_row = prop_row.enter().append("tr");
-        prop_row.append('td').text(function (d) { return d.value.name });
-        let prop_input = prop_row.append('td').append("input");
-        prop_row.append('td').text(function (d) { return d.value.unit });
-        prop_row.append('td').text(function (d) { return d.value.info });
-        prop_row.append('td').text(function (d) { return d.value.example });
-
-        prop_input.attr("id", function (d) { return d.key; })
-            .attr("name", function (d) { return d.key; })
-            .attr("type", "text")
-            .attr("value", function (d) { return prop_data[d.key] })
-            .on('keyup', function (d) {
-                if (d3.event.keyCode === 13) {
-                    post('set_model_property', {'model': obj.mu.id, 'property': d.key, 'value': this.value})
-                }
+        this.content.append('div').attr('class','tab')
+            .selectAll('.tablink').data(data).enter()
+            .append('button').attr("class", "tablink")
+            .text(function (d) { return d.name })
+            .on('click', function (d) {
+                obj.content.selectAll('.tablink').classed('active', false);
+                d3.select(this).classed('active', true);
+                obj.content.selectAll('.section').style('display', 'none');
+                obj.content.select('.section#'+d.name).style('display', 'block');
             })
-            .on('blur', function (d) {
-                post('set_model_property', {'model': obj.mu.id, 'property': d.key, 'value': this.value})
-            });
+            .classed('active', function (d) { return (d.name==='Properties') });
 
-        // Inputs & Outputs
-        let docks = this.content.selectAll(".docks").data(this.mu.model.info.docks);
-        docks = docks.enter().append("div").classed("docks", true).attr('id', function (d) { return d.direction });
-        docks.append('h3').text(function (d) {
-            switch (d.direction){
-                case 'input': return 'Inputs';
-                case 'output': return 'Outputs';
-                default: return 'Invalid dock';
+        let sections = this.content.selectAll('.section').data(data)
+            .enter().append('div').attr('class', 'section')
+            .attr('id', function (d) { return d.name })
+            .style('display', function (d) { return (d.name==='Properties') ? 'block' : 'none' });
+        sections.filter(function (d) { return d.data.length === 0; }).append('p').text('none')
+        let _table = sections.filter(function (d) { return d.data.length !== 0; }).append('table');
+        let _thead = _table.append('thead');
+        let	_tbody = _table.append('tbody');
+        _thead.append('tr').selectAll('th').data(function (d) { return d.columns}).enter()
+            .append('th').text(function (d) { return d; });
+        let _tr = _tbody.selectAll("tr").data(function (d) { return d.data }).enter().append("tr");
+
+        let tr_Properties = this.content.select('#Properties').select('tbody').selectAll('tr');
+        let tr_InOutputs = this.content.selectAll('#Inputs, #Outputs').select('tbody').selectAll('tr');
+        let tr_Settings = this.content.select('#Settings').select('tbody').selectAll('tr');
+
+        fill_tr_Properties(tr_Properties);
+        fill_tr_InOutputs(tr_InOutputs);
+        fill_tr_Settings(tr_Settings);
+
+
+        // funtions to fill tables
+        function fill_tr_Properties(tr){
+            tr.append('td').text(function (d) { return d.value.name });
+            let prop_input = tr.append('td').append("input");
+            tr.append('td').text(function (d) { return d.value.unit });
+            tr.append('td').text(function (d) { return d.value.info });
+            tr.append('td').text(function (d) { return d.value.example });
+            prop_input.attr("id", function (d) { return d.key; })
+                .attr("name", function (d) { return d.key; })
+                .attr("type", "text")
+                .attr("value", function (d) { return obj.mu.properties[d.key] })
+                .on('keyup', async function (d) { if (d3.event.keyCode === 13) { await post_property(obj.mu.id, d.key, this.value) }})
+                .on('blur', async function (d) { await post_property(obj.mu.id, d.key, this.value) });
+            async function post_property(id, key, val) {
+                await post('set_mu_property', {'mu_id': id, 'property': key, 'value': val});
             }
-        });
+        }
+        function fill_tr_InOutputs(tr){
+            tr.append('td').text(function (d) { return d.name });
+            tr.append('td').text(function (d) { return d.unit });
+            tr.append('td').text(function (d) { return d.info });
+            tr.append('td').text(function (d) { return d.example });
+        }
 
-        let table = docks.append('table');
-        let thead = table.append('thead');
-        let	tbody = table.append('tbody');
+        function fill_tr_Settings(tr){
+            let settings = [
+                {'class':'setting name','id':'name','type': 'input', 'default': obj.mu.name, 'mu_id': obj.mu.id},
+                {'class':'setting name_pos','id':'vertical','type': 'select', 'default': obj.mu.name_v_position,
+                    'mu_id': obj.mu.id,'options':['top outside', 'top inside', 'center', 'bottom inside', 'bottom outside']},
+                {'class':'setting name_pos','id':'horizontal','type': 'select', 'default': obj.mu.name_h_position,
+                    'mu_id': obj.mu.id, 'options':['left outside', 'left inside', 'center', 'right inside', 'right outside']},
+                {'class':'setting _orientation','id':'input_o','type': 'select', 'default': obj.mu.input_orientation,
+                    'mu_id': obj.mu.id, 'options':['top','bottom','left','right'], 'dock': 'input'},
+                {'class':'setting _orientation','id':'output_o','type': 'select', 'default': obj.mu.output_orientation,
+                    'mu_id': obj.mu.id, 'options':['top','bottom','left','right'], 'dock': 'output'}];
 
-        thead.append('tr').selectAll('th').data(['Name','Unit','Info','Example']).enter()
-            .append('th').text(function (column) { return column; });
+            let tds = tr.selectAll('.setting').data(settings).enter().append('td');
+            tds.append(function (d) { return document.createElement(d.type) })
+                .attr('id', function (d) { return d.id  }).attr('class', function (d) { return d.class  });
 
-        let ports = tbody.selectAll("tr").data(function (d) { return d.ports });
-        ports = ports.enter().append("tr");
-        ports.append('td').text(function (d) { return d.name });
-        ports.append('td').text(function (d) { return d.unit });
-        ports.append('td').text(function (d) { return d.info });
-        ports.append('td').text(function (d) { return d.example });
+            tds.select('#name')
+                .attr("type", "text").attr("value", function (d) { return d.default })
+                .on('keyup', async function (d) {
+                    obj.title.select('b').property('textContent', this.value);
+                    main.select('#mu_'+d.mu_id).select(".model_name").text(this.value);
+                    if (d3.event.keyCode === 13) { await post_model_name(d.mu_id, this.value) }
+                })
+                .on('blur', async function (d) { await post_model_name(d.mu_id, this.value) });
+            async function post_model_name(id, val) {
+                await post('set_mu_name', {'mu_id': id, 'name': val}, true);
+            }
 
-        // settings
-        let set_div = this.content.append('div').attr('id', 'settings');
-        set_div.append('h3').text('Settings');
+            tds.selectAll('.name_pos')
+                .on('change', async function (d) {
+                    await post('set_mu_name_pos',
+                        {'mu_id': d.mu_id, 'axis': d.id, 'position': this.value},
+                        true);
+                });
 
-        let set_table = set_div.append('table');
-        let set_thead = set_table.append('thead');
-        let	set_tbody = set_table.append('tbody');
-        set_thead.append('tr').selectAll('th').data(['Name','Name Vertical Position','Name Horizontal Position','Inputs orientation','Outputs Orientation']).enter()
-            .append('th').text(function (column) { return column; });
-
-        let set_row = set_tbody.append("tr");
-        set_row.append('td').append("input").attr("type", "text").attr("value", this.mu.name)
-            .on('keyup', async function (d) {
-                if (d3.event.keyCode === 13) {
-                    await post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true);
-                    models.activate(obj.mu.id);
-                }
-                obj.title.select('b').property('textContent', this.value);
-                main.select('#mu_'+obj.mu.id).select(".model_name").text(this.value);
-            })
-            .on('blur', async function (d) {
-                await post('set_model_name', {'mu_id': obj.mu.id, 'name': this.value}, true);
-                models.activate(obj.mu.id);
-            });
-        // vertical position
-        let set_name_v_pos = set_row.append('td').append("select")
-            .attr('id', 'name_pos')
-            .on('change', function (d) {
-                let pos = d3.select(this).property('value');
-                post('set_model_name_position', {'mu_id': obj.mu.id, 'axis': 'vertical', 'position': pos}, true);
-            });
-        set_name_v_pos.selectAll('option').data(['top outside', 'top inside', 'center', 'bottom inside', 'bottom outside'])
-            .enter().append('option')
-            .attr("value", function (d) { return d })
-            .text(function (d) { return d });
-        set_name_v_pos.property('value',function (d) { return obj.mu.name_v_position  });
-        // horizontal position
-        let set_name_h_pos = set_row.append('td').append("select")
-            .attr('id', 'name_pos')
-            .on('change', function (d) {
-                let pos = d3.select(this).property('value');
-                post('set_model_name_position', {'mu_id': obj.mu.id, 'axis': 'horizontal', 'position': pos}, true);
-            });
-        set_name_h_pos.selectAll('option').data(['left outside', 'left inside', 'center', 'right inside', 'right outside'])
-            .enter().append('option')
-            .attr("value", function (d) { return d })
-            .text(function (d) { return d });
-        set_name_h_pos.property('value',function (d) { return obj.mu.name_h_position  });
-
-        set_row.append('td').append("select").attr('id', 'input').classed('orientation',true);
-        set_row.append('td').append("select").attr('id', 'output').classed('orientation',true);
-        let set_orientation =  set_row.selectAll(".orientation");
-
-        set_orientation
-            .on('change', function (d) {
-                let or_in = set_row.select('#input').property('value');
-                let or_out = set_row.select('#output').property('value');
-                if (or_in === or_out){
-                    d3.select(this).style('background-color', 'red');
-                } else {
-                    d3.select(this).style('background-color', 'white');
-                    let direction = d3.select(this).attr('id');
-                    let val = set_row.select('#'+direction).property('value');
-                    post('set_model_dock_orientation', {'mu_id': obj.mu.id, 'dock': direction, 'orientation': val}, true);
-                }
-            })
-            .selectAll('option').data(['top','bottom','left','right']).enter()
-            .append('option')
-            .attr("value", function (d) { return d })
-            .text(function (d) { return d });
-
-        set_orientation
-            .property('value',function (d) {
-                let direction = d3.select(this).attr('id');
-
-                let or_in = obj.mu.input_orientation;
-                let or_out = obj.mu.output_orientation;
-                or_in = (or_in) ? or_in : 'left';
-                or_out = (or_out) ? or_out : 'right';
-
-                return (direction === 'input') ? or_in : or_out;
-            })
-
+            tds.selectAll('._orientation')
+                .on('change', async function (d) {
+                    if (tr.select('#input_o').property('value') === tr.select('#output_o').property('value')){
+                        d3.select(this).style('background-color', 'red');
+                    } else {
+                        d3.select(this).style('background-color', 'white');
+                        await post('set_mu_dock_orientation',
+                            {'mu_id': obj.mu.id, 'dock': d.dock, 'orientation': this.value},
+                            true);
+                    }
+                });
+            tds.selectAll('select').selectAll('option').data(function (d) { return d.options })
+                .enter().append('option')
+                .attr("value", function (d) { return d })
+                .text(function (d) { return d });
+            tds.selectAll('select').property('value',function (d) { return d.default  });
+        }
     }
 
     async update_custom_property_view() {
         if (!this.mu) { this.content.html(""); return }
         this.content.html("");
-        let src = '/model_view?MU_id=' + this.mu.id + '&view=properties';
+        let src = '/model_view?mu_id=' + this.mu.id + '&view=properties';
         this.menu.select("#properties").append("img")
             .attr("src", "static/images/icons/open.png")
             .style("width", "14px").style("height", "14px").style("margin-left", "15px")
@@ -551,6 +533,33 @@ class View {
 
 
     async update_add_model() {
+        let all_models = {};
+        for (let id in agent_data.models){
+            let model = agent_data.models[id];
+
+            let t = model.topic;
+            let n = model.name;
+            let v = model.version;
+
+            if (!(t in all_models)){ all_models[t] = {} }
+            if (!(n in all_models[t])){ all_models[t][n] = {} }
+
+            all_models[t][n][v] = model.id;
+        }
+
+        all_models = sort_dict(all_models);
+
+        function sort_dict(dict){
+            let new_dict = {};
+            let sorted_key = Object.keys(dict).sort();
+            for (let i in sorted_key){
+                let key = sorted_key[i];
+                let value = dict[key];
+                new_dict[key] = (typeof value === typeof {}) ? sort_dict(value) : value
+            }
+            return new_dict;
+        }
+
         let obj = this;
         // Title
         this.content.html("");
@@ -613,10 +622,11 @@ class View {
                 if (name === "") {name_inp.style("background-color","red"); return; }
                 name_inp.style("background-color","white");
                 let v = v_sel.property("selectedOptions")[0].__data__;
-                await models.add(name, v.value.id);
+                await models.add(name, v.value);
 
-                let mu = agent_data.model_used[agent_data.model_used.length-1];
-                models.activate(mu.id);
+                let ids = Object.keys(agent_data.model_used);
+                for(let i=0; i<ids.length;i++) ids[i] = parseInt(ids[i]);
+                models.activate(Math.max(...ids));
             });
         // trigger first change
         t_sel.dispatch('change');

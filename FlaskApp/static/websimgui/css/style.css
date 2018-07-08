@@ -245,5 +245,37 @@
 #wsg #view #view_content #properties h3{
     margin-top: 0px;
 }
+#wsg #view #view_content .tab{
+    color: navy;
+}
+
+#wsg #view #view_content .tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+/* Style the buttons inside the tab */
+#wsg #view #view_content .tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    font-size: 17px;
+    width: 25%;
+}
+
+/* Change background color of buttons on hover */
+#wsg #view #view_content .tab button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+#wsg #view #view_content .tab button.active {
+    background-color: #ccc;
+}
 
 

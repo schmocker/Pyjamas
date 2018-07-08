@@ -1,20 +1,33 @@
+$.ajaxSetup({
+    timeout:1000 // in milliseconds
+});
+
 async function post(fnc_str, data_dict, rebuild){
-    data_dict['agent'] = agent_data.id;
+
+    data_dict['agent_id'] = agent_data.id;
     let data = await $.post("/websimgui", {
         'fnc': fnc_str,
-        'data': JSON.stringify(data_dict)
+        'data': JSON.stringify(data_dict),
+        timeout: 1000
     });
-    data = JSON.parse(data);
-    if (data === false){
-        alert('POST request returned "false", check the request for the function "' + fnc_str + '"!');
-    } else {
-        await setData(data);
-        if (rebuild){
-            await build_all();
+
+    try {
+        data = JSON.parse(data);
+        if (data === true) {
+        } else if ("error" in data){
+            alert(data.error);
         } else {
-            await update_all();
+            agent_data = data;
+            if (rebuild){
+                await build_all();
+            } else {
+                await update_all();
+            }
         }
+    } catch (e) {
+        alert(e.message);
     }
+    return false;
 }
 
 async function get(query_name, data_dict){
@@ -22,10 +35,19 @@ async function get(query_name, data_dict){
         'agent': agent_data.id,
         'fnc': query_name,
         'data': JSON.stringify(data_dict)});
-    if (data === "false"){
-        alert('GET request returned "false", check the request for the query "' + query_name + '"!');
-        return false
-    } else {
-        return data;
+    try {
+        data = JSON.parse(data);
+        if (data){
+            if ("error" in data){
+                alert(data.error);
+            } else {
+                return data;
+            }
+        } else {
+            log('no data received with GET request: '+query_name);
+        }
+    } catch(e) {
+        alert(e.message);
     }
+    return false;
 }

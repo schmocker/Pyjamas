@@ -5,7 +5,7 @@ import json
 from flask import Markup
 import markdown2
 from .app import app
-
+import sys
 
 @app.route('/')
 def home():
@@ -55,7 +55,6 @@ def agents():
 @app.route('/websimgui', methods=['GET', 'POST'])
 def web_sim_gui():
     try:
-
         if request.method == 'GET':
             fnc = request.args.get('fnc', None, str)
             data = request.args.get('data', None, str)
@@ -66,17 +65,11 @@ def web_sim_gui():
                 db_agent = Agent.get_agent(agent_id)
                 return json.dumps(db_agent.dict)
 
-            if fnc == 'get_model_selection':
-                return json.dumps(Model.get_all())
-
             elif fnc == 'get_model_readme':
-                return Model_used.get_readme(data['mu_id'])
-
-            elif fnc == 'get_model_properties':
-                return json.dumps(Model_used.get_properties(data['model']))
+                return json.dumps({'html': Model_used.get_readme_byID(data['mu_id'])})
 
             elif fnc == 'get_mu_results':
-                results = Model_used.get_results(data['mu_id'], data['mu_run'])
+                results = Model_used.get_results_byID(data['mu_id'], data['mu_run'])
                 filter = data.get('filter')
 
                 '''
@@ -95,9 +88,11 @@ def web_sim_gui():
                         for f in v:
                             filtered_results[k] = filtered_results[k][f]
                     results['result'] = filtered_results
+                json_str = json.dumps(results)
+                if sys.getsizeof(json_str) > 1E6:
+                    raise ValueError(f"to much data in result (max result size is set to 1E6 bytes)")
 
-                results = json.dumps(results)
-                return results
+                return json_str
 
         elif request.method == 'POST':
             fnc = request.form.get('fnc', None, str)
@@ -105,52 +100,52 @@ def web_sim_gui():
             data = json.loads(data) if data else data
             request_return = None
 
-            if fnc == 'set_model_pos':
-                Model_used.set_position(data['model'], data['x'], data['y'])
+            if fnc == 'set_mu_pos':
+                Model_used.set_position(data['mu_id'], data['x'], data['y'])
 
-            elif fnc == 'set_model_size':
-                Model_used.set_size(data['model'], data['width'], data['height'])
+            elif fnc == 'set_mu_size':
+                Model_used.set_size(data['mu_id'], data['width'], data['height'])
 
-            elif fnc == 'set_model_property':
-                Model_used.set_property(data['model'], data['property'], data['value'])
+            elif fnc == 'set_mu_property':
+                Model_used.set_property_byID(data['mu_id'], data['property'], data['value'])
 
-            elif fnc == 'set_model_name':
+            elif fnc == 'set_mu_name':
                 Model_used.set_name(data['mu_id'], data['name'])
 
-            elif fnc == 'set_model_name_position':
+            elif fnc == 'set_mu_name_pos':
                 Model_used.set_name_position(data['mu_id'], data['axis'], data['position'])
 
 
-            elif fnc == 'set_model_dock_orientation':
+            elif fnc == 'set_mu_dock_orientation':
                 Model_used.set_dock_orientation(data['mu_id'], data['dock'], data['orientation'])
 
             elif fnc == 'add_connection':
-                Connection.add(data['fk_model_used_from'], data['port_id_from'],
-                               data['fk_model_used_to'], data['port_id_to'])
+                Connection.add(data['fk_mu_from'], data['port_id_from'],
+                               data['fk_mu_to'], data['port_id_to'])
 
-            elif fnc == 'add_model_used':
-                agent = Agent.get_agent(data['agent'])
+            elif fnc == 'add_mu':
+                agent = Agent.get_agent(data['agent_id'])
                 model = Model.get_model(data['fk_model'])
-                id = Model_used.add(data['name'], model, agent)
-                request_return = id
+                mu_id = Model_used.add(data['name'], model, agent)
+                request_return = mu_id
 
             elif fnc == 'remove_connection':
                 Connection.remove(data['connection'])
 
-            elif fnc == 'remove_model':
-                Model_used.remove(data['model'])
+            elif fnc == 'remove_mu':
+                Model_used.remove_byID(data['mu_id'])
 
             elif fnc == 'start':
-                Agent.start_agent(data['agent'])
+                Agent.start_agent(data['agent_id'])
 
             elif fnc == 'pause':
-                Agent.pause_agent(data['agent'])
+                Agent.pause_agent(data['agent_id'])
 
             elif fnc == 'stop':
-                Agent.stop_agent(data['agent'])
+                Agent.stop_agent(data['agent_id'])
 
             elif fnc == 'kill':
-                Agent.kill_agent(data['agent'])
+                Agent.kill_agent(data['agent_id'])
 
             elif fnc == 'update':
                 Model.update_all()
@@ -159,22 +154,19 @@ def web_sim_gui():
                 fnc = 'None' if fnc is None else fnc
                 raise ValueError(f"Function '{fnc}' is not defined for websimgui")
 
-            if 'agent' in data.keys():
-                data = Agent.dict_agent(data['agent'])
-                data['request_return'] = request_return
-                return json.dumps(data)
-            else:
-                return json.dumps(True)
+            return json.dumps(True)
 
     except Exception as e:
-        print(f"no valid {request.method} request ({e})")
-        return json.dumps(False)
+        msg = f"no valid {request.method} request ({e})"
+        print(msg)
+        error = {'error': msg}
+        return json.dumps(error)
 
 
 # @login_required
 @app.route('/model_view')
 def model_view():
-    mu_id = request.args.get('MU_id', None, int)
+    mu_id = request.args.get('mu_id', None, int)
     view = request.args.get('view', None, str)
 
     p = Model_used.get_path_folders(mu_id)

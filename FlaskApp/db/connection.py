@@ -19,20 +19,27 @@ class Connection(db.Model):
         self.port_id_to = port_id_to
 
     @property
-    def list(self):
-        atrs = self.__class__.__table__.columns.keys()
-        return {atr: getattr(self, atr) for atr in atrs}
+    def dict(self):
+        attributes = self.__class__.__table__.columns.keys()
+        return {atr: getattr(self, atr) for atr in attributes}
 
 
 
     @classmethod
     def add(cls, fk_model_used_from, port_id_from, fk_model_used_to, port_id_to):
-        obj = cls(fk_model_used_from=fk_model_used_from,
-                  port_id_from=port_id_from,
-                  fk_model_used_to=fk_model_used_to,
-                  port_id_to=port_id_to)
-        db.session.add(obj)
-        db.session.commit()
+        obj = Connection.query.filter_by(fk_model_used_from=fk_model_used_from,
+                                         port_id_from=port_id_from,
+                                         fk_model_used_to=fk_model_used_to,
+                                         port_id_to=port_id_to).first()
+        if not obj:
+            obj = cls(fk_model_used_from=fk_model_used_from,
+                      port_id_from=port_id_from,
+                      fk_model_used_to=fk_model_used_to,
+                      port_id_to=port_id_to)
+            db.session.add(obj)
+            db.session.commit()
+        else:
+            raise ValueError('Connection already exists')
 
     @classmethod
     def remove(cls, id):

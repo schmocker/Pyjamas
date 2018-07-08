@@ -36,7 +36,7 @@ class Models {
         //////////// models ////////////
         ////////////////////////////////
         //join
-        let models = main.selectAll(".model").data(agent_data.model_used);
+        let models = main.selectAll(".model").data(d3.values(agent_data.model_used));
 
 
         //exit: delete unused models
@@ -45,8 +45,7 @@ class Models {
         //enter: create new if need
         models = models.enter().append("g")
             .classed("model", true)
-            .attr("id", function (d) {
-                return "mu_"+d.id;
+            .attr("id", function (d) { return "mu_"+d.id;
             });
         models.append("rect")
             .classed("box", true)
@@ -67,8 +66,12 @@ class Models {
         //////////// docks ////////////
         ///////////////////////////////
         //join
-        let docks = models.selectAll(".dock").data(function (d) {
-            return d.model.info.docks
+        let docks = models.selectAll(".dock").data(function (mu) {
+            let m = agent_data.models[mu.fk_model];
+            let docks = {};
+            docks.inputs = m.inputs;
+            docks.outputs = m.outputs;
+            return d3.entries(docks);
         });
 
         //exit
@@ -78,9 +81,7 @@ class Models {
         docks = docks.enter()
             .append("g")
             .classed("dock", true)
-            .each(function (d, i) {
-                //d.form = obj.array.forms[d.orientation][d.direction];
-            });
+            .attr("id", function (d) {d.key});
 
         // update
         docks = models.selectAll(".dock");
@@ -89,7 +90,7 @@ class Models {
         //////////// ports ////////////
         ///////////////////////////////
         // join
-        let ports = docks.selectAll(".port").data(function (d) { return d.ports });
+        let ports = docks.selectAll(".port").data(function (m) { return d3.entries(m.value) });
 
         //exit
         ports.exit().remove();
@@ -120,16 +121,10 @@ class Models {
             model.selectAll(".port").each(await async function (d,i){
                 d.model = d_model.id;
                 d3.select(this).select(".arrow")
-                    .attr("id", function (d) {
-                        return "m" + d_model.id + "_" + d.key;
-                    })
+                    .attr("id", function (d) { return d.key })
             })
         });
-
-
         await this.update();
-
-
     }
 
 
@@ -193,34 +188,39 @@ class Models {
             let docks = model.selectAll(".dock");
 
             docks.each(await async function (d,i){ // for each dock in this model
+                d.direction = d.key.substring(0, d.key.length - 1);
+                d.orientation = d_model[d.direction+'_orientation'];
+                d.numOfPorts = Object.keys(d.value).length;
+
                 let dock = d3.select(this);
                 let d_dock = d;
+
                 let ports = dock.selectAll(".port");
 
-                let form = obj.array.forms[d.orientation][d.direction];
+                let form = obj.array.forms[d_dock.orientation][d_dock.direction];
 
 
                 let x0 = d_model.x;
                 let y0 = d_model.y;
                 let dx;
                 let dy;
-                switch (d.orientation) {
+                switch (d_dock.orientation) {
                     case "left":
                     case "right":
                         dx = 0;
-                        dy = d_model.height / d.ports.length;
+                        dy = d_model.height / d_dock.numOfPorts;
                         y0 += dy/2;
                         break;
                     case "top":
                     case "bottom":
-                        dx = d_model.width / d.ports.length;
+                        dx = d_model.width / d_dock.numOfPorts;
                         dy = 0;
                         x0 += dx/2;
                         break;
                 }
                 let alignment_baseline;
                 let text_anchor;
-                switch (d.orientation) {
+                switch (d_dock.orientation) {
                     case "left":
                         alignment_baseline = "central";
                         text_anchor = "start";
@@ -247,7 +247,7 @@ class Models {
                     .attr("y", function(d,i){
                         return y0 + i * dy + obj.text_offset[d_dock.orientation][1];
                     })
-                    .text(function(d) { return d.name; })
+                    .text(function(d) { return d.value.name; })
                     .attr("text-anchor", text_anchor)
                     .attr("alignment-baseline", alignment_baseline);
 
@@ -274,9 +274,8 @@ class Models {
 
 
     async add(name, fk_model){
-        await post("add_model_used",
+        await post("add_mu",
             {
-                'agent': agent_data.id,
                 'name': name,
                 'fk_model': fk_model
             }, true);
@@ -294,10 +293,9 @@ class Models {
     }
 
     async remove(mu){
-        await post("remove_model",
+        await post("remove_mu",
             {
-                'agent': agent_data.id,
-                'model': mu.id
+                'mu_id': mu.id
             }, true);
         view.set_mu(null);
     }
@@ -321,10 +319,9 @@ class Models {
                 await update_all();
             })
             .on("end", await async function (d) {
-                await post("set_model_pos",
+                await post("set_mu_pos",
                     {
-                        'agent': agent_data.id,
-                        'model': d.id,
+                        'mu_id': d.id,
                         'x': d.x,
                         'y': d.y
                     }, false);
@@ -352,10 +349,9 @@ class Models {
             .on("end", await async function (d) {
                 let model = this.parentNode.parentNode.parentNode;
                 let d_model = model.__data__;
-                await post("set_model_pos",
+                await post("set_mu_pos",
                     {
-                        'agent': agent_data.id,
-                        'model': d_model.id,
+                        'mu_id': d_model.id,
                         'x': d_model.x,
                         'y': d_model.y
                     }, false);
@@ -372,10 +368,9 @@ class Models {
                 await update_all();
             })
             .on("end", async function (d) {
-                await post("set_model_size",
+                await post("set_mu_size",
                     {
-                        'agent': agent_data.id,
-                        'model': d.id,
+                        'mu_id': d.id,
                         'width': d.width,
                         'height': d.height
                     }, false);
