@@ -154,7 +154,12 @@ def web_sim_gui():
                 fnc = 'None' if fnc is None else fnc
                 raise ValueError(f"Function '{fnc}' is not defined for websimgui")
 
-            return json.dumps(True)
+            if 'agent_id' in data.keys():
+                data = Agent.dict_agent(data['agent_id'])
+                data['request_return'] = request_return
+                return json.dumps(data)
+            else:
+                return json.dumps(True)
 
     except Exception as e:
         msg = f"no valid {request.method} request ({e})"
