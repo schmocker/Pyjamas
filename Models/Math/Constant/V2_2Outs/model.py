@@ -12,8 +12,8 @@ class Model(Supermodel):
         self.outputs['const1'] = Output({'name': 'Number1', 'unit': 'int', 'dimensions': []})
         self.outputs['const2'] = Output({'name': 'Number2', 'unit': 'int', 'dimensions': []})
 
-        self.properties['number1'] = Property(0,float, {'name': 'Number 1', 'unit': 'int', 'dimensions': []})
-        self.properties['number2'] = Property(0,float, {'name': 'Number 2', 'unit': 'int', 'dimensions': []})
+        self.properties['number1'] = Property(default=0, data_type=float, name='Number 1', unit='-')
+        self.properties['number2'] = Property(default=0, data_type=float, name='Number 2', unit='-')
 
     async def func_peri(self, prep_to_peri=None):
 

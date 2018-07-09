@@ -4,6 +4,8 @@ import importlib
 import logging
 import errno
 import time
+import json
+
 
 class Port():
     def __init__(self, name, unit='undefined', info='-', example='-', **kwargs):
@@ -103,22 +105,5 @@ class CreateDirFileHandler(logging.FileHandler):
             except OSError as exc:
                 if exc.errno == errno.EEXIST and os.path.isdir(path):
                     pass
-                else: raise
-
-
-def get_model_info(p, t, m, v):
-    def gen_dock(direction, in_out_puts):
-        orientation = "left" if direction == "input" else "right"
-        ports = [gen_port(key, in_out_put) for key, in_out_put in in_out_puts.items()]
-        return {'direction': direction, 'orientation': orientation, 'ports': ports}
-
-    def gen_port(key, in_out_put):
-        in_out_put['key'] = key
-        return in_out_put
-
-    try:
-        info = importlib.import_module(f"{p}.{t}.{m}.{v}.model").Model(1, '').get_info()
-        docks = [gen_dock(direction, info[direction + "s"]) for direction in ['input', 'output']]
-        return {'docks': docks, 'properties': info["properties"]}
-    except Exception as e:
-        print(f" --> Error updating {p}.{t}.{m}.{v}.model ({e})")
+                else:
+                    raise

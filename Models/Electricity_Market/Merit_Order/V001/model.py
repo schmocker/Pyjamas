@@ -22,8 +22,9 @@ class Model(Supermodel):
         self.inputs['distance_costs'] = Input(name='Distance costs', unit='$/J',
                                               info='Distance costs for each power plant and distribution network')
 
-        self.properties["filter_ts"] = Property(0, int, name='Filter time step for view', info='Filter info', example='exampl')
-        self.properties["filter_dn"] = Property(0, int, name='Filter distribution network for view')
+        self.properties["filter_ts"] = Property(default=0, data_type=int, name='Filter time step for view', info='Filter info', example='exampl')
+        self.properties["filter_dn"] = Property(default=0, data_type=int, name='Filter distribution network for view')
+        self.properties["filter_dn"] = Property(default=0, data_type=int, name='Filter distribution network for view')
 
         self.outputs['market_prices'] = Output(name='Market prices', unit='$',
                                                info='Market prices for each distribution network and time step')
@@ -71,8 +72,10 @@ class Model(Supermodel):
                 d_c = d_c[sort_order]
                 c = m_c + d_c  # for each pp
                 p = p[sort_order]
-
-                price = c[np.where(np.cumsum(p) >= d)[0][0]]
+                try:
+                    price = c[np.where(np.cumsum(p) >= d)[0][0]]
+                except Exception as E:
+                    price = np.max(c)
                 # plot_merit_order(m_c, d_c, p, d, price)
 
 

@@ -24,10 +24,10 @@ class Model(Supermodel):
         self.outputs['weather_data'] = Output(name='weather data of KWs', unit='date, °C, m/s, ???', info='????')
 
         # define properties
-        self.properties['T_offset'] = Property(0., float, name='temperature offset', unit='%', info="offset of temperature in %")
-        self.properties['u_offset'] = Property(0., float, name='wind speed offset', unit='%', info="offset of wind speed in %")
-        self.properties['P_offset'] = Property(0., float, name='radiation offset', unit='%', info="offset of radiation in %")
-        self.properties['ref_year'] = Property(2000, int, name='reference year', unit='-', info="reference year for modeled weather")
+        self.properties['T_offset'] = Property(default=0., data_type=float, name='temperature offset', unit='%', info="offset of temperature in %")
+        self.properties['u_offset'] = Property(default=0., data_type=float, name='wind speed offset', unit='%', info="offset of wind speed in %")
+        self.properties['P_offset'] = Property(default=0., data_type=float, name='radiation offset', unit='%', info="offset of radiation in %")
+        self.properties['ref_year'] = Property(default=2000, data_type=int, name='reference year', unit='-', info="reference year for modeled weather")
 
         # define persistent variables
         self.data_hist_self = None

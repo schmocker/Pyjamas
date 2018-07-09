@@ -13,9 +13,14 @@ from Models import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d # is used even if warning says otherwise!
 from scipy.interpolate import griddata
 from pytz import timezone
+from dotenv import load_dotenv
+from os import environ
 
+from Models._utils.time import utc_time2datetime
+from Models._utils.time import datetime2utc_time
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -25,14 +30,14 @@ class Model(Supermodel):
         super(Model, self).__init__(model_id, name)
 
         # define inputs
-        self.inputs['t'] = Input(name='Zeitarray')
+        self.inputs['t'] = Input('Zeitarray')
 
         # define outputs
-        self.outputs['kw_park'] = Output(name='Kraftwerkspark')
+        self.outputs['kw_park'] = Output('Kraftwerkspark')
 
         # define properties
         # Property(<initial value>,<type>,<info dictionary>)
-        self.properties['prop1'] = Property(10, float, name='property1')
+        self.properties['prop1'] = Property('property1', default=10, data_type=float)
 
         # define persistent variables
         self.pers_variable_0 = 5
@@ -60,7 +65,6 @@ class Model(Supermodel):
         # only first time value for interpolation
         kw_time = t_in[0]
 
-        # TODO query all data
         # query Kraftwerk
         db_kw = self.db.query(Kraftwerk).all()
         db_kw_id = self.db.query(Kraftwerk.id).order_by(Kraftwerk.id).all()
@@ -85,8 +89,6 @@ class Model(Supermodel):
         # query Co2Preis
         db_co2 = self.db.query(Co2Preis).all()
         db_co2_t = [i.datetime for i in db_co2]
-        db_co2_lat = [i.lat for i in db_co2]
-        db_co2_long = [i.long for i in db_co2]
         db_co2_preis = [i.preis for i in db_co2]
 
         # query Entsorgungspreis
@@ -123,23 +125,18 @@ class Model(Supermodel):
                 db_kw_lat = kw.lat
                 db_kw_long = kw.long
 
-                kw_bsp = interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis,
-                                     db_kw_lat, db_kw_long, kw_time)
+                kw_bsp = self.interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis,
+                                          db_kw_lat, db_kw_long, kw_time)
 
             bsp = bsp + [kw_bsp]
         bsp = np.array(bsp)
 
         # CO2-Preis Interpolation
-        co2 = []
+        co2_preis = []
         for kw in db_kw:
             print("CO2-Preis", kw.id, kw.bezeichnung)
-
-            db_kw_lat = kw.lat
-            db_kw_long = kw.long
-
-            co2 = co2 + [self.interpol_3d(db_co2_t, db_co2_lat, db_co2_long, db_co2_preis,
-                                          db_kw_lat, db_kw_long, kw_time)]
-        co2 = np.array(co2)
+            co2_preis = co2_preis + [self.interpol_1d(db_co2_t, db_co2_preis, kw_time)]
+        co2_preis = np.array(co2_preis)
 
         # Entsorgungspreis Interpolation
         ents = []
@@ -168,7 +165,7 @@ class Model(Supermodel):
 
             pinst = pinst + [self.interpol_1d(db_pinst_t, db_pinst_p, kw_time)]
         pinst = np.array(pinst)
-        
+
         # Verguetung Interpolation
         verg = []
         for kw in db_kw:
@@ -183,20 +180,62 @@ class Model(Supermodel):
             db_kw_long = kw.long
 
             verg = verg + [self.interpol_3d(db_verg_t, db_verg_lat, db_verg_long, db_verg_beitrag,
-                                             db_kw_lat, db_kw_long, kw_time)]
+                                            db_kw_lat, db_kw_long, kw_time)]
         verg = np.array(verg)
 
+        # Berechnung CO2-Kosten
+        co2_kosten = []
+        for idx, kw in enumerate(db_kw):
+            print("CO2-Kosten", kw.id, kw.bezeichnung)
+            co2_emissfakt = kw.kraftwerkstyp.brennstofftyp.co2emissFakt
+            wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
+            co2_preis = co2_preis[idx]
+            co2_kosten = co2_kosten + [co2_preis * co2_emissfakt / wirkungsgrad]
+        co2_kosten = np.array(co2_kosten)
 
+        # Berechnung Entsorgungskosten
+        ents_kosten = []
+        for idx, kw in enumerate(db_kw):
+            print("Entsorgungskosten", kw.id, kw.bezeichnung)
+            wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
+            ents = ents[idx]
+            ents_kosten = ents_kosten + [ents / wirkungsgrad]
+        ents_kosten = np.array(ents_kosten)
 
-        # TODO Berechnugnen integrieren für
-        # TODO CO2-Kosten (CO2Preise*CO2_Emiss Fakt/Wirkungsgrad)
-        # TODO Entsorgungskosten (entsorgungskosten/Wirkungsgrad)
-        # TODO Brennstoffkosten (Brennstoffpreise/Wirkungsgrad)
+        # Berechnung Brennstoffkosten
+        bs_kosten = []
+        for idx, kw in enumerate(db_kw):
+            print("Brennstoffkosten", kw.id, kw.bezeichnung)
+            wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
+            bsp = bsp[idx]
+            bs_kosten = bs_kosten + [bsp / wirkungsgrad]
+        bs_kosten = np.array(bs_kosten)
 
         # TODO assemble kwp table
         # id¦bez¦lat¦long¦p_inst¦fk_KWT¦bez_KWT¦bez_subtyp¦wirk.¦spez_opex¦capex¦p_typ¦spez_info¦ents.preis¦verg¦
         # fk_bst¦bez_bst¦co2emissfakt¦bs_preis¦co2_preis¦co2kosten¦entskosten¦brennstoffkosten
         # set output
+
+        kwp = {"id":db_kw_id,
+               "bezeichnung":a,
+               "lat":a,
+               "long":a,
+               "p_inst":a,
+               "fk_kraftwerkstyp":a,
+               "bez_kraftwerkstyp":a,
+               "bez_subtyp":a,
+               "wirkungsgrad":a,
+               "spez_opex":a,
+               "capex":a,
+               "p_typisch":a,
+               "spez_info":a,
+               "entsorgungspreis":a,
+               "verguetung":a,
+               "co2_kosten":a,
+               "ents_kosten":a,
+               "bs_kosten":a,
+               }
+
         self.set_output("kw_park", kwp)
 
         # TODO remove if func_post is unused
@@ -519,12 +558,18 @@ class Model(Supermodel):
 
 
 def start_db():
-    db_path = 'db/powerplants.db'
-    if not os.path.isfile(db_path):
-        open(db_path, 'a').close()
+    load_dotenv()
+    db_path = environ.get("KW_DB")
 
     # an engine is the real DB
-    engine = create_engine('sqlite:///'+db_path)
+    engine = create_engine(db_path)
+
+    # uncomment for local db
+    # db_path = 'db/powerplants.db'
+    # if not os.path.isfile(db_path):
+    # open(db_path, 'a').close()
+    # engine = create_engine('sqlite:///'+db_path)
+
     # delete all tables
     Base.metadata.drop_all(engine)
     # create all tables

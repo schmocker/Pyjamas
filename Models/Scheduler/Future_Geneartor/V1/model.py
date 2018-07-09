@@ -18,9 +18,9 @@ class Model(Supermodel):
 
         self.outputs['times'] = Output(name='Futures', unit='s', info='utc time array in seconds since epoch')
 
-        self.properties["interval"] = Property(1, float, name='Interval time',
+        self.properties["interval"] = Property(default=1, data_type=float, name='Interval time',
                                                unit='s',  info='Time between each time stamps')
-        self.properties["future_steps"] = Property(0, int, name='Number of intervals',
+        self.properties["future_steps"] = Property(default=0, data_type=int, name='Number of intervals',
                                                    unit='-',  info='Number of time stamps')
 
     async def func_birth(self):

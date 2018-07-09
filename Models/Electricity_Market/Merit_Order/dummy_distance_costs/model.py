@@ -9,24 +9,22 @@ class Model(Supermodel):
         super(Model, self).__init__(uuid,name)
         self.outputs['data'] = Output(name='Data')
         self.inputs['n_kw'] = Input(name='n_kw')
-        self.inputs['n_dn'] = Input(name='n_dn')
+        self.inputs['dns'] = Input(name='DistNets')
 
     async def func_peri(self, prep_to_peri=None):
         n_kw = await self.get_input("n_kw")
         n_kw = int(n_kw)
-        n_dist = await self.get_input("n_dn")
-        n_dist = int(n_dist)
+        dns = await self.get_input("dns")
+        dn_ids = dns['dist_networks']
+        n_dist = len(dn_ids)
 
         pp_ids = [i for i in range(n_kw)]
         np.random.shuffle(pp_ids)
 
-        dist_ids = [i for i in range(n_dist)]
-        np.random.shuffle(dist_ids)
-
         distance_costs = [(np.random.rand(n_dist) * 20).tolist() for i in pp_ids]
 
         data = {'power_plants': pp_ids,
-                'distribution_networks': dist_ids,
+                'distribution_networks': dn_ids,
                 'costs': distance_costs}
         self.set_output("data", data)
 

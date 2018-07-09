@@ -2,6 +2,9 @@ class MeritOrderDiagram {
     constructor(parent) {
         this.run = 0;
 
+        this.power_units = {'W': 1E0,'kW': 1E3,'MW': 1E6,'GW': 1E9,'TW': 1E12};
+        this.power_unit = 'TW';
+
         this.data = null;
 
         this.div = parent.append("div").attr("class", "tooltip");
@@ -33,6 +36,9 @@ class MeritOrderDiagram {
 
         this.yAxis = this.svg.append("g")
             .classed('y_axis', true);
+
+        this.yLabel = this.createXLabel(this.svg);
+
     }
 
     async updateView(updateSpeed){
@@ -127,7 +133,20 @@ class MeritOrderDiagram {
             this.yAxis
                 .transition().duration(updateSpeed)
                 .call(d3.axisLeft(this.yScale));
+
+            this.updateXLabel(updateSpeed);
         }
+    }
+
+    createXLabel(parent){
+        return parent.append("text").attr('class', 'xLabel');
+    }
+    async updateXLabel(updateSpeed){
+        let obj = this;
+        this.yLabel
+            .transition().duration(updateSpeed)
+            .text('Power ['+this.power_unit+']')
+            .attr("transform", function() { return "translate(" + obj.xScale(obj.xScale.domain()[1]/2) + "," + obj.yScale(0-obj.yScale.domain()[1]/9) + ")"; });
     }
 
 
@@ -149,7 +168,7 @@ class MeritOrderDiagram {
                 rect[i].id = pps.ids[i];
                 rect[i].mc = pps.m_c[i];
                 rect[i].dc = pps.d_c[i];
-                rect[i].p = pps.p[i];
+                rect[i].p = pps.p[i]/this.power_units[this.power_unit];
                 if(i===0){
                     rect[i].p_i = 0;
                 } else {
@@ -161,7 +180,7 @@ class MeritOrderDiagram {
 
             data = {'rect': rect,
                 'dn_id': result.dn_id,
-                'd': result.d,
+                'd': result.d/this.power_units[this.power_unit],
                 'price': result.price};
         }
         this.data = data

@@ -1,6 +1,5 @@
 from .db_main import db, controller
 import json
-import os
 
 
 class Model_used(db.Model):
@@ -16,7 +15,7 @@ class Model_used(db.Model):
     width = db.Column(db.Integer, default=120)
     height = db.Column(db.Integer, default=60)
     properties = db.Column(db.Text, default=json.dumps({}))
-    input_orientation = db.Column(db.String(80), default='left')  # top, left, bottom, right
+    input_orientation = db.Column(db.String(80), default='left')
     output_orientation = db.Column(db.String(80), default='right')
     ###
     model = db.relationship("Model", foreign_keys=[fk_model],
@@ -33,75 +32,79 @@ class Model_used(db.Model):
     def dict(self):
         atrs = self.__class__.__table__.columns.keys()
         d = {atr: getattr(self, atr) for atr in atrs}
-
-        d['settings'] = json.loads(d['settings'])
-        d['model'] = self.model.dict
-
+        d['properties'] = json.loads(d['properties'])
         return d
 
 
     @classmethod
-    def add(cls, name, fk_model, fk_agent):
-        obj = cls(name=name, fk_model=fk_model,  fk_agent=fk_agent)
+    def add(cls, name, model, agent):
+        obj = cls(name=name, fk_model=model.id, fk_agent=agent.id)
+        props = json.loads(model.properties)
+        for key, prop in props.items():
+            props[key] = prop['default']
+        obj.properties = json.dumps(props)
+
         db.session.add(obj)
         db.session.commit()
         return obj.id
 
+    # get model by id
     @classmethod
-    def remove(cls, id):
-        obj = cls.query.filter_by(id=id).first()
-        db.session.delete(obj)
+    def get_model_used(cls, id):
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
+    def remove_byID(cls, id):
+        cls.get_model_used(id).remove()
+
+    def remove(self):
+        db.session.delete(self)
         db.session.commit()
 
-    @classmethod
-    def get_readme(cls, id):
-        m = cls.query.filter_by(id=id).first()
-        return m.model.readme
 
     @classmethod
-    def get_properties(cls, id):
-        obj = cls.query.filter_by(id=id).first()
-        props = obj.properties
-        props = '{}' if props is None else props
-        return json.loads(props)
+    def get_readme_byID(cls, id):
+        return cls.get_model_used(id).model.readme
 
     @classmethod
-    def get_results(cls, id, run):
-        obj = cls.query.filter_by(id=id).first()
+    def get_results_byID(cls, id, run):
+        obj = cls.get_model_used(id)
         result = controller.get_model_results_newer_than(obj.agent.id, obj.id, run)
         return result
 
     @classmethod
-    def set_property(cls, id, key, value):
-        obj = cls.query.filter_by(id=id).first()
-        obj.agent.set_property(obj.id, key, value)
-        if obj.properties is None:
-            props = dict()
+    def set_property_byID(cls, id, key, value):
+        cls.get_model_used(id).set_property(key, value)
+
+    def set_property(self, key, value):
+        # send to controller
+        controller.set_property(self.agent.id, self.id, key, value)
+        # update db
+        if self.properties:
+            props = json.loads(self.properties)
         else:
-            props = json.loads(obj.properties)
+            props = dict()
         props[key] = value
-        obj.properties = json.dumps(props)
+        self.properties = json.dumps(props)
         db.session.commit()
 
     @classmethod
     def set_name(cls, id, name):
-        obj = cls.query.filter_by(id=id).first()
-        obj.name = name
+        cls.get_model_used(id).name = name
         db.session.commit()
 
     @classmethod
     def set_name_position(cls, id, axis, position):
-        obj = cls.query.filter_by(id=id).first()
+        obj = cls.get_model_used(id)
         if axis == 'vertical':
             obj.name_v_position = position
-            db.session.commit()
         elif axis == 'horizontal':
             obj.name_h_position = position
-            db.session.commit()
+        db.session.commit()
 
     @classmethod
     def set_dock_orientation(cls, id, dock, orientation):
-        obj = cls.query.filter_by(id=id).first()
+        obj = cls.get_model_used(id)
         if dock == 'input':
             obj.input_orientation = orientation
         elif dock == 'output':
@@ -110,23 +113,22 @@ class Model_used(db.Model):
 
     @classmethod
     def set_position(cls, id, x, y):
-        m = cls.query.filter_by(id=id).first()
-        m.x = x
-        m.y = y
+        obj = cls.get_model_used(id)
+        obj.x = x
+        obj.y = y
         db.session.commit()
 
     @classmethod
     def set_size(cls, id, width, height):
-        obj = cls.query.filter_by(id=id).first()
+        obj = cls.get_model_used(id)
         obj.width = width
         obj.height = height
         db.session.commit()
 
     @classmethod
     def get_path_folders(cls, id):
-        return cls.query.filter_by(id=id).first().path_folders
+        return cls.get_model_used(id).path_folders
 
     @property
     def path_folders(self):
         return self.model.path_folders
-
