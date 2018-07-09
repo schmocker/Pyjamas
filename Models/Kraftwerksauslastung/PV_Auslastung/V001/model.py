@@ -11,11 +11,11 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input(name='WeatherData', info='dict')
-        self.inputs['kwDaten'] = Input(name='PowerPlantsData', info='dict')
+        self.inputs['weather'] = Input('WeatherData', info='dict')
+        self.inputs['kwDaten'] = Input('PowerPlantsData', info='dict')
 
         # define outputs
-        self.outputs['load'] = Output(name='Load', info='value[0-1]')
+        self.outputs['load'] = Output('Load', info='value[0-1]')
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -37,7 +37,7 @@ class Model(Supermodel):
         # GlobalRadiations: Measured values of global irradiance on horizontal surface [W/m^2]
         #
         # Output Arguments:
-        # Auslastung: Calculated Auslastung, output values are between [0-1]
+        # Auslastung: Calculated load(Auslastung), output values are between [0-1]
         ###################################################################################################################
         # 75% of total global radiation are captured by the tilted surface oriented towards specified direction (e.g south)
         GlobalRadiationLoss = 0.25
@@ -59,38 +59,37 @@ class Model(Supermodel):
         # Determine the load(Auslastung) PV power plant
         ###################################################################################################################
         # Input Arguments:
-        # KWDaten: Matrix holding Power plant IDs(KWIDs), foreign keys (FKs-KWT), Scaling Power, Weather data of
-        #          all power plants and other parameters as shown in the following table
-        # ----------------------------------------------------
-        # KWIDs FKKWT    Power[W]    Nabenhöhe        Z0
-        # ----------------------------------------------------
-        #   1    2(WT)   1000000       150           0.03
-        #   2    1(pv)   2000000        0          nothing =0
-        #   3    2(WT)   3000000       200           0.03
-        #   4    1(pv)   4000000        0          nothing =0
-        #   5    2(WT)   5000000       250           0.03
-        #   6    1(pv)   6000000        0          nothing =0
-        #   8    3()     1000000        0          nothing =0
-        #   10   3()     1000000        0          nothing =0
-        #   11   4()     1000000        0          nothing =0
+        # KWDaten: Dictionary holding the different parameters of power plants
+        # ------------------------------------------------------------------------------------
+        #   id  fk_kwt   kw_bezeichnung    power[W]         spez_info             Capex   Opex
+        # ------------------------------------------------------------------------------------
+        #   1     2          WT            1000000       NH: 150,  Z0: 0.03         1     0.01
+        #   2     1          PV            2000000       NH: 0,    Z0: {}           2     0.02
+        #   3     2          WT            3000000       NH: 200,  Z0: 0.2          3     0.03
+        #   4     1          PV            4000000       NH: 0,    Z0: {}           4     0.04
+        #   5     2          WT            5000000       NH: 250,  Z0: 0.03         5     0.05
+        #   6     1          PV            6000000       NH: 0,    Z0: {}           6     0.06
+        #   8     3        OTHER           1000000       NH: 0,    Z0: {}           7     0.07
+        #   10    3        OTHER           1000000       NH: 0,    Z0: {}           8     0.08
+        #   11    4        OTHER           1000000       NH: 0,    Z0: {}           9     0.09
+        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
         #
-        # WetterDaten: Matrix holding Power plant IDs(KWIDs) and weather data for all types of power plants as shown in
-        # the following table
-        # -------------------
-        # KWIDs   WetterDaten
-        # -------------------
-        #   1     array(96)
-        #   2     array(96)
-        #   3     array(96)
-        #   4     array(96)
-        #   5     array(96)
-        #   6     array(96)
-        #   8     array(96)
-        #   10    array(96)
-        #   11    array(96)
+        # WetterDaten: Dictionary holding Power plant IDs(KWIDs) and weather data for all types of power plants
+        # ----------------------------------------------
+        #  id      windspeed   radiation   windmesshoehe
+        # ----------------------------------------------
+        #  1(WT)   array(96)   None            50
+        #  2(PV)   None        array(96)       None
+        #  3(WT)   array(96)   None            45
+        #  4(PV)   None        array(96)       None
+        #  5(WT)   array(96)   None            80
+        #  6(PV)   None        array(96)       None
+        #  8       None        None            None
+        #  10      None        None            None
+        #  11      None        None            None
         #
         # Output Arguments:
-        # PVAuslastung: Matrix containing KWIDs in the first column  and corresponding calculated
+        # PVAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
         # load(Auslastung) of PV power plant in following 96 columns, output values are between [0-1] except KWIDs
         # -----------------
         # KWIDs  Auslastung   Note: Output matrix contains only load for PV power plants
@@ -99,7 +98,8 @@ class Model(Supermodel):
         #   4    array(96)
         #   6    array(96)
         ###################################################################################################################
-        ###################################################################################################################
+
+
         KWBezeichnung = 'PV' #ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
         KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
 

@@ -10,12 +10,12 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['WTAuslastung'] = Input(name='LoadWT', info='value[0-1]')
-        self.inputs['PVAuslastung'] = Input(name='LoadPV', info='value[0-1]')
-        self.inputs['KWDaten'] = Input(name='PowerPlantsData', info='IDs extracted from PowerPlantData')
+        self.inputs['WTAuslastung'] = Input('LoadWT', info='value[0-1]')
+        self.inputs['PVAuslastung'] = Input('LoadPV', info='value[0-1]')
+        self.inputs['KWDaten'] = Input('PowerPlantsData', info='IDs extracted from PowerPlantData')
 
         # define outputs
-        self.outputs['GemeinsameAuslastung'] = Output(name='CombinedLoad', info='value[0-1]')
+        self.outputs['GemeinsameAuslastung'] = Output('CombinedLoad', info='value[0-1]')
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -32,32 +32,50 @@ class Model(Supermodel):
 
     # define additional methods (normal)
     def auslastungallerKWs(self, WTauslastung, PVauslastung, KWDaten):
-        # Determine the loading(Auslastung) of each power plant according to incoming Foreign Keys separately and then
+        # Determine the load(Auslastung) of each power plant according to incoming Foreign Keys separately and then
         # combine them together in a matrix to form combined loading
         ###################################################################################################################
         # Input Arguments:
-        # KWDaten: Matrix holding Power plant IDs(KWIDs), foreign keys (FKs-KWT), Scaling Power, Weather data of
-        #          all power plants and other parameters as shown in the following table
-        # ----------------------------------------------------
-        # KWIDs FKKWT    Power[W]    Nabenhöhe        Z0
-        # ----------------------------------------------------
-        #   1    2(WT)   1000000       150           0.03
-        #   2    1(pv)   2000000        0          nothing =0
-        #   3    2(WT)   3000000       200           0.03
-        #   4    1(pv)   4000000        0          nothing =0
-        #   5    2(WT)   5000000       250           0.03
-        #   6    1(pv)   6000000        0          nothing =0
-        #   8    3()     1000000        0          nothing =0
-        #   10   3()     1000000        0          nothing =0
-        #   11   4()     1000000        0          nothing =0
+        ## WTAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
+        # load(Auslastung) of wind turbine in following 96 columns, output values are between [0-1] except KWIDs
+        # -----------------
+        # KWIDs  Auslastung   Note: Output matrix contains only load for wind turbines
+        # -----------------
+        #   2    array(96)
+        #   4    array(96)
+        #   6    array(96)
+        #
+        # PVAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
+        # load(Auslastung) of PV power plant in following 96 columns, output values are between [0-1] except KWIDs
+        # -----------------
+        # KWIDs  Auslastung   Note: Output matrix contains only load for PV power plants
+        # -----------------
+        #   2    array(96)
+        #   4    array(96)
+        #   6    array(96)
+        #
+        # KWDaten: Dictionary holding the different parameters of power plants
+        # ------------------------------------------------------------------------------------
+        #   id  fk_kwt   kw_bezeichnung    power[W]         spez_info             Capex   Opex
+        # ------------------------------------------------------------------------------------
+        #   1     2          WT            1000000       NH: 150,  Z0: 0.03         1     0.01
+        #   2     1          PV            2000000       NH: 0,    Z0: {}           2     0.02
+        #   3     2          WT            3000000       NH: 200,  Z0: 0.2          3     0.03
+        #   4     1          PV            4000000       NH: 0,    Z0: {}           4     0.04
+        #   5     2          WT            5000000       NH: 250,  Z0: 0.03         5     0.05
+        #   6     1          PV            6000000       NH: 0,    Z0: {}           6     0.06
+        #   8     3        OTHER           1000000       NH: 0,    Z0: {}           7     0.07
+        #   10    3        OTHER           1000000       NH: 0,    Z0: {}           8     0.08
+        #   11    4        OTHER           1000000       NH: 0,    Z0: {}           9     0.09
+        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
         #
         # Output Arguments:
-        # GemeinsameAuslastungAllerKWs: Matrix containing KWIDs in the first column  and corresponding calculated
-        # loading(Auslastung) of a power plant in following 96 columns, output values are between [0-1] except KWIDs
+        # AuslastungAllerKWs: Dictionary containing KWIDs in the first column  and corresponding calculated
+        # load(Auslastung) of a power plant in following 96 columns, output values are between [0-1] except KWIDs
         # -----------------
-        # KWIDs  Auslastung   Note: Output matrix is not sorted according to incoming KWIDs, will be done if required
-        # -----------------
-        #   1    array(96)
+        # KWIDs  Auslastung   Note: Output matrix is not sorted and contains the load of wind turbines at first place
+        # -----------------         on the top, then comes the load of PV and in the last comes the load of remaining
+        #   1    array(96)          power plants(having 100% load).
         #   3    array(96)
         #   5    array(96)
         #   2    array(96)

@@ -10,39 +10,28 @@ class Model(Supermodel):
         # instantiate supermodel
         super(Model, self).__init__(id, name)
         # define outputs
-        self.outputs['kw_data'] = Output(name='PowerPlantData')
+        self.outputs['kw_data'] = Output('PowerPlantData')
 
 
         # define persistent variables
         self.kw_data = None
 
     async def func_birth(self):
-        # Temporary dummy data for testing purpose, Will be replaced by the data coming from the database
-        # KWDaten: Matrix holding different parameters of power plants
-        # ------------------------------------------------------------------
-        # KWIDs FKKWT    Power[W]    Nabenhöhe        Z0        Capex   Opex
-        # ------------------------------------------------------------------
-        #   1    2(WT)   1000000       150           0.03         1     0.01
-        #   2    1(pv)   2000000        0          nothing =0     2     0.02
-        #   3    2(WT)   3000000       200           0.03         3     0.03
-        #   4    1(pv)   4000000        0          nothing =0     4     0.04
-        #   5    2(WT)   5000000       250           0.03         5     0.05
-        #   6    1(pv)   6000000        0          nothing =0     6     0.06
-        #   8    3()     1000000        0          nothing =0     7     0.07
-        #   10   3()     1000000        0          nothing =0     8     0.08
-        #   11   4()     1000000        0          nothing =0     9     0.09
-        # [KW-ID, FK-KWT, Power, Nabenhöhe, Weitere Parameter(Z0), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten]
-        '''
-        self.KWDaten = np.array([[1, 2, 1000000, {'NH': 150, 'Z0': 0.03}, 1, 0.01]
-                                ,[2, 1, 2000000, {},                      2, 0.02]
-                                ,[3, 2, 3000000, {'NH': 100, 'Z0': 0.2},  3, 0.03]
-                                ,[4, 1, 4000000, {},                      4, 0.04]
-                                ,[5, 2, 5000000, {'NH': 250, 'Z0': 0.03}, 5, 0.05]
-                                ,[6, 1, 6000000, {},                      6, 0.06]
-                                ,[8, 3, 1000000, {},                      7, 0.07]
-                                ,[10,3, 1000000, {},                      8, 0.08]
-                                ,[11,4, 1000000, {},                      9, 0.09]]).tolist()
-        '''
+        # Temporary dummy data for testing purpose, Will be replaced by the data coming from the database/ Kraftwerkspark
+        # KWDaten: Dictionary holding the different parameters of power plants
+        # ------------------------------------------------------------------------------------
+        #   id  fk_kwt   kw_bezeichnung    power[W]         spez_info             Capex   Opex
+        # ------------------------------------------------------------------------------------
+        #   1     2          WT            1000000       NH: 150,  Z0: 0.03         1     0.01
+        #   2     1          PV            2000000       NH: 0,    Z0: {}           2     0.02
+        #   3     2          WT            3000000       NH: 200,  Z0: 0.2          3     0.03
+        #   4     1          PV            4000000       NH: 0,    Z0: {}           4     0.04
+        #   5     2          WT            5000000       NH: 250,  Z0: 0.03         5     0.05
+        #   6     1          PV            6000000       NH: 0,    Z0: {}           6     0.06
+        #   8     3        OTHER           1000000       NH: 0,    Z0: {}           7     0.07
+        #   10    3        OTHER           1000000       NH: 0,    Z0: {}           8     0.08
+        #   11    4        OTHER           1000000       NH: 0,    Z0: {}           9     0.09
+        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
 
         self.KWDaten = {'id': [1, 2, 3, 4, 5, 6, 8, 10, 11], 'fk_kwt': [2, 1, 2, 1, 2, 1, 3, 3, 4],
              'kw_bezeichnung': ['WT','PV','WT','PV','WT','PV','OTHER','OTHER','OTHER'],
