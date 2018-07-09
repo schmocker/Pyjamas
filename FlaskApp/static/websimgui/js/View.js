@@ -111,7 +111,7 @@ class View {
             .on("click", async function() {
                 await post("start", {},false);
                 agent_data.status = "running";
-                await obj.status();
+                obj.status();
             });
 
         this.pause = this.menu.append("img")
@@ -124,7 +124,7 @@ class View {
             .on("click", async function() {
                 await post("pause", {},false);
                 agent_data.status = "paused";
-                await obj.status();
+                obj.status();
             });
 
         this.stop = this.menu.append("img")
@@ -137,7 +137,7 @@ class View {
             .on("click", async function() {
                 await post("stop", {},false);
                 agent_data.status = "stopped";
-                await obj.status();
+                obj.status();
             });
 
         this.kill = this.menu.append("img")
@@ -150,7 +150,7 @@ class View {
             .on("click", async function() {
                 await post("kill", {},false);
                 agent_data.status = "stopped";
-                await obj.status();
+                obj.status();
             });
 
 
@@ -164,27 +164,28 @@ class View {
         obj.status();
     }
 
-    async status(){
+    status(){
         switch(agent_data.status) {
             case 'running':
                 this.play.style("display","none");
                 this.pause.style("display","block");
                 this.stop.style("display","block");
-                //this.kill.style("display","block");
                 break;
             case 'paused':
                 this.play.style("display","block");
                 this.pause.style("display","none");
                 this.stop.style("display","block");
-                //this.kill.style("display","block");
                 break;
             case 'stopped':
                 this.play.style("display","block");
                 this.pause.style("display","none");
                 this.stop.style("display","none");
-                //this.kill.style("display","none");
                 break;
             default:
+                this.play.style("display","block");
+                this.pause.style("display","block");
+                this.stop.style("display","block");
+                break;
         }
     }
 
@@ -344,34 +345,34 @@ class View {
         await set_updater(this);
 
         async function update(obj){
-            let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
+            try{
+                let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
 
-            if (result){
-                obj.content.selectAll('.value')
-                    .html(function (d) {
-                        let value = result.result[d.key];
-                        if (d.key === "time" || d.key === "times"){
-                            if(Array.isArray(value)){
-                                for (let i = 0; i < value.length; i++) {
-                                    value[i] = new Date(value[i]*1000).toString()
+                if (result){
+                    obj.content.selectAll('.value')
+                        .html(function (d) {
+                            let value = result.result[d.key];
+                            if (d.key === "time" || d.key === "times"){
+                                if(Array.isArray(value)){
+                                    for (let i = 0; i < value.length; i++) {
+                                        value[i] = new Date(value[i]*1000).toString()
+                                    }
+                                } else {
+                                    value = new Date(value*1000).toString()
                                 }
-                            } else {
-                                value = new Date(value*1000).toString()
                             }
-                        }
-                        return `<pre style="margin: 3px">${JSON.stringify(value,null,5)}</pre>`;
-                    });
-
-
-            }
+                            return `<pre style="margin: 3px">${JSON.stringify(value,null,5)}</pre>`;
+                        });
+                }
+            } catch (e) { log('Error updateing results: '+e.message) }
         }
 
         async function set_updater(obj) {
             clearInterval(obj.update_interval);
             obj.update_interval = setInterval(await async function() {
-                obj.content.select(".update_dot").html("I");
+                await obj.content.select(".update_dot").html("I");
                 await update(obj);
-                obj.content.select(".update_dot").html("");
+                await obj.content.select(".update_dot").html("");
             }, obj.interval_speed*1000);
         }
     }
