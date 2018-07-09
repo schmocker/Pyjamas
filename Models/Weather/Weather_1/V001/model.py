@@ -6,6 +6,7 @@ from Models._utils.time import datetime2utc_time, utc_time2datetime
 import pandas as pd
 import numpy as np
 from pytz import timezone
+from scipy.interpolate import griddata
 
 
 # define the model class and inherit from class "Supermodel"
@@ -241,3 +242,57 @@ class Model(Supermodel):
             weather_data = data_hist.iloc[(data_hist['Date'] - date).abs().argsort()[:1]]
 
         return weather_data
+
+    # 3D Interpolation based on 3D Interpolation European_power_plant
+    def interpol_3d(self, db_time, db_lat, db_long, db_values, interp_lat, interp_long, interp_time):
+        """
+        This function interpolates in a grid of points (db_lat,db_long,db_time) with assigned values (db_values).
+        It interpolates for points given by (interp_lat, interp_long, interp_time) and outputs their corresponding value.
+
+        Values inside the grid are interpolated linearly and values outside of the grid are interpolated to the
+        nearest point of the grid.
+
+        ATTENTION: If there are less than 4 points in db_... no grid can be formed and everything will be "interpolated"
+                   to nearest.
+                   Also, it is not allowed to have all points forming a plane, they must span a 3dimensional space
+
+        |  "db_" inputs are things as location, temperature, time
+        |  "interp_" inputs denote the points to interpolate
+
+        INPUTS:
+            |  db_lat: Latitude, list of [float]; nx1
+            |  db_long: Longitude, list of [float]; nx1
+            |  db_time: Time, list of [datetime]; nx1
+            |  db_values: list of [float]; nx1
+            |  interp_lat: Latitude, list of [float]; jx1
+            |  interp_long: Longitude, list of [float]; jx1
+            |  interp_time: Time, list of [datetime]; jx1
+
+        OUTPUTS:
+            interp_values: ndarray of [float]; jx1
+        """
+        db_lat = np.asarray(db_lat)
+        db_long = np.asarray(db_long)
+        db_time = np.asarray(db_time)
+        db_values = np.asarray(db_values)
+        interp_lat = np.asarray(interp_lat)
+        interp_long = np.asarray(interp_long)
+        interp_time = np.asarray(interp_time)
+
+        # change time values from datetime to float
+        db_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in db_time])
+        interp_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in interp_time])
+        # arrange inputs for griddata
+        xi = np.vstack((interp_lat, interp_long, interp_timestamp))
+        gridpoints = np.vstack((db_lat, db_long, db_timestamp))
+
+        # interpolate
+        interp_nearest = griddata(gridpoints.T, db_values.T, xi.T, method='nearest')
+        if db_values.size < 4:
+            interp_values = interp_nearest
+        else:
+            interp_linear = griddata(gridpoints.T, db_values.T, xi.T, method='linear')
+            # replace Nan in linear with nearest (out of range values)
+            interp_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
+
+        return interp_values

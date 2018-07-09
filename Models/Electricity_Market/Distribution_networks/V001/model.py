@@ -1,6 +1,8 @@
 from core import Supermodel
 from core.util import Input, Output, Property
 import json
+from collections import OrderedDict
+from json import JSONDecoder
 
 
 # define the model class and inherit from class "Supermodel"
@@ -19,7 +21,7 @@ class Model(Supermodel):
 
         # define properties
         # - distribution network
-        self.properties['distNets'] = Property(default='{"Baden": {"Lat": 47.47256, "Lon": 8.30850}', data_type=str, name='distribution network', unit='-',
+        self.properties['distNets'] = Property(default='{"Baden": {"Lat": 47.47256, "Lon": 8.30850}}', data_type=str, name='distribution network', unit='-',
                                                info="distribution network with lon and lat",
                                                example='{"Baden": {"Lat": 47.47256, "Lon": 8.30850}, '
                                                        '"Brugg": {"Lat": 47.48420, "Lon": 8.20706}, '
@@ -34,7 +36,12 @@ class Model(Supermodel):
     async def func_amend(self, keys=[]):
         if 'distNets' in keys:
             distNets = self.get_property('distNets')
-            dict_distNets = json.loads(distNets)
+            #distNets = '{"Baden": {"Lat": 47.47256, "Lon": 8.30850}, "Brugg": {"Lat": 47.48420, "Lon": 8.20706}, "Olten": {"Lat": 47.35212, "Lon": 7.90801}, "Brugg": {"Lat": 47.48420, "Lon": 8.20706}}'
+            #dict_distNets = json.loads(distNets)
+            decoder = JSONDecoder(object_pairs_hook=self.parse_object_pairs)
+            dict_distNets = decoder.decode(distNets)
+            dict_distNets = dict(dict_distNets)
+            #print(dict_distNets)
 
             # formatting
             locations = list(dict_distNets.keys())
@@ -55,3 +62,32 @@ class Model(Supermodel):
 
     async def func_peri(self, prep_to_peri=None):
         self.set_output('distNets', self.distNets)
+
+    def parse_object_pairs(self, pairs):
+        dct = OrderedDict()
+        for key, value in pairs:
+            if key in dct:
+                key = self.make_unique(key, dct)
+            dct[key] = value
+
+        return dct
+    # https://stackoverflow.com/questions/29321677/python-json-parser-allow-duplicate-keys
+
+    @staticmethod
+    def make_unique(key, dct):
+        counter = 0
+        unique_key = key
+
+        while unique_key in dct:
+            counter += 1
+            unique_key = '{}_{}'.format(key, counter)
+        return unique_key
+
+
+# if __name__ == "__main__":
+#
+#     inputs = '{"Baden": {"Lat": 47.47256, "Lon": 8.30850}, "Brugg": {"Lat": 47.48420, "Lon": 8.20706}, "Olten": {"Lat": 47.35212, "Lon": 7.90801}, "Brugg": {"Lat": 47.48420, "Lon": 8.20706}}'
+#     properties = {}
+#
+#     outputs = Model.test(inputs, properties)
+#     print(outputs)
