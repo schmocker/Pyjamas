@@ -2,6 +2,8 @@ from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
 import random
+from datetime import datetime as dt
+from Models._utils.time import utc_time2datetime, datetime2utc_time
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -17,10 +19,17 @@ class Model(Supermodel):
         # define outputs
         self.outputs['load'] = Output('Load', info='value[0-1]')
 
+        self.ref_year = 2018
+        ref_dates = [[self.ref_year, 1, 1], [self.ref_year, 4, 1], [self.ref_year, 8, 1], [self.ref_year + 1, 1, 1]]
+        self.ref_dates = np.array([datetime2utc_time(dt(d[0], d[1], d[2])) for d in ref_dates])
+        self.ref_loads = np.array([0.3, 0.5, 1, 0.3])
+
+
     async def func_peri(self, prep_to_peri=None):
         # get inputs
         futures = await self.get_input('futures')
         kwDaten = await self.get_input('kwDaten')
+
 
         load = self.laufwasserauslastung(kwDaten, futures)
 
@@ -97,32 +106,43 @@ class Model(Supermodel):
         # Extracting data corresponding solely to running water power plant
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
 
-        def make_load_for_one_plant(kw_id):
+        def make_load_for_one_plant():
             #index_of_kwid_in_wetter = WetterDaten['id'].index(kw_id)
             #laufwasserdaten_for_kwid = WetterDaten['laufwasserdaten'][index_of_kwid_in_wetter]
             #laufwasserdaten = np.array(laufwasserdaten_for_kwid)
             #laufwasserdaten = laufwasserdaten_for_kwid
-            laufwasserdaten = Futures
 
-            auslastung = self.laufwasserpowerplant(laufwasserdaten)
-            return auslastung
+            futures = [utc_time2datetime(f).replace(year=self.ref_year) for f in Futures]
+            futures = [datetime2utc_time(f) for f in futures]
+            loads = np.interp(futures, self.ref_dates, self.ref_loads).tolist()
+            return loads
+
+            # laufwasserdaten = Futures
+
+            # auslastung = self.laufwasserpowerplant(laufwasserdaten)
+            # return auslastung
 
         KWid = [kw[0] for kw in KraftwerksDaten]
-        load = [make_load_for_one_plant(kw[0]) for kw in KraftwerksDaten]
+        load = [make_load_for_one_plant() for kw in KraftwerksDaten]
 
         LaufwasserAuslastung = {'id': KWid, 'load': load}
 
         return LaufwasserAuslastung
 
 
-'''
 if __name__ == "__main__":
+    kw_daten = {'id': [1, 2, 3, 4, 5, 6, 8, 10, 11], 'fk_kwt': [2, 1, 2, 1, 2, 1, 5, 3, 4],
+             'kw_bezeichnung': ['WT','PV','WT','PV','WT','PV','Laufwasserkraftwerk','Laufwasserkraftwerk','OTHER'],
+             'power': [1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 8000000, 9000000, 7000000],
+             'spez_info': [{'NH': 150, 'Z0': 0.03}, {}, {'NH': 100, 'Z0': 0.2}, {}, {'NH': 250, 'Z0': 0.03}, {}, {}, {}, {}],
+             'capex': [1, 2, 3, 4, 5, 6, 7, 8, 9],
+             'opex': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09]}
+
     Props={}
     Inputs = {
-        'futures': [1,2,3,4],
-        'kwDaten': {}
+        'futures': [1531227300, 1531227400, 1531227500, 1531227600],
+        'kwDaten': kw_daten
     }
     Output = Model.test(Inputs, Props)
 
     print(Output)
-'''
