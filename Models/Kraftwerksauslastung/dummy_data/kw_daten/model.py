@@ -33,8 +33,8 @@ class Model(Supermodel):
         #   11    4        OTHER           1000000       NH: 0,    Z0: {}           9     0.09
         # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
 
-        self.KWDaten = {'id': [1, 2, 3, 4, 5, 6, 8, 10, 11], 'fk_kwt': [2, 1, 2, 1, 2, 1, 5, 3, 4],
-             'kw_bezeichnung': ['WT','PV','WT','PV','WT','PV','OTHER','Laufwasserkraftwerk','OTHER'],
+        self.KWDaten = {'id': [1, 2, 3, 4, 5, 6, 8, 10, 11], 'fk_kwt': [2, 1, 2, 1, 2, 1, 5, 3, 3],
+             'kw_bezeichnung': ['WT','PV','WT','PV','WT','PV','OTHER','Laufwasserkraftwerk','Laufwasserkraftwerk'],
              'power': [1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 8000000, 9000000, 7000000],
              'spez_info': [{'NH': 150, 'Z0': 0.03}, {}, {'NH': 100, 'Z0': 0.2}, {}, {'NH': 250, 'Z0': 0.03}, {}, {}, {}, {}],
              'capex': [1, 2, 3, 4, 5, 6, 7, 8, 9],

@@ -76,29 +76,16 @@ class Model(Supermodel):
         #   11    4        OTHER           1000000       NH: 0,    Z0: {}           9     0.09
         # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
         #
-        # WetterDaten: Dictionary holding Power plant IDs(KWIDs) and weather data for all types of power plants
-        # ----------------------------------------------
-        #  id      windspeed   radiation   windmesshoehe
-        # ----------------------------------------------
-        #  1(WT)   array(96)   None            50
-        #  2(PV)   None        array(96)       None
-        #  3(WT)   array(96)   None            45
-        #  4(PV)   None        array(96)       None
-        #  5(WT)   array(96)   None            80
-        #  6(PV)   None        array(96)       None
-        #  8       None        None            None
-        #  10      None        None            None
-        #  11      None        None            None
+        # Futures: Incoming datetime values (produced by Scheduler/Cronjob/V2), required for interpolation
         #
         # Output Arguments:
-        # PVAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
-        # load(Auslastung) of PV power plant in following 96 columns, output values are between [0-1] except KWIDs
-        # -----------------
-        # KWIDs  Auslastung   Note: Output matrix contains only load for PV power plants
-        # -----------------
-        #   2    array(96)
-        #   4    array(96)
-        #   6    array(96)
+        # LaufwasserAuslastung: Dictionary containing KWIDs  and corresponding calculated load(Auslastung)
+        # of running water power plant, output values are between [0-1] except KWIDs
+        # ---------------------------
+        # KWIDs  LaufwasserAuslastung   Note: Output matrix contains only load for running water power plants
+        # ---------------------------
+        #   10    array(96)
+        #   11    array(96)
         ###################################################################################################################
         KWBezeichnung = 'Laufwasserkraftwerk'  # ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
         KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
@@ -107,13 +94,10 @@ class Model(Supermodel):
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
 
         def make_load_for_one_plant():
-            #index_of_kwid_in_wetter = WetterDaten['id'].index(kw_id)
-            #laufwasserdaten_for_kwid = WetterDaten['laufwasserdaten'][index_of_kwid_in_wetter]
-            #laufwasserdaten = np.array(laufwasserdaten_for_kwid)
-            #laufwasserdaten = laufwasserdaten_for_kwid
 
             futures = [utc_time2datetime(f).replace(year=self.ref_year) for f in Futures]
             futures = [datetime2utc_time(f) for f in futures]
+            # One-dimensional linear interpolation
             loads = np.interp(futures, self.ref_dates, self.ref_loads).tolist()
             return loads
 
@@ -126,10 +110,10 @@ class Model(Supermodel):
         load = [make_load_for_one_plant() for kw in KraftwerksDaten]
 
         LaufwasserAuslastung = {'id': KWid, 'load': load}
-
         return LaufwasserAuslastung
 
 
+# For testing purposes
 if __name__ == "__main__":
     kw_daten = {'id': [1, 2, 3, 4, 5, 6, 8, 10, 11], 'fk_kwt': [2, 1, 2, 1, 2, 1, 5, 3, 4],
              'kw_bezeichnung': ['WT','PV','WT','PV','WT','PV','Laufwasserkraftwerk','Laufwasserkraftwerk','OTHER'],

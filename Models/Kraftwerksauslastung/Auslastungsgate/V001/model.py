@@ -12,7 +12,7 @@ class Model(Supermodel):
         # define inputs
         self.inputs['WTAuslastung'] = Input('LoadWindTurbine', info='value[0-1]')
         self.inputs['PVAuslastung'] = Input('LoadPhotovoltaic', info='value[0-1]')
-        self.inputs['LaufwasserAuslastung'] = Input('LoadRunningPowerPlant', info='value[0-1]')
+        self.inputs['LaufwasserKWAuslastung'] = Input('LoadRunningPowerPlant', info='value[0-1]')
         self.inputs['KWDaten'] = Input('PowerPlantsData', info='IDs extracted from PowerPlantData')
 
         # define outputs
@@ -22,11 +22,11 @@ class Model(Supermodel):
         # get inputs
         WTAuslastung = await self.get_input('WTAuslastung')
         PVAuslastung = await self.get_input('PVAuslastung')
-        LWAuslastung = await self.get_input('LaufwasserAuslastung')
+        LWKWAuslastung = await self.get_input('LaufwasserKWAuslastung')
         KWDaten = await self.get_input('KWDaten')
 
         # calculate
-        GemeinsameAuslastung = self.auslastungallerKWs(WTAuslastung, PVAuslastung, LWAuslastung, KWDaten)
+        GemeinsameAuslastung = self.auslastungallerKWs(WTAuslastung, PVAuslastung, LWKWAuslastung, KWDaten)
 
         # set output
         self.set_output("GemeinsameAuslastung", GemeinsameAuslastung)
