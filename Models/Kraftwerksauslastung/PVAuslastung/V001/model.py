@@ -103,7 +103,7 @@ class Model(Supermodel):
         KWBezeichnung = 'PV' #ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
         KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
 
-        # Extracting data corresponding solely to wind turbines, by selecting rows of KWDaten where Foreign-Key= 2
+        # Extracting data corresponding solely to Photovoltaic power plant
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
 
         def make_load_for_one_pv(kw_id):

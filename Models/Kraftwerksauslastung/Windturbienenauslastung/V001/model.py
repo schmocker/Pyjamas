@@ -201,7 +201,7 @@ class Model(Supermodel):
         KWDaten = np.array([ KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
         # Wetter = np.array([ WetterDaten['id'], WetterDaten['wetter']]).transpose()
 
-        # Extracting data corresponding solely to wind turbines, by selecting rows of KWDaten where Foreign-Key= 2
+        # Extracting data corresponding solely to wind turbines
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
 
         def make_load_for_one_wt(kw_id, NH, Z0):

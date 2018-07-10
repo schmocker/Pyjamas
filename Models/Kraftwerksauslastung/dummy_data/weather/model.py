@@ -69,7 +69,8 @@ class Model(Supermodel):
         self.WeatherData = {'id': [1, 2, 3, 4, 5, 6, 8 ,10 ,11],
                             'windspeed': [ws1, None, ws3, None, ws5, None, None, None, None],
                             'radiation': [None, ra2, None, ra4, None, ra6, None, None, None],
-                            'windmesshoehe': [50, None, 45, None, 80, None, None, None, None]}
+                            'windmesshoehe': [50, None, 45, None, 80, None, None, None, None]
+                            }
 
 
     async def func_peri(self, prep_to_peri=None):
