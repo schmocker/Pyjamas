@@ -190,11 +190,6 @@ class View {
     }
 
     async update_view(menu_item, new_mu){
-        if (new_mu === false){
-            try {
-                this.mu = agent_data.model_used[this.mu.id]
-            } catch (e) { log('warning: no model selected') }
-        }
         let obj = this;
         let mu = this.mu;
         let m = this.m;
@@ -400,7 +395,7 @@ class View {
         this.content.html("");
 
         ////
-        let section_data = [
+        let data = [
             {'name': 'Properties',
                 'columns': ['Name','Value','Unit','Info','Example'],
                 'data': d3.entries(this.m.properties)},
@@ -413,10 +408,9 @@ class View {
             {'name': 'Settings',
                 'columns': ['Name','Name Vertical Position','Name Horizontal Position','Inputs orientation','Outputs Orientation'],
                 'data': [this.mu]}];
-        section_data = JSON.parse(JSON.stringify(section_data));
 
         this.content.append('div').attr('class','tab')
-            .selectAll('.tablink').data(section_data).enter()
+            .selectAll('.tablink').data(data).enter()
             .append('button').attr("class", "tablink")
             .text(function (d) { return d.name })
             .on('click', function (d) {
@@ -427,7 +421,7 @@ class View {
             })
             .classed('active', function (d) { return (d.name==='Properties') });
 
-        let sections = this.content.selectAll('.section').data(section_data)
+        let sections = this.content.selectAll('.section').data(data)
             .enter().append('div').attr('class', 'section')
             .attr('id', function (d) { return d.name })
             .style('display', function (d) { return (d.name==='Properties') ? 'block' : 'none' });
@@ -473,7 +467,7 @@ class View {
         }
 
         function fill_tr_Settings(tr){
-            let settings_r = [
+            let settings = [
                 {'class':'setting name','id':'name','type': 'input', 'default': obj.mu.name, 'mu_id': obj.mu.id},
                 {'class':'setting name_pos','id':'vertical','type': 'select', 'default': obj.mu.name_v_position,
                     'mu_id': obj.mu.id,'options':['top outside', 'top inside', 'center', 'bottom inside', 'bottom outside']},
@@ -483,12 +477,10 @@ class View {
                     'mu_id': obj.mu.id, 'options':['top','bottom','left','right'], 'dock': 'input'},
                 {'class':'setting _orientation','id':'output_o','type': 'select', 'default': obj.mu.output_orientation,
                     'mu_id': obj.mu.id, 'options':['top','bottom','left','right'], 'dock': 'output'}];
-            let settings = JSON.parse(JSON.stringify(settings_r));
 
             let tds = tr.selectAll('.setting').data(settings).enter().append('td');
             tds.append(function (d) { return document.createElement(d.type) })
-                .attr('id', function (d) { return d.id  })
-                .attr('class', function (d) { return d.class  });
+                .attr('id', function (d) { return d.id  }).attr('class', function (d) { return d.class  });
 
             tds.select('#name')
                 .attr("type", "text").attr("value", function (d) { return d.default })
@@ -511,14 +503,12 @@ class View {
 
             tds.selectAll('._orientation')
                 .on('change', async function (d) {
-                    let val_out = $('#output_o option:selected').text();
-                    let val_in = $('#input_o option:selected').text();
-                    if (val_out === val_in){
+                    if (tr.select('#input_o').property('value') === tr.select('#output_o').property('value')){
                         d3.select(this).style('background-color', 'red');
                     } else {
                         d3.select(this).style('background-color', 'white');
                         await post('set_mu_dock_orientation',
-                            {'mu_id': d.mu_id, 'dock': d.dock, 'orientation': this.value},
+                            {'mu_id': obj.mu.id, 'dock': d.dock, 'orientation': this.value},
                             true);
                     }
                 });
