@@ -19,8 +19,8 @@ datetime
 pytz
 numpy
 sqlalchemy
-datetime
 bson
 scipy
 paho-mqtt
 pandas
+requests
