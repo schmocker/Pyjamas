@@ -1,17 +1,11 @@
-$.ajaxSetup({
-    timeout:1000 // in milliseconds
-});
-
 async function post(fnc_str, data_dict, rebuild){
 
-    data_dict['agent_id'] = agent_data.id;
-    let data = await $.post("/websimgui", {
-        'fnc': fnc_str,
-        'data': JSON.stringify(data_dict),
-        timeout: 1000
-    });
-
     try {
+        data_dict['agent_id'] = agent_data.id;
+        let data = await $.post("/websimgui", {
+            'fnc': fnc_str,
+            'data': JSON.stringify(data_dict)
+        });
         data = JSON.parse(data);
         if (data === true) {
         } else if ("error" in data){
