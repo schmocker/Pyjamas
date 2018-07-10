@@ -1,7 +1,7 @@
 from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
-import matplotlib.pyplot as plt
+import random
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -11,7 +11,7 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input('WeatherData', info='dict')
+        self.inputs['futures'] = Input('Futures', info='dict')
         self.inputs['kwDaten'] = Input('PowerPlantsData', info='dict')
 
         # define outputs
@@ -19,10 +19,10 @@ class Model(Supermodel):
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
-        weather = await self.get_input('weather')
+        futures = await self.get_input('futures')
         kwDaten = await self.get_input('kwDaten')
 
-        load = self.pvauslastung(kwDaten, weather)
+        load = self.laufwasserauslastung(kwDaten, futures)
 
         # set output
         self.set_output("load", load)
@@ -30,33 +30,26 @@ class Model(Supermodel):
 
 
     # define additional methods (normal)
-    def pvpowergenerator(self, GlobalRadiations):
-        # Simulates photovoltaic power plant for specified incoming solar irradiance
+    def laufwasserpowerplant(self, WaterFlowRate):
+        # Simulates a dummy running water power plant for specified incoming values
         ###################################################################################################################
         # Input Arguments:
-        # GlobalRadiations: Measured values of global irradiance on horizontal surface [W/m^2]
+        # WaterFlowRate: Measured values
         #
         # Output Arguments:
         # Auslastung: Calculated load(Auslastung), output values are between [0-1]
         ###################################################################################################################
-        # 75% of total global radiation are captured by the tilted surface oriented towards specified direction (e.g south)
-        GlobalRadiationLoss = 0.25
-        RadiationOnTiltedSurface = (1 - GlobalRadiationLoss) * GlobalRadiations
 
-        Tmodule = 25  # Standard Test Condition temperature
-        Pnominal = 1000  # 1kW base power
+        # Generates random numbers between 0 & 100
+        #PowerOutput = random.sample(range(0, 100), WaterFlowRate.shape[1])
+        PowerOutput = random.sample(range(0, 100), len(WaterFlowRate))
+        Auslastung = [(num / 100) for num in PowerOutput]
 
-        # Output reduction[W] = (Actuell module temperature[°C] - 25°C) * (-0.0034 /°C) * Module's nominal power[W])
-        OutputReduction = (Tmodule - 25) * 0.0034 * Pnominal
-        # PVs Output[W] = (Module's nominal power[W] - Output reduction[W])*(Solar irradiations [W/m2] /1000 W/m2)
-        DcPout = (Pnominal - OutputReduction) * (RadiationOnTiltedSurface / 1000)
-
-        Auslastung = DcPout / Pnominal  # Auslastung = ProducedPower/Pnominal
         return Auslastung
 
 
-    def pvauslastung(self, KWDaten, WetterDaten):
-        # Determine the load(Auslastung) PV power plant
+    def laufwasserauslastung(self, KWDaten, Futures):
+        # Determine the load(Auslastung) running water power plant
         ###################################################################################################################
         # Input Arguments:
         # KWDaten: Dictionary holding the different parameters of power plants
@@ -98,27 +91,38 @@ class Model(Supermodel):
         #   4    array(96)
         #   6    array(96)
         ###################################################################################################################
-
-
-        KWBezeichnung = 'PV' #ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
+        KWBezeichnung = 'Laufwasserkraftwerk'  # ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
         KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
 
-        # Extracting data corresponding solely to Photovoltaic power plant
+        # Extracting data corresponding solely to running water power plant
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
 
-        def make_load_for_one_pv(kw_id):
-            index_of_kwid_in_wetter = WetterDaten['id'].index(kw_id)
-            radiation_for_kwid = WetterDaten['radiation'][index_of_kwid_in_wetter]
-            radiation = np.array(radiation_for_kwid)
+        def make_load_for_one_plant(kw_id):
+            #index_of_kwid_in_wetter = WetterDaten['id'].index(kw_id)
+            #laufwasserdaten_for_kwid = WetterDaten['laufwasserdaten'][index_of_kwid_in_wetter]
+            #laufwasserdaten = np.array(laufwasserdaten_for_kwid)
+            #laufwasserdaten = laufwasserdaten_for_kwid
+            laufwasserdaten = Futures
 
-            auslastung = self.pvpowergenerator(radiation)
-            return auslastung.tolist()
+            auslastung = self.laufwasserpowerplant(laufwasserdaten)
+            return auslastung
 
         KWid = [kw[0] for kw in KraftwerksDaten]
-        load = [make_load_for_one_pv(kw[0]) for kw in KraftwerksDaten]
+        load = [make_load_for_one_plant(kw[0]) for kw in KraftwerksDaten]
 
-        PVAuslastung = {'id': KWid, 'load': load}
-        return PVAuslastung
+        LaufwasserAuslastung = {'id': KWid, 'load': load}
+
+        return LaufwasserAuslastung
 
 
+'''
+if __name__ == "__main__":
+    Props={}
+    Inputs = {
+        'futures': [1,2,3,4],
+        'kwDaten': {}
+    }
+    Output = Model.test(Inputs, Props)
 
+    print(Output)
+'''
