@@ -8,3 +8,5 @@ logs
 FlaskApp/pyjamas
 workspace.xml
 __pycache__/
+
+Model/Weather/Weather_1/dict_hist
