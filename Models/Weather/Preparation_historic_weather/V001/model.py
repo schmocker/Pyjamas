@@ -33,7 +33,7 @@ class Model(Supermodel):
     async def func_birth(self):
 
         # Infos
-        filename = 'history_export_FHNW_2006_2017csv_Info.csv'
+        filename = 'confidential/history_export_FHNW_2006_2017csv_Info.csv'
         data_info_table = pd.read_csv(filename, sep=';', header=None)
         id_list = list(data_info_table.values[3][4:29])
         lat_list = data_info_table.values[0][4:29]
@@ -53,7 +53,7 @@ class Model(Supermodel):
         rad_unit = 'W/m2'
 
         # Data
-        filename = 'history_export_FHNW_2006_2017csv_Data.csv'
+        filename = 'confidential/history_export_FHNW_2006_2017csv_Data.csv'
         data_table = pd.read_csv(filename, sep=';', header=0)
         # - time
         time_list = []
@@ -95,7 +95,7 @@ class Model(Supermodel):
                                    "values": rad_list}
                      }
         #json_dumps = json.dumps(dict_hist)
-        with open('dict_hist', 'w') as fp:
+        with open('confidential/dict_hist', 'w') as fp:
             json.dump(dict_hist, fp)
 
         # dict of weather point info data
@@ -104,7 +104,7 @@ class Model(Supermodel):
                                "lon": lon_list,
                                "asl": asl_list
                                }
-        with open('dict_weather_points', 'w') as fp:
+        with open('confidential/dict_weather_points', 'w') as fp:
             json.dump(dict_weather_points, fp)
 
 
