@@ -115,9 +115,9 @@ class Model(Supermodel):
             return auslastung.tolist()
 
         KWid = [kw[0] for kw in KraftwerksDaten]
-        load = [make_load_for_one_pv(kw[0]) for kw in KraftwerksDaten]
+        loads = [make_load_for_one_pv(kw[0]) for kw in KraftwerksDaten]
 
-        PVAuslastung = {'id': KWid, 'load': load}
+        PVAuslastung = {'id': KWid, 'load': loads}
         return PVAuslastung
 
 

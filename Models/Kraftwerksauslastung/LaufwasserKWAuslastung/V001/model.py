@@ -31,14 +31,13 @@ class Model(Supermodel):
         kwDaten = await self.get_input('kwDaten')
 
 
-        load = self.laufwasserauslastung(kwDaten, futures)
+        load = self.laufwasserKWauslastung(kwDaten, futures)
 
         # set output
         self.set_output("load", load)
 
 
-
-    # define additional methods (normal)
+    '''
     def laufwasserpowerplant(self, WaterFlowRate):
         # Simulates a dummy running water power plant for specified incoming values
         ###################################################################################################################
@@ -55,9 +54,10 @@ class Model(Supermodel):
         Auslastung = [(num / 100) for num in PowerOutput]
 
         return Auslastung
+    '''
 
-
-    def laufwasserauslastung(self, KWDaten, Futures):
+    # define additional methods (normal)
+    def laufwasserKWauslastung(self, KWDaten, Futures):
         # Determine the load(Auslastung) running water power plant
         ###################################################################################################################
         # Input Arguments:
@@ -79,10 +79,10 @@ class Model(Supermodel):
         # Futures: Incoming datetime values (produced by Scheduler/Cronjob/V2), required for interpolation
         #
         # Output Arguments:
-        # LaufwasserAuslastung: Dictionary containing KWIDs  and corresponding calculated load(Auslastung)
+        # Auslastung: Dictionary containing KWIDs  and corresponding calculated load(Auslastung)
         # of running water power plant, output values are between [0-1] except KWIDs
         # ---------------------------
-        # KWIDs  LaufwasserAuslastung   Note: Output matrix contains only load for running water power plants
+        # KWIDs   Auslastung   Note: Output matrix contains only load for running water power plants
         # ---------------------------
         #   10    array(96)
         #   11    array(96)
@@ -98,8 +98,8 @@ class Model(Supermodel):
             futures = [utc_time2datetime(f).replace(year=self.ref_year) for f in Futures]
             futures = [datetime2utc_time(f) for f in futures]
             # One-dimensional linear interpolation
-            loads = np.interp(futures, self.ref_dates, self.ref_loads).tolist()
-            return loads
+            load = np.interp(futures, self.ref_dates, self.ref_loads).tolist()
+            return load
 
             # laufwasserdaten = Futures
 
@@ -107,10 +107,10 @@ class Model(Supermodel):
             # return auslastung
 
         KWid = [kw[0] for kw in KraftwerksDaten]
-        load = [make_load_for_one_plant() for kw in KraftwerksDaten]
+        loads = [make_load_for_one_plant() for kw in KraftwerksDaten]
 
-        LaufwasserAuslastung = {'id': KWid, 'load': load}
-        return LaufwasserAuslastung
+        Auslastung = {'id': KWid, 'load': loads}
+        return Auslastung
 
 
 # For testing purposes
