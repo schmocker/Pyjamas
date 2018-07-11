@@ -10,3 +10,5 @@ workspace.xml
 __pycache__/
 
 Model/Weather/Weather_1/dict_hist
+Model/Weather/Preparation/V001/dict*
+Model/Weather/Preparation/V001/hist*
