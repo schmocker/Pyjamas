@@ -16,6 +16,8 @@ def utc_time2datetime(utc_time, tz=None):
 
 
 def datetime2utc_time(datetime):
+    if datetime.tzinfo is None:
+        datetime = datetime.replace(tzinfo=timezone('utc'))
     utc_datetime = datetime.astimezone(timezone('utc')).replace(tzinfo=None)
     utc_timetuple = utc_datetime.timetuple()
     utc_time = calendar.timegm(utc_timetuple) + datetime.microsecond / 1E6
