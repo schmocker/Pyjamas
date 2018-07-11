@@ -9,6 +9,4 @@ FlaskApp/pyjamas
 workspace.xml
 __pycache__/
 
-Models/Weather/Weather_1/dict_hist
-Models/Weather/Preparation/V001/dict*
-Models/Weather/Preparation/V001/hist*
+confidential
