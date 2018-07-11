@@ -19,19 +19,12 @@ class Model(Supermodel):
         # define outputs
         self.outputs['load'] = Output('Load', info='value[0-1]')
 
-        self.ref_year = 2018
-        ref_dates = [[self.ref_year, 1, 1], [self.ref_year, 4, 1], [self.ref_year, 8, 1], [self.ref_year + 1, 1, 1]]
-        self.ref_dates = np.array([datetime2utc_time(dt(d[0], d[1], d[2])) for d in ref_dates])
-        self.ref_loads = np.array([0.3, 0.5, 1, 0.3])
-
-
     async def func_peri(self, prep_to_peri=None):
         # get inputs
         futures = await self.get_input('futures')
         kwDaten = await self.get_input('kwDaten')
 
-
-        load = self.laufwasserauslastung(kwDaten, futures)
+        load = self.speicherwasserKWauslastung(kwDaten, futures)
 
         # set output
         self.set_output("load", load)
@@ -39,7 +32,7 @@ class Model(Supermodel):
 
 
     # define additional methods (normal)
-    def laufwasserpowerplant(self, WaterFlowRate):
+    def speicherwasserpowerplant(self, WaterFlowRate):
         # Simulates a dummy running water power plant for specified incoming values
         ###################################################################################################################
         # Input Arguments:
@@ -57,7 +50,7 @@ class Model(Supermodel):
         return Auslastung
 
 
-    def laufwasserauslastung(self, KWDaten, Futures):
+    def speicherwasserKWauslastung(self, KWDaten, Futures):
         # Determine the load(Auslastung) running water power plant
         ###################################################################################################################
         # Input Arguments:
@@ -79,15 +72,15 @@ class Model(Supermodel):
         # Futures: Incoming datetime values (produced by Scheduler/Cronjob/V2), required for interpolation
         #
         # Output Arguments:
-        # LaufwasserAuslastung: Dictionary containing KWIDs  and corresponding calculated load(Auslastung)
-        # of running water power plant, output values are between [0-1] except KWIDs
+        # Auslastung: Dictionary containing KWIDs  and corresponding calculated load(Auslastung)
+        # of storage power plant, output values are between [0-1] except KWIDs
         # ---------------------------
-        # KWIDs  LaufwasserAuslastung   Note: Output matrix contains only load for running water power plants
+        # KWIDs   Auslastung   Note: Output matrix contains only load for storage power plants
         # ---------------------------
         #   10    array(96)
         #   11    array(96)
         ###################################################################################################################
-        KWBezeichnung = 'Laufwasserkraftwerk'  # ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
+        KWBezeichnung = 'Speicherwasserkraftwerk'  # ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
         KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
 
         # Extracting data corresponding solely to running water power plant
@@ -95,22 +88,16 @@ class Model(Supermodel):
 
         def make_load_for_one_plant():
 
-            futures = [utc_time2datetime(f).replace(year=self.ref_year) for f in Futures]
-            futures = [datetime2utc_time(f) for f in futures]
-            # One-dimensional linear interpolation
-            loads = np.interp(futures, self.ref_dates, self.ref_loads).tolist()
-            return loads
-
-            # laufwasserdaten = Futures
-
-            # auslastung = self.laufwasserpowerplant(laufwasserdaten)
-            # return auslastung
+            #laufwasserdaten = Futures
+            #load = self.speicherwasserpowerplant(laufwasserdaten)
+            load = [1]*len(Futures)
+            return load
 
         KWid = [kw[0] for kw in KraftwerksDaten]
-        load = [make_load_for_one_plant() for kw in KraftwerksDaten]
+        loads = [make_load_for_one_plant() for kw in KraftwerksDaten]
 
-        LaufwasserAuslastung = {'id': KWid, 'load': load}
-        return LaufwasserAuslastung
+        Auslastung = {'id': KWid, 'load': loads}
+        return Auslastung
 
 
 # For testing purposes

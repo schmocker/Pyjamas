@@ -215,9 +215,9 @@ class Model(Supermodel):
             return auslastung.tolist()
 
         KWid = [kw[0] for kw in KraftwerksDaten]
-        load = [make_load_for_one_wt(kw[0], kw[2]['NH'], kw[2]['Z0']) for kw in KraftwerksDaten]
+        loads = [make_load_for_one_wt(kw[0], kw[2]['NH'], kw[2]['Z0']) for kw in KraftwerksDaten]
 
-        WTAuslastung = {'id': KWid, 'load': load}
+        WTAuslastung = {'id': KWid, 'load': loads}
         return WTAuslastung
 
 

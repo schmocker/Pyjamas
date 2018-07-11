@@ -12,7 +12,8 @@ class Model(Supermodel):
         # define inputs
         self.inputs['WTAuslastung'] = Input('LoadWindTurbine', info='value[0-1]')
         self.inputs['PVAuslastung'] = Input('LoadPhotovoltaic', info='value[0-1]')
-        self.inputs['LaufwasserKWAuslastung'] = Input('LoadRunningPowerPlant', info='value[0-1]')
+        self.inputs['LaufwasserKWAuslastung'] = Input('LoadRunningWaterPowerPlant', info='value[0-1]')
+        self.inputs['SpeicherwasserKWAuslastung'] = Input('LoadStoragePowerPlant', info='value[0-1]')
         self.inputs['KWDaten'] = Input('PowerPlantsData', info='IDs extracted from PowerPlantData')
 
         # define outputs
@@ -23,19 +24,20 @@ class Model(Supermodel):
         WTAuslastung = await self.get_input('WTAuslastung')
         PVAuslastung = await self.get_input('PVAuslastung')
         LWKWAuslastung = await self.get_input('LaufwasserKWAuslastung')
+        SWKWAuslastung = await self.get_input('SpeicherwasserKWAuslastung')
         KWDaten = await self.get_input('KWDaten')
 
         # calculate
-        GemeinsameAuslastung = self.auslastungallerKWs(WTAuslastung, PVAuslastung, LWKWAuslastung, KWDaten)
+        GemeinsameAuslastung = self.auslastungallerKWs(WTAuslastung, PVAuslastung, LWKWAuslastung, SWKWAuslastung, KWDaten)
 
         # set output
         self.set_output("GemeinsameAuslastung", GemeinsameAuslastung)
 
 
     # define additional methods (normal)
-    def auslastungallerKWs(self, WTauslastung, PVauslastung, LWauslastung, KWDaten):
-        # Determine the load(Auslastung) of each power plant according to incoming Foreign Keys separately and then
-        # combine them together in a matrix to form combined loading
+    def auslastungallerKWs(self, WTauslastung, PVauslastung, LWKWauslastung, SWKWAuslastung, KWDaten):
+        # Determine the load(Auslastung) of each power plant according to incoming Power plant key /Foreign Keys
+        # separately and then combine them together in a matrix to form combined loading
         ###################################################################################################################
         # Input Arguments:
         ## WTAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
@@ -93,16 +95,21 @@ class Model(Supermodel):
         PVauslastungLoad = PVauslastung['load']                      # shape(3,96)
         PVauslastung = np.hstack((PVauslastungID, PVauslastungLoad))
 
-        LWauslastungID = np.array([LWauslastung['id']]).transpose()  # shape(3,1)
-        LWauslastungLoad = LWauslastung['load']  # shape(3,96)
-        LWauslastung = np.hstack((LWauslastungID, LWauslastungLoad))
+        LWKWauslastungID = np.array([LWKWauslastung['id']]).transpose()  # shape(3,1)
+        LWKWauslastungLoad = LWKWauslastung['load']  # shape(3,96)
+        LWKWauslastung = np.hstack((LWKWauslastungID, LWKWauslastungLoad))
 
-        AuslastungWtPvLw = np.vstack((WTauslastung, PVauslastung, LWauslastung))
+        SWKWAuslastungID = np.array([SWKWAuslastung['id']]).transpose()  # shape(3,1)
+        SWKWAuslastungLoad = SWKWAuslastung['load']  # shape(3,96)
+        SWKWAuslastung = np.hstack((SWKWAuslastungID, SWKWAuslastungLoad))
 
-        # Filtering elements in KWDaten that are not in AuslastungWtPvLw, representing power plants other than PV or Wind
+        AuslastungWtPvLwSw = np.vstack((WTauslastung, PVauslastung, LWKWauslastung, SWKWAuslastung))
+
+        # Filtering elements in KWDaten that are not in AuslastungWtPvLwSw, representing power plants other than PV,
+        # Wind, Running-Water, or Storage
         # BoolDifference is a 1D vector holding TRUE/FALSE, False values corresponds to the values present only in KWDaten
         KWDatenID = np.array([KWDaten['id']]).transpose()  # shape(3,1)
-        BoolDifference = np.in1d(KWDatenID[:, 0], AuslastungWtPvLw[:, 0])
+        BoolDifference = np.in1d(KWDatenID[:, 0], AuslastungWtPvLwSw[:, 0])
 
         # Extracting KWIDs of other power plants
         OtherPowerPlantIDs = KWDatenID[BoolDifference == False]
@@ -110,7 +117,7 @@ class Model(Supermodel):
         AuslastungOPP = np.ones((OtherPowerPlantIDs.shape[0], len(WTauslastungLoad[0])))
         OtherPowerPlantsAuslastung = np.hstack((OtherPowerPlantIDs, AuslastungOPP))
 
-        AuslastungAllerKWs = np.vstack((AuslastungWtPvLw, OtherPowerPlantsAuslastung))
+        AuslastungAllerKWs = np.vstack((AuslastungWtPvLwSw, OtherPowerPlantsAuslastung))
         AuslastungAllerKWs = {'id': AuslastungAllerKWs[:,0].tolist(), 'load': AuslastungAllerKWs[:,1:].tolist()}
         return AuslastungAllerKWs
 
