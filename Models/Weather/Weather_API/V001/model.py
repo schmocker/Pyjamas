@@ -28,7 +28,9 @@ class Model(Supermodel):
 
     async def func_birth(self):
 
-        url_ad = 1
+        with open("confidential/API_Key.txt", "r") as f:
+            API_key = f.readline()
+        url_ad = API_key
         text = requests.get(url_ad).json()
 
 
