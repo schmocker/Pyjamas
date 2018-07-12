@@ -1,4 +1,4 @@
-# imports for core
+# imports from core
 from core import Supermodel
 from core.util import Input, Output, Property
 
@@ -9,17 +9,15 @@ from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraf
     Kraftwerksleistung, Brennstoffpreis, Entsorgungspreis, Co2Preis, create_dummy_data
 
 # general imports
-import datetime
+import time
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d # is used even if warning says otherwise!
 from scipy.interpolate import griddata
-from pytz import timezone
 from dotenv import load_dotenv
 from os import environ
 
 from Models._utils.time import utc_time2datetime
 from Models._utils.time import datetime2utc_time
+
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -29,17 +27,15 @@ class Model(Supermodel):
         super(Model, self).__init__(model_id, name)
 
         # define inputs
-        self.inputs['t'] = Input('Zeitarray')
+        self.inputs['t'] = Input('Zeit')
 
         # define outputs
         self.outputs['kw_park'] = Output('Kraftwerkspark')
 
         # define properties
-        # Property(<initial value>,<type>,<info dictionary>)
         self.properties['prop1'] = Property('property1', default=10, data_type=float)
 
         # define persistent variables
-        self.pers_variable_0 = 5
         self.db = None
 
     async def func_birth(self):
@@ -47,23 +43,24 @@ class Model(Supermodel):
         # create database
         self.db = start_db()
 
+    # TODO remove amend and prep if unused
     async def func_amend(self, keys=[]):
         pass
 
     async def func_prep(self):
         pass
-        ## # calculate something
-        ## prep_result = 3 * 5
-        ## # pass values to peri function
-        ## return prep_result
+        # # # calculate something
+        # # prep_result = 3 * 5
+        # # # pass values to peri function
+        # # return prep_result
 
     async def func_peri(self, prep_to_peri=None):
-        ## prep_result = prep_to_peri
+        # # prep_result = prep_to_peri
 
         # get inputs
         t_in = await self.get_input('t')
         # only first time value for interpolation
-        kw_time = t_in[0]
+        kw_time = [t_in[0]]
 
         """
         Naming conventions for queried and interpolated data:
@@ -98,134 +95,113 @@ class Model(Supermodel):
 
         # query Co2Preis
         db_co2 = self.db.query(Co2Preis).all()
-        db_co2_t = [i.datetime for i in db_co2]
+        db_co2_t = [datetime2utc_time(i.datetime) for i in db_co2]
         db_co2_preis = [i.preis for i in db_co2]
 
+        print("queries finished successfully")
+
         # Brennstoffpreis Interpolation
-        bsp = []
+        bs_preis_int = []
         for kw in db_kw:
+            print("Brennstoffpreis", kw.id, kw.bezeichnung)
             if kw.kraftwerkstyp.brennstofftyp.bezeichnung == "None":
-                kw_bsp = np.asarray([np.nan])
+                kw_bs_preis = [float('nan')]
             else:
-                print("Brennstoffpreis", kw.id, kw.bezeichnung)
                 db_bsp = kw.kraftwerkstyp.brennstofftyp.brennstoffpreise
-                db_bsp_t = [i.datetime for i in db_bsp]
+                db_bsp_t = [datetime2utc_time(i.datetime) for i in db_bsp]
                 db_bsp_lat = [i.lat for i in db_bsp]
                 db_bsp_long = [i.long for i in db_bsp]
                 db_bsp_preis = [i.preis for i in db_bsp]
 
-                db_kw_lat = kw.lat
-                db_kw_long = kw.long
+                kw_bs_preis = self.interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis,
+                                               kw.lat, kw.long, kw_time)
 
-                kw_bsp = self.interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis,
-                                          db_kw_lat, db_kw_long, kw_time)
-
-            bsp = bsp + [kw_bsp]
-        bsp = np.array(bsp)
+            bs_preis_int = bs_preis_int + kw_bs_preis
 
         # CO2-Preis Interpolation
-        co2_preis = []
+        co2_preis_int = []
         for kw in db_kw:
-            print("CO2-Preis", kw.id, kw.bezeichnung)
-            co2_preis = co2_preis + [self.interpol_1d(db_co2_t, db_co2_preis, kw_time)]
-        co2_preis = np.array(co2_preis)
+            print("CO2 Preis", kw.id, kw.bezeichnung)
+            co2_preis_int = co2_preis_int + self.interpol_1d(db_co2_t, db_co2_preis, kw_time)
 
         # Entsorgungspreis Interpolation
-        ents = []
+        ents_preis_int = []
         for kw in db_kw:
             print("Entsorgungspreis", kw.id, kw.bezeichnung)
             db_ents = kw.kraftwerkstyp.entsorgungspreise
-            db_ents_t = [i.datetime for i in db_ents]
-            db_ents_lat = [i.lat for i in db_ents]
-            db_ents_long = [i.long for i in db_ents]
-            db_ents_preis = [i.preis for i in db_ents]
 
-            db_kw_lat = kw.lat
-            db_kw_long = kw.long
+            if len(db_ents) == 0:
+                kw_ents = [float('nan')]
 
-            ents = ents + [self.interpol_3d(db_ents_t, db_ents_lat, db_ents_long, db_ents_preis,
-                                            db_kw_lat, db_kw_long, kw_time)]
-        ents = np.array(ents)
+            else:
+                db_ents_t = [datetime2utc_time(i.datetime) for i in db_ents]
+                db_ents_lat = [i.lat for i in db_ents]
+                db_ents_long = [i.long for i in db_ents]
+                db_ents_preis = [i.preis for i in db_ents]
+
+                kw_ents = self.interpol_3d(db_ents_t, db_ents_lat, db_ents_long, db_ents_preis,
+                                           kw.lat, kw.long, kw_time)
+
+            ents_preis_int = ents_preis_int + kw_ents
 
         # P_inst Interpolation
-        pinst = []
+        pinst_int = []
         for kw in db_kw:
-            print("P_inst", kw.id, kw.bezeichnung)
+            print("P inst", kw.id, kw.bezeichnung)
             db_pinst = kw.kraftwerksleistungen
-            db_pinst_t = [i.datetime for i in db_pinst]
+            db_pinst_t = [datetime2utc_time(i.datetime) for i in db_pinst]
             db_pinst_p = [i.power_inst for i in db_pinst]
 
-            pinst = pinst + [self.interpol_1d(db_pinst_t, db_pinst_p, kw_time)]
-        pinst = np.array(pinst)
-
-        # Verguetung Interpolation
-        verg = []
-        for kw in db_kw:
-            print("Verguetung", kw.id, kw.bezeichnung)
-            db_verg = kw.kraftwerkstyp.verguetungen
-            db_verg_t = [i.datetime for i in db_verg]
-            db_verg_lat = [i.lat for i in db_verg]
-            db_verg_long = [i.long for i in db_verg]
-            db_verg_beitrag = [i.beitrag for i in db_verg]
-
-            db_kw_lat = kw.lat
-            db_kw_long = kw.long
-
-            verg = verg + [self.interpol_3d(db_verg_t, db_verg_lat, db_verg_long, db_verg_beitrag,
-                                            db_kw_lat, db_kw_long, kw_time)]
-        verg = np.array(verg)
+            pinst_int = pinst_int + self.interpol_1d(db_pinst_t, db_pinst_p, kw_time)
 
         # Berechnung CO2-Kosten
         co2_kosten = []
         for idx, kw in enumerate(db_kw):
-            print("CO2-Kosten", kw.id, kw.bezeichnung)
+            print("CO2 Kosten", kw.id, kw.bezeichnung)
             co2_emissfakt = kw.kraftwerkstyp.brennstofftyp.co2emissFakt
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-            co2_preis = co2_preis[idx]
-            co2_kosten = co2_kosten + [co2_preis * co2_emissfakt / wirkungsgrad]
-        co2_kosten = np.array(co2_kosten)
+            co2_kosten = co2_kosten + [co2_preis_int[idx] * co2_emissfakt / wirkungsgrad]
 
         # Berechnung Entsorgungskosten
         ents_kosten = []
         for idx, kw in enumerate(db_kw):
             print("Entsorgungskosten", kw.id, kw.bezeichnung)
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-            ents = ents[idx]
-            ents_kosten = ents_kosten + [ents / wirkungsgrad]
-        ents_kosten = np.array(ents_kosten)
+            ents_kosten = ents_kosten + [ents_preis_int[idx] / wirkungsgrad]
 
         # Berechnung Brennstoffkosten
         bs_kosten = []
         for idx, kw in enumerate(db_kw):
             print("Brennstoffkosten", kw.id, kw.bezeichnung)
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-            bsp = bsp[idx]
-            bs_kosten = bs_kosten + [bsp / wirkungsgrad]
-        bs_kosten = np.array(bs_kosten)
+            bs_kosten = bs_kosten + [bs_preis_int[idx] / wirkungsgrad]
 
-        # TODO assemble kwp table
-        # id¦bez¦lat¦long¦p_inst¦fk_KWT¦bez_KWT¦bez_subtyp¦wirk.¦spez_opex¦capex¦p_typ¦spez_info¦ents.preis¦verg¦
-        # fk_bst¦bez_bst¦co2emissfakt¦bs_preis¦co2_preis¦co2kosten¦entskosten¦brennstoffkosten
-        # set output
-
-        kwp = {"id":db_kw_id,
-               "bezeichnung":a,
-               "lat":a,
-               "long":a,
-               "p_inst":a,
-               "fk_kraftwerkstyp":a,
-               "bez_kraftwerkstyp":a,
-               "bez_subtyp":a,
-               "wirkungsgrad":a,
-               "spez_opex":a,
-               "capex":a,
-               "p_typisch":a,
-               "spez_info":a,
-               "entsorgungspreis":a,
-               "verguetung":a,
-               "co2_kosten":a,
-               "ents_kosten":a,
-               "bs_kosten":a,
+         # TODO Alle Namen prüfen
+        # TODO Namenskonvention!! (db, kwp,...)
+        kwp = {"id": db_kw_id,
+               "bezeichnung": db_kw_bez,
+               "lat": db_kw_lat,
+               "long": db_kw_long,
+               "p_inst": pinst_int,
+               "fk_kraftwerkstyp": db_kw_fk_kwt,
+               "kwt_id": db_kwt_id,
+               "bez_kraftwerkstyp": db_kwt_bez,
+               "bez_subtyp": db_kwt_bez_subtyp,
+               "wirkungsgrad": db_kwt_wirkungsgrad,
+               "spez_opex": db_kwt_opex,
+               "capex": db_kwt_capex,
+               "p_typisch": db_kwt_p_typisch,
+               "spez_info": db_kwt_spez_info,
+               "entsorgungspreis": ents_preis_int,
+               "fk_brennstofftyp": db_kwt_fk_brennstofftyp,
+               "brennstofftyp_id": db_bst_id,
+               "bez_brennstofftyp": db_bst_bez,
+               "co2emissfakt": db_bst_co2emissfakt,
+               "bs_preis_int": bs_preis_int,
+               "co2_preis_int": co2_preis_int,
+               "co2_kosten": co2_kosten,
+               "ents_kosten": ents_kosten,
+               "bs_kosten": bs_kosten,
                }
 
         self.set_output("kw_park", kwp)
@@ -263,64 +239,26 @@ class Model(Supermodel):
         INPUTS:
             |  db_lat: Latitude, list of [float]; nx1
             |  db_long: Longitude, list of [float]; nx1
-            |  db_time: Time, list of [datetime]; nx1
+            |  db_time: Time, list of [float](timestamp in s); nx1
             |  db_values: list of [float]; nx1
             |  kw_lat: Latitude, list of [float]; jx1
             |  kw_long: Longitude, list of [float]; jx1
-            |  kw_time: Time, list of [datetime]; jx1
+            |  kw_time: Time, list of [float](timestamp in s); jx1
 
         OUTPUTS:
-            kw_values: ndarray of [float]; jx1
+            kw_values: list of [float]; jx1
         """
+        db_lat = np.asarray(db_lat)
+        db_long = np.asarray(db_long)
+        db_time = np.asarray(db_time)
+        db_values = np.asarray(db_values)
+        kw_lat = np.asarray(kw_lat)
+        kw_long = np.asarray(kw_long)
+        kw_time = np.asarray(kw_time)
 
-        # test data or database data
-        test_data = False
-        test_data_ordered = False
-        plot_data = False
-
-        if test_data:
-            if not test_data_ordered:
-                # generate random locations and values for the grid and the data points
-                n_db_pts = 10
-                db_lat = np.random.rand(n_db_pts) * 30 + 20
-                db_long = np.random.rand(n_db_pts) * 20 - 5
-                t0 = datetime.datetime.utcnow()
-                db_time = t0 + np.random.randint(120, size=n_db_pts) * datetime.timedelta(days=30)
-                db_values = np.random.rand(db_lat.size) * 100
-
-                n_kw = 3
-                kw_lat = np.random.rand(n_kw) * 40 + 15
-                kw_long = np.random.rand(n_kw) * 30 - 10
-                kw_time = t0 + np.random.randint(-20, 130, size=n_kw) * datetime.timedelta(days=30)
-
-            else:
-                # set fixed locations and values for the grid and the data points
-                n_times = 5
-                db_lat = np.tile(np.array([0, 0, 0, 5, 5, 5, 10, 10, 10]), n_times)
-                db_long = np.tile(np.array([0, 5, 10, 0, 5, 10, 0, 5, 10]), n_times)
-                t0 = datetime.datetime.utcnow()
-                db_time = np.repeat(t0 + np.arange(n_times) * datetime.timedelta(days=365), 9)
-                db_values = np.repeat(np.arange(10, 151, 10), 3)
-
-                kw_lat = np.array([2.5, 7.5, 11])
-                kw_long = np.array([2.5, 7.5, 5])
-                kw_time = t0 + np.array([0.5, 2.5, 5]) * datetime.timedelta(days=365)
-
-        else:
-            db_lat = np.asarray(db_lat)
-            db_long = np.asarray(db_long)
-            db_time = np.asarray(db_time)
-            db_values = np.asarray(db_values)
-            kw_lat = np.asarray(kw_lat)
-            kw_long = np.asarray(kw_long)
-            kw_time = np.asarray(kw_time)
-
-        # change time values from datetime to float
-        db_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in db_time])
-        kw_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in kw_time])
         # arrange inputs for griddata
-        xi = np.vstack((kw_lat, kw_long, kw_timestamp))
-        gridpoints = np.vstack((db_lat, db_long, db_timestamp))
+        xi = np.vstack((kw_lat, kw_long, kw_time))
+        gridpoints = np.vstack((db_lat, db_long, db_time))
 
         # interpolate
         interp_nearest = griddata(gridpoints.T, db_values.T, xi.T, method='nearest')
@@ -331,44 +269,7 @@ class Model(Supermodel):
             # replace Nan in linear with nearest (out of range values)
             kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
 
-        if plot_data:
-            if not db_values.size < 4:
-                print('interp_linear')
-                print(interp_linear)
-            print('interp_nearest')
-            print(interp_nearest)
-            print('kw_values')
-            print(kw_values)
-
-            ax1 = plt.subplot(221, projection='3d')
-            ax1.scatter(db_lat, db_long, db_timestamp, c=db_values, depthshade=False)
-            ax1.scatter(kw_lat, kw_long, kw_timestamp, c='r', depthshade=False)
-            ax1.set_xlabel("lat")
-            ax1.set_ylabel("lon")
-            ax1.set_zlabel("time")
-
-            ax2 = plt.subplot(222)
-            ax2.plot(db_long, db_timestamp, 'k.', ms=5)
-            ax2.plot(kw_long, kw_timestamp, 'ro')
-            plt.title('Lon/Time')
-            ax2.set_ylabel("timestamp")
-            ax2.set_xlabel("lon")
-
-            ax3 = plt.subplot(223)
-            ax3.plot(db_lat, db_timestamp, 'k.', ms=5)
-            ax3.plot(kw_lat, kw_timestamp, 'ro')
-            plt.title('Lat/Time')
-            ax3.set_xlabel("lat")
-            ax3.set_ylabel("timestamp")
-
-            ax4 = plt.subplot(224)
-            ax4.plot(db_lat, db_long, 'k.', ms=5)
-            ax4.plot(kw_lat, kw_long, 'ro')
-            plt.title('Lat/Lon')
-            ax4.set_xlabel("lat")
-            ax4.set_ylabel("lon")
-
-            plt.show()
+        kw_values = kw_values.tolist()
 
         return kw_values
 
@@ -396,43 +297,13 @@ class Model(Supermodel):
             |  kw_long: Longitude, list of [float]; jx1
 
         OUTPUTS:
-            kw_values: ndarray of [float]; jx1
+            kw_values: list of [float]; jx1
         """
-
-        # test data or database data
-        test_data = False
-        test_data_ordered = False
-        plot_data = False
-
-        if test_data:
-            if not test_data_ordered:
-                # generate random locations and values for the grid and the data points
-
-                n_db_pts = 5
-                db_lat = np.random.rand(n_db_pts) * 30 + 20
-                db_long = np.random.rand(n_db_pts) * 20 - 5
-                db_values = np.random.rand(db_lat.size) * 100
-
-                n_kw = 3
-                kw_lat = np.random.rand(n_kw) * 40 + 15
-                kw_long = np.random.rand(n_kw) * 30 - 10
-
-            else:
-                # set fixed locations and values for the grid and the data points
-
-                db_lat = np.array([0, 0, 0, 5, 5, 5, 10, 10, 10])
-                db_long = np.array([0, 5, 10, 0, 5, 10, 0, 5, 10])
-                db_values = np.arange(9) + 1
-
-                kw_lat = np.array([2.5, 7.5, 11])
-                kw_long = np.array([2.5, 7.5, 5])
-
-        else:
-            db_lat = np.asarray(db_lat)
-            db_long = np.asarray(db_long)
-            db_values = np.asarray(db_values)
-            kw_lat = np.asarray(kw_lat)
-            kw_long = np.asarray(kw_long)
+        db_lat = np.asarray(db_lat)
+        db_long = np.asarray(db_long)
+        db_values = np.asarray(db_values)
+        kw_lat = np.asarray(kw_lat)
+        kw_long = np.asarray(kw_long)
 
         # arrange inputs for griddata
         xi = np.vstack((kw_lat, kw_long))
@@ -448,22 +319,7 @@ class Model(Supermodel):
             # replace Nan in linear with nearest (out of range values)
             kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
 
-        if plot_data:
-            if not db_values.size < 3:
-                print('interp_linear')
-                print(interp_linear)
-            print('interp_nearest')
-            print(interp_nearest)
-            print('kw_values')
-            print(kw_values)
-
-            ax1 = plt.axes()
-            ax1.plot(db_long, db_lat, 'k+', ms=15)
-            ax1.plot(kw_long, kw_lat, 'ro')
-            plt.title('Lon/Lat')
-            ax1.set_xlabel("longitude")
-            ax1.set_ylabel("latitude")
-            plt.show()
+        kw_values = kw_values.tolist()
 
         return kw_values
 
@@ -481,41 +337,22 @@ class Model(Supermodel):
         If only one value for X and Y is provided, the output array is filled with the input value (nearest)
 
         INPUTS:
-            |  time: list of [datetime]; nx1 (n>=2)
+            |  time: list of [float](timestamp in s); nx1 (n>=2)
             |  values: list of [float]; nx1 (n>=2)
-            |  kw_time: list of [datetime]; mx1 (m>=1)
+            |  kw_time: list of [float](timestamp in s); mx1 (m>=1)
 
         OUTPUTS:
-            kw_values: ndarray of [float]; mx1
+            kw_values: list of [float]; mx1
         """
 
-        # test data or database data
-        test_data = False
-        plot_data = False
+        db_time = np.asarray(db_time)
+        db_values = np.asarray(db_values)
+        kw_time = np.asarray(kw_time)
 
-        if test_data:
-            # create 3 time values (today, 1 and 2 years from now) and random corresponding y values
-            t0 = datetime.datetime.now(timezone('utc'))
-            db_time = t0 + np.arange(3) * datetime.timedelta(days=365)
-            db_values = np.random.rand(3) * 100
-
-            # create 1 or 4 test values
-            kw_time = t0 + np.random.rand(4) * 30 * datetime.timedelta(days=30)
-            # kw_time = t0 + np.random.rand(1) * 30 * datetime.timedelta(days=30)
-
-        else:
-            db_time = np.asarray(db_time)
-            db_values = np.asarray(db_values)
-            kw_time = np.asarray(kw_time)
-
-        # change time values from datetime to float
-        db_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in db_time])
-        kw_timestamp = np.asarray([datetime.datetime.timestamp(i) for i in kw_time])
-
-        if db_timestamp.size > 1:
+        if db_time.size > 1:
             # interpolate
-            interp_nearest = griddata(db_timestamp.T, db_values.T, kw_timestamp.T, method='nearest')
-            interp_linear = griddata(db_timestamp.T, db_values.T, kw_timestamp.T, method='linear')
+            interp_nearest = griddata(db_time.T, db_values.T, kw_time.T, method='nearest')
+            interp_linear = griddata(db_time.T, db_values.T, kw_time.T, method='linear')
 
             # replace Nan in linear with nearest (out of range values)
             kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
@@ -524,21 +361,7 @@ class Model(Supermodel):
             # if only one time and one value is provided, set output to nearest (which in this case is the input value)
             kw_values = np.full(kw_time.size, db_values[0])
 
-        if plot_data:
-            if db_timestamp.size > 1:
-                print('interp_linear')
-                print(interp_linear)
-                print('interp_nearest')
-                print(interp_nearest)
-                print('interp_combined')
-                print(kw_values)
-
-            ax1 = plt.axes()
-            ax1.plot(db_timestamp, db_values, 'k+', ms=15)
-            ax1.plot(kw_timestamp, kw_values, 'ro')
-            ax1.set_xlabel("time")
-            ax1.set_ylabel("values")
-            plt.show()
+        kw_values = kw_values.tolist()
 
         return kw_values
 
@@ -570,21 +393,25 @@ def start_db():
 
 
 if __name__ == "__main__":
-    db = start_db()
-
-    kws = db.query(Kraftwerk).all()
-    kw = db.query(Kraftwerk).first()
-
-    stop = 1
-
+    # db = start_db()
+    #
+    # kws = db.query(Kraftwerk).all()
+    # kw = db.query(Kraftwerk).first()
+    #
+    # stop = 1
+    #
     # define Input
     dt = 900
-    t0 = datetime.datetime.now()
-    t = t0 + np.arange(96) * datetime.timedelta(seconds=dt)
-    inputs = {'t': t}
+    t0 = time.time()
+    t = [i * dt + t0 for i in range(96)]
 
-    h_hub = 12
-    d = 26
-    properties = {'h_hub': h_hub, 'd': d}
+    inputs = {'t': t}
+    #
+    # h_hub = 12
+    # d = 26
+    # properties = {'h_hub': h_hub, 'd': d}
+    properties = {'prop1': 10}
 
     outputs = Model.test(inputs, properties)
+
+    stop = 1
