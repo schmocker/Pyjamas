@@ -11,35 +11,35 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['AuslastungallerKWs'] = Input('CombinedLoad', info='dict')
+        self.inputs['opex'] = Input('OPEX', info='dict')
         self.inputs['KWDaten'] = Input('PowerPlantsData', info='dict')
 
         # define outputs
-        self.outputs['opex'] = Output('OPEX')
+        self.outputs['Grenzkosten'] = Output('MarginalCost')
 
 
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
-        CombinedLoad = await self.get_input('AuslastungallerKWs')
+        OPEX = await self.get_input('opex')
         KWDaten = await self.get_input('KWDaten')
 
-        OperationalExpenses = self.operatingexpenses(CombinedLoad, KWDaten)
+        Grenzkosten = self.marginalcost(OPEX, KWDaten)
 
         # set output
-        self.set_output("opex", OperationalExpenses)
+        self.set_output("Grenzkosten", Grenzkosten)
 
 
     # define additional methods (normal)
-    def operatingexpenses(self, CombinedLoad, KWDaten):
+    def marginalcost(self, OPEX, KWDaten):
         # Determine the output power[W] of each power plant
         ###################################################################################################################
         # Input Arguments:
-        # CombinedLoad: Dictionary containing KWIDs and load(Auslastung) of all power plants
+        # OPEX: Dictionary containing KWIDs and operating expenses of all power plants
         # -----------------
-        # KWIDs  Auslastung   Note: Input matrix/dictionary is not sorted and contains the load of wind turbines at first place
-        # -----------------         on the top, then comes the load of PV and in the last comes the load of remaining
-        #   1    array(96)          power plants(having 100% load).
+        # KWIDs  Auslastung   Note: Input matrix/dictionary is sorted according to KWDaten
+        # -----------------
+        #   1    array(96)
         #   3    array(96)
         #   5    array(96)
         #   2    array(96)
@@ -65,10 +65,10 @@ class Model(Supermodel):
         # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
         #
         # Output Arguments:
-        # ScaledPower: Dictionary containing KWIDs in the first column  and corresponding calculated
-        # power of a power plant in following 96 columns
+        # Grenzkosten: Dictionary containing KWIDs in the first column  and corresponding calculated
+        # marginal cost for a power plant in following 96 columns
         # -----------------
-        # id  Auslastung   Note: Output matrix is sorted according to the incoming id's of KWDaten.
+        # id   Grenzkosten   Note: Output matrix is sorted according to the incoming id's of KWDaten.
         # -----------------
         #  1    array(96)
         #  2    array(96)
@@ -82,30 +82,21 @@ class Model(Supermodel):
         ###################################################################################################################
         KWDatenID = KWDaten['id']
 
-        def make_opex_for_one_plant(kw_id):
-            index_of_kwid_in_CombinedLoad = CombinedLoad['id'].index(kw_id)
-            auslastung_for_kwid = CombinedLoad['load'][index_of_kwid_in_CombinedLoad]
-
+        def make_cost_for_one_plant(kw_id):
+            index_of_kwid_in_OPEX = OPEX['id'].index(kw_id)
+            OPEX_for_kwid = OPEX['opex'][index_of_kwid_in_OPEX]
+            OPEXP = np.array(OPEX_for_kwid)
             index_of_kwid_in_KWDaten = KWDaten['id'].index(kw_id)
-            capex_for_kwid = KWDaten['capex'][index_of_kwid_in_KWDaten]
-            opex_for_kwid = KWDaten['opex'][index_of_kwid_in_KWDaten]
-            expenses = capex_for_kwid * opex_for_kwid
+            brennstoffkosten_for_kwid = KWDaten['brennstoffkosten'][index_of_kwid_in_KWDaten]
+            co2kosten_for_kwid = KWDaten['co2kosten'][index_of_kwid_in_KWDaten]
+            entsorgungskosten_for_kwid = KWDaten['entsorgungskosten'][index_of_kwid_in_KWDaten]
+            kev_for_kwid = KWDaten['kev'][index_of_kwid_in_KWDaten]
+            KEV = np.array(kev_for_kwid)
 
-            # boolean mask to avoid divide by zero
-            boolmask = [(load!=0) for load in auslastung_for_kwid]
+            Grenzkosten = OPEXP + brennstoffkosten_for_kwid + co2kosten_for_kwid + entsorgungskosten_for_kwid - KEV
+            return Grenzkosten.tolist()
 
-            # Function to avoid divide by zero
-            def safedivide(bool, divider):
-                if bool:
-                    result = expenses / divider
-                else:
-                    result = 0
-                return result
+        GrenzkostenForAllPlants = [make_cost_for_one_plant(id) for id in KWDatenID]
 
-            Opex = [safedivide(val, divider =auslastung_for_kwid[idx]) for idx, val in enumerate(boolmask)]
-            return Opex
-
-        OpexForAllPlants = [make_opex_for_one_plant(id) for id in KWDatenID]
-
-        opex = {'id': KWDatenID, 'opex': OpexForAllPlants}
-        return opex
+        Grenzkosten = {'id': KWDatenID, 'Grenzkosten': GrenzkostenForAllPlants}
+        return Grenzkosten
