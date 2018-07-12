@@ -24,3 +24,4 @@ scipy
 paho-mqtt
 pandas
 requests
+geopy
