@@ -37,25 +37,6 @@ class Model(Supermodel):
         self.set_output("load", load)
 
 
-    '''
-    def laufwasserpowerplant(self, WaterFlowRate):
-        # Simulates a dummy running water power plant for specified incoming values
-        ###################################################################################################################
-        # Input Arguments:
-        # WaterFlowRate: Measured values
-        #
-        # Output Arguments:
-        # Auslastung: Calculated load(Auslastung), output values are between [0-1]
-        ###################################################################################################################
-
-        # Generates random numbers between 0 & 100
-        #PowerOutput = random.sample(range(0, 100), WaterFlowRate.shape[1])
-        PowerOutput = random.sample(range(0, 100), len(WaterFlowRate))
-        Auslastung = [(num / 100) for num in PowerOutput]
-
-        return Auslastung
-    '''
-
     # define additional methods (normal)
     def laufwasserKWauslastung(self, KWDaten, Futures):
         # Determine the load(Auslastung) running water power plant
@@ -100,11 +81,6 @@ class Model(Supermodel):
             # One-dimensional linear interpolation
             load = np.interp(futures, self.ref_dates, self.ref_loads).tolist()
             return load
-
-            # laufwasserdaten = Futures
-
-            # auslastung = self.laufwasserpowerplant(laufwasserdaten)
-            # return auslastung
 
         KWid = [kw[0] for kw in KraftwerksDaten]
         loads = [make_load_for_one_plant() for kw in KraftwerksDaten]

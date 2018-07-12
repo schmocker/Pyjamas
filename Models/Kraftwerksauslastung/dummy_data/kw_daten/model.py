@@ -62,7 +62,9 @@ class Model(Supermodel):
              'brennstoffkosten': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12],
              'co2kosten': [0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.0010, 0.0011, 0.0012],
              'entsorgungskosten': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.10, 0.11, 0.12],
-             'kev':[kev1, kev2, KeinKEV, kev4, kev5, KeinKEV, KeinKEV, KeinKEV, kev11, KeinKEV, kev13, KeinKEV]}
+             'kev':[kev1, kev2, KeinKEV, kev4, kev5, KeinKEV, KeinKEV, KeinKEV, kev11, KeinKEV, kev13, KeinKEV],
+             'latitude':[51.165691, 46.227638, 47.516231, 41.871940, 51.165691, 46.227638, 47.516231, 41.871940, 51.165691, 46.227638, 47.516231, 41.871940],
+             'longitude':[10.451526, 2.213749, 14.550072, 12.567380, 10.451526, 2.213749, 14.550072, 12.567380, 10.451526, 2.213749, 14.550072, 12.567380]}
 
 
     async def func_peri(self, prep_to_peri=None):
