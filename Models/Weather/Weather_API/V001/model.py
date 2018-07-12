@@ -28,7 +28,7 @@ class Model(Supermodel):
 
     async def func_birth(self):
 
-        url_ad = "http://my.meteoblue.com/packages/basic-1h_solar-1h?apikey=137fcf8f8d26&lat=36.79&lon=-10.04&asl=0&temperature=C&windspeed=ms-1&format=json&tz=UTC"
+        url_ad = 1
         text = requests.get(url_ad).json()
 
 
