@@ -71,20 +71,6 @@ class Kraftwerksleistung(Base):
                              backref=backref("kraftwerksleistungen", cascade="all, delete-orphan", lazy=True))
 
 
-class Verguetung(Base):
-    __tablename__ = 'verguetung'
-    # declare columns
-    id = Column(Integer, primary_key=True)
-    fk_kraftwerkstyp = Column(Integer, ForeignKey('kraftwerkstyp.id', ondelete="CASCADE"))
-    long = Column(Float, nullable=False)
-    lat = Column(Float, nullable=False)
-    datetime = Column(DateTime, nullable=False)
-    beitrag = Column(Float, nullable=False)
-    # declare relations
-    kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp],
-                                 backref=backref("verguetungen", cascade="all, delete-orphan", lazy=True))
-
-
 class Entsorgungspreis(Base):
     __tablename__ = 'entsorgungspreis'
     # declare columns
