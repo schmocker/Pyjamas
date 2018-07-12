@@ -5,8 +5,8 @@ from Models._utils.time import datetime2utc_time, utc_time2datetime
 import numpy as np
 from pytz import timezone
 import json
-import math
 from scipy.interpolate import griddata
+import pandas as pd
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -21,7 +21,8 @@ class Model(Supermodel):
         self.inputs['date'] = Input(name='Time vector', unit='s', info="Time in utc")
 
         # define outputs
-        # self.outputs['weather_data'] = Output(name='weather data of KWs', unit='date, °C, m/s, ???', info='????')
+        self.outputs['KW_weather'] = Output(name='weather data of KWs', unit='date, °C, m/s, ???', info='????')
+        self.outputs['Futures_weather'] = Output(name='future weather data (temperature, wind speed, radiation)', unit='date, °C, m/s, ???', info='????')
 
         # define properties
         self.properties['T_offset'] = Property(default=0., data_type=float, name='temperature offset', unit='%', info="offset of temperature in %")
@@ -36,7 +37,8 @@ class Model(Supermodel):
         self.mode = None
 
     async def func_birth(self):
-        pass
+        self.data_hist = self.historic_data_read()
+        #pass
 
     async def func_amend(self, keys=[]):
 
@@ -44,36 +46,31 @@ class Model(Supermodel):
             self.ref_year = self.get_property('ref_year')
             self.data_hist_year = self.historic_select_year(self.data_hist, self.ref_year)
 
-        if 'mode' in keys:
-            self.mode = self.get_property('mode')
-            if (self.mode == 'simulation') & (self.data_hist == None):
-                # read historic weather data
-                self.data_hist = self.historic_data_read()
-
     async def func_peri(self, prep_to_peri=None):
 
         # get inputs
         mode = await self.get_input('mode')
         KW_data_orig = await self.get_input('KW')
-        KW_data =1
-        dates = await self.get_input('date')
+        KW_data = {k: KW_data_orig[k] for k in ('id', 'kw_bezeichnung', 'lat', 'lon')}
+        futures = await self.get_input('date')
 
-        # set dates back to ref_year
-        dates = self.dates_shift(dates)
+        # prepare weather data
+        mode = 'simulation'
+        if mode == 'simulation':
+            weather_data = self.prepare_historic_weather(futures)
+        else:
+            weather_data = self.prepare_API_weather()
 
-        # filter ?historic? weather data
-        data_filtered = self.data_filter(dates)
-
-        # create data base of ?historic? weather data
-        data_base = self.create_database(data_filtered)
+        # KW weather
+        KW_weather_data = self.KW_weather_data(KW_data, weather_data, futures)
 
 
+        # futures weather
+        futures_weather_data = self.future_weather_data(futures, weather_data)
 
-        # interpolation
-        grid_pattern = {"lat": data_filtered["lat"],
-                        "lon": data_filtered["lon"],
-                        "times": data_filtered["times"]}
-        data_interp = self.interpolation(grid_pattern, data_base, KW_data["lat"], KW_data["lon"], dates)
+        # set output
+        self.set_output("KW_weather", KW_weather_data)
+        self.set_output("Futures_weather", futures_weather_data)
 
         r = 5
         print(r)
@@ -204,34 +201,6 @@ class Model(Supermodel):
 
         return data_base
 
-    def check_leapyear(self, current_year):
-        bool_leap_current_year = self.ind_leapyear(current_year)
-        bool_leap_ref_year = self.ind_leapyear(self.ref_year)
-
-        if bool_leap_current_year != bool_leap_ref_year:
-            print("change reference year due to inconsistency of leap year")
-            if bool_leap_current_year:
-                self.ref_year = int(2012)        # or 2008, 2012, 2016
-                print('')
-            else:
-                self.ref_year = int(self.ref_year+1) # instead of {2008, 2012, 2016} to {2009, 2013, 2017}
-
-    @staticmethod
-    def ind_leapyear(year_i):
-
-        if year_i%4 == 0:
-            if year_i%100 == 0:
-                if year_i%400 == 0:
-                    bool_leapyear = True
-                else:
-                    bool_leapyear = False
-            else:
-                bool_leapyear = True
-        else:
-            bool_leapyear = False
-
-        return bool_leapyear
-
     def dates_shift(self, dates):
         dates = [utc_time2datetime(x) for x in dates]
         date_1 = dates[0]
@@ -245,6 +214,23 @@ class Model(Supermodel):
         dates_shifted = [datetime2utc_time(x) for x in dates_shifted]
 
         return dates_shifted
+
+    #def datahist_shift(self, datahist, future_start):
+#
+    #    future_1 = utc_time2datetime(future_start)
+    #    future_1_ref = future_1.replace(year=self.ref_year)
+    #    date_shift = future_1-future_1_ref
+    #    print(date_shift)
+#
+    #    hist_time = datahist[:, 2]
+    #    hist_time = [utc_time2datetime(x) for x in hist_time]
+    #    hist_time_shifted = [x+date_shift for x in hist_time]
+    #    hist_time_shifted = [datetime2utc_time(x) for x in hist_time_shifted]
+#
+    #    forecast_weather = datahist
+    #    forecast_weather[:, 2] = hist_time_shifted
+#
+    #    return forecast_weather
 
     def interpolation(self, grid_pattern, data_base, lat_x, lon_x, time_x):
 
@@ -395,6 +381,132 @@ class Model(Supermodel):
             interp_values = np.full(kw_time.size, db_values[0])
 
         return interp_values
+
+    def prepare_historic_weather(self, futures):
+
+        # set futures back to ref_year
+        futures_shifted = self.dates_shift(futures)
+
+        # filter historic weather data
+        data_filtered = self.data_filter(futures_shifted)
+
+        # create data base of historic weather data
+        data_base = self.create_database(data_filtered)
+
+        # forecast weather data (shift of historic weather data)
+        #forecast_data = self.datahist_shift(data_base, futures[0])
+
+        return data_base            # forecast_data
+
+    def KW_weather_data(self, KW_data, weather_data, futures):
+
+        KW_data_columns = ['id', 'kw_bezeichnung', 'lat', 'lon']
+
+        # shift futures back
+        futures = self.dates_shift(futures)
+
+        KW_data_df = pd.DataFrame(KW_data)
+        #WT_data = KW_data_df.loc[KW_data_df['kw_bezeichnung'] == 'WT']
+        #PV_data = KW_data_df.loc[KW_data_df['kw_bezeichnung'] == 'PV']
+        WT_data = KW_data_df.loc[KW_data_df[KW_data_columns[1]] == 'WT']
+        PV_data = KW_data_df.loc[KW_data_df[KW_data_columns[1]] == 'PV']
+
+        weather_df = pd.DataFrame(data=weather_data, columns=['lat', 'lon', 'time', 'temperature', 'windspeed', 'radiation'])
+        weather_PV = weather_df[['lat', 'lon', 'time', 'radiation']]
+        weather_WT = weather_df[['lat', 'lon', 'time', 'windspeed']]
+
+        # 2D interpolation over lat/lon
+        time_vec = weather_df['time'].unique()
+        PV_weather_2D = pd.DataFrame()
+        WT_weather_2D = pd.DataFrame()
+        PV_weather_2D_ft_df = PV_data.copy()
+        PV_weather_2D_ft_df['radiation'] = [None] * PV_weather_2D_ft_df['id'].__len__()
+        PV_weather_2D_ft_df['time'] = [None] * PV_weather_2D_ft_df['id'].__len__()
+        WT_weather_2D_ft_df = WT_data.copy()
+        WT_weather_2D_ft_df['windspeed'] = [None] * WT_weather_2D_ft_df['id'].__len__()
+        WT_weather_2D_ft_df['time'] = [None] * WT_weather_2D_ft_df['id'].__len__()
+        for tt in time_vec:
+
+            weather_PV_tt = weather_PV.loc[weather_PV['time'] == tt]
+            weather_WT_tt = weather_WT.loc[weather_WT['time'] == tt]
+
+            PV_weather_2D_ft = self.interpol_2d(list(weather_PV_tt['lat']), list(weather_PV_tt['lon']), list(weather_PV_tt['radiation']),
+                                                list(PV_data['lat']), list(PV_data['lon']))
+            WT_weather_2D_ft = self.interpol_2d(list(weather_WT_tt['lat']), list(weather_WT_tt['lon']), list(weather_WT_tt['windspeed']),
+                                                list(WT_data['lat']), list(WT_data['lon']))
+
+            PV_weather_2D_ft_df['radiation'] = PV_weather_2D_ft.tolist()
+            PV_weather_2D_ft_df['time'] = [tt] * PV_weather_2D_ft_df['id'].__len__()
+            WT_weather_2D_ft_df['windspeed'] = WT_weather_2D_ft.tolist()
+            WT_weather_2D_ft_df['time'] = [tt] * WT_weather_2D_ft_df['id'].__len__()
+
+            PV_weather_2D = PV_weather_2D.append(PV_weather_2D_ft_df)
+            WT_weather_2D = WT_weather_2D.append(WT_weather_2D_ft_df)
+
+        # 1D interpolation over time
+        # - PV
+        id_vec = PV_weather_2D['id'].unique()
+        PV_weather_1d_fid_df = pd.DataFrame()
+        PV_weather_1D = pd.DataFrame()
+        for nid in id_vec:
+
+            PV_weather_nid = PV_weather_2D.loc[PV_weather_2D['id'] == nid]
+            PV_weather_1D_fid = self.interpol_1d(list(PV_weather_nid['time']), PV_weather_nid['radiation'], list(futures))
+
+            PV_weather_1d_fid_df['id'] = [nid] * futures.__len__()
+            PV_weather_1d_fid_df['time'] = list(futures)
+            PV_weather_1d_fid_df['value'] = list(PV_weather_1D_fid)
+
+            PV_weather_1D = PV_weather_1D.append(PV_weather_1d_fid_df)
+
+        # - WT
+        id_vec = WT_weather_2D['id'].unique()
+        WT_weather_1d_fid_df = pd.DataFrame()
+        WT_weather_1D = pd.DataFrame()
+        for nid in id_vec:
+            WT_weather_nid = WT_weather_2D.loc[WT_weather_2D['id'] == nid]
+            WT_weather_1D_fid = self.interpol_1d(list(WT_weather_nid['time']), WT_weather_nid['windspeed'], list(futures))
+
+            WT_weather_1d_fid_df['id'] = [nid] * futures.__len__()
+            WT_weather_1d_fid_df['time'] = list(futures)
+            WT_weather_1d_fid_df['value'] = list(WT_weather_1D_fid)
+
+            WT_weather_1D = WT_weather_1D.append(WT_weather_1d_fid_df)
+
+        # format
+        l_id = []
+        l_ws = []
+        l_rad = []
+        l_wm = []
+        l_wm_set = self.data_hist['windspeed']['height']
+        for n_id in range(0, KW_data[KW_data_columns[0]].__len__()):
+            l_id.append(KW_data[KW_data_columns[0]][n_id])
+
+            if KW_data[KW_data_columns[1]][n_id] is 'WT':
+                l_ws_i = WT_weather_1D[WT_weather_1D['id'] == KW_data[KW_data_columns[0]][n_id]]['value'].tolist()
+                l_ws.append(l_ws_i)
+                l_wm.append(l_wm_set)
+            else:
+                l_ws.append(None)
+                l_wm.append(None)
+
+            if KW_data[KW_data_columns[1]][n_id] is 'PV':
+                l_rad_i = PV_weather_1D[PV_weather_1D['id'] == KW_data[KW_data_columns[0]][n_id]]['value'].tolist()
+                l_rad.append(l_rad_i)
+            else:
+                l_rad.append(None)
+
+        KW_weather_data = {'id': l_id,
+                           'windspeed': l_ws,
+                           'radiation': l_rad,
+                           'windmesshoehe': l_wm}
+
+        return KW_weather_data
+
+    # def future_weather_data(self, futures, weather_data):
+#
+    #     future_weather_data = 1
+    #     return future_weather_data
 
 if __name__ == "__main__":
 
