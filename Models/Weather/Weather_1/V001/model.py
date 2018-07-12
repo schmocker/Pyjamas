@@ -171,11 +171,11 @@ class Model(Supermodel):
         num_times = data_filtered["times"].__len__()
         lat_vec = []
         lon_vec = []
-        time_vec = np.tile(np.array(data_filtered["times"]), num_points-1)
+        time_vec = np.tile(np.array(data_filtered["times"]), num_points)
         temp_vec = []
         wind_vec = []
         rad_vec = []
-        for it in range(0, 24):
+        for it in range(0, num_points):
             lat_vec.append(np.repeat(data_filtered["lat"][it], num_times))
             lon_vec.append(np.repeat(data_filtered["lon"][it], num_times))
 
@@ -199,7 +199,6 @@ class Model(Supermodel):
         rad_vec = rad_vec[np.newaxis, :].transpose()
 
         data_base = np.concatenate((lat_vec, lon_vec, time_vec, temp_vec, wind_vec, rad_vec), axis=1)
-
 
         return data_base
 
@@ -252,6 +251,7 @@ class Model(Supermodel):
         db_lon = grid_pattern["lon"]
 
         # interpolation of (lat, lon)
+        tt_it = 0
         for tt in db_time:
             data_tt = data_base[data_base[:, 2] == tt]
             data_T = data_tt[:, 3].tolist()
@@ -259,17 +259,47 @@ class Model(Supermodel):
             data_r = data_tt[:, 5]
 
             data_T_interp = self.interpol_2d(db_lat, db_lon, data_T, lat_x, lon_x)
+            data_u_interp = self.interpol_2d(db_lat, db_lon, data_u, lat_x, lon_x)
+            data_r_interp = self.interpol_2d(db_lat, db_lon, data_r, lat_x, lon_x)
+            data_time_i = np.tile(tt, lat_x.__len__())
 
+            data_2D_i = np.stack((np.array(lat_x), np.array(lon_x), data_time_i, data_T_interp, data_u_interp, data_r_interp), axis=0)
+            data_2D_i = data_2D_i.transpose()
 
+            if tt_it == 0:
+                data_2D_inter = data_2D_i
+            else:
+                data_2D_inter = np.concatenate((data_2D_inter, data_2D_i), axis=0)
+            tt_it = tt_it + 1
 
+        # interpolation of time
+        ni_it = 0
+        for ni in range(0, lat_x.__len__()):
+            lat_ni = lat_x[ni]
+            lon_ni = lon_x[ni]
 
+            data_ll = data_2D_inter[(data_2D_inter[:, 0] == lat_ni) & (data_2D_inter[:, 1] == lon_ni)]
+            data_tt_1 = data_ll[:, 2]
+            data_T_1 = data_ll[:, 3]
+            data_u_1 = data_ll[:, 4]
+            data_r_1 = data_ll[:, 5]
 
-            r = 2
+            data_T_1_interp = self.interpol_1d(data_tt_1, data_T_1, time_x)
+            data_u_1_interp = self.interpol_1d(data_tt_1, data_u_1, time_x)
+            data_r_1_interp = self.interpol_1d(data_tt_1, data_r_1, time_x)
+            data_lat_i = np.tile(lat_ni, time_x.__len__())
+            data_lon_i = np.tile(lon_ni, time_x.__len__())
 
-        r=1
+            data_1D_i = np.stack((data_lat_i, data_lon_i, time_x, data_T_1_interp, data_u_1_interp, data_r_1_interp), axis=0)
+            data_1D_i = data_1D_i.transpose()
 
+            if ni_it == 0:
+                data_1D_inter = data_1D_i
+            else:
+                data_1D_inter = np.concatenate((data_1D_inter, data_1D_i), axis=0)
+            ni_it = ni_it + 1
 
-
+        data_interp = data_1D_inter
 
         return data_interp
 
@@ -299,25 +329,70 @@ class Model(Supermodel):
 
         OUTPUTS:
             kw_values: ndarray of [float]; jx1
+            interp_values: ""
         """
 
         # arrange inputs for griddata
         xi = np.vstack((kw_lat, kw_long))
         gridpoints = np.vstack((db_lat, db_long))
-        g_values = np.array(db_values)
+        np_values = np.array(db_values)
 
         # interpolate
-        interp_nearest = griddata(gridpoints.T, g_values.T, xi.T, method='nearest')
+        interp_nearest = griddata(gridpoints.T, np_values.T, xi.T, method='nearest')
 
-        if db_values.size < 3:
-            kw_values = interp_nearest
+        #if db_values.size < 3:
+        if np_values.size < 3:
+                interp_values = interp_nearest
         else:
-            interp_linear = griddata(gridpoints.T, db_values.T, xi.T, method='linear')
+            #interp_linear = griddata(gridpoints.T, db_values.T, xi.T, method='linear')
+            interp_linear = griddata(gridpoints.T, np_values.T, xi.T, method='linear')
             # replace Nan in linear with nearest (out of range values)
-            kw_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
+            interp_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
 
-        return kw_values
+        return interp_values
 
+    # 1D Interpolation - based on 1D interpolation of European Power Plant
+    @staticmethod
+    def interpol_1d(db_time, db_values, kw_time):
+        """
+        This function interpolates in one dimension.
+        |  X: time
+        |  Y: values
+        |  xi: kw_time
+        |  yi: kw_values (output)
+
+        Values inside [X(min), X(max)] are interpolated linearly,
+        values outside of it are interpolated to the nearest X.
+        If only one value for X and Y is provided, the output array is filled with the input value (nearest)
+
+        INPUTS:
+            |  time: list of [datetime]; nx1 (n>=2)
+            |  values: list of [float]; nx1 (n>=2)
+            |  kw_time: list of [datetime]; mx1 (m>=1)
+
+        OUTPUTS:
+            kw_values: ndarray of [float]; mx1
+            interp_values: ""
+        """
+
+        # format
+        db_timestamp = np.array(db_time)
+        kw_timestamp = np.array(kw_time)
+        np_values = np.array(db_values)
+
+        if db_timestamp.size > 1:
+            # interpolate
+            interp_nearest = griddata(db_timestamp.T, np_values.T, kw_timestamp.T, method='nearest')
+            interp_linear = griddata(db_timestamp.T, np_values.T, kw_timestamp.T, method='linear')
+
+            # replace Nan in linear with nearest (out of range values)
+            interp_values = np.where(np.isnan(interp_linear), interp_nearest, interp_linear)
+
+        else:
+            # if only one time and one value is provided, set output to nearest (which in this case is the input value)
+            interp_values = np.full(kw_time.size, db_values[0])
+
+        return interp_values
 
 if __name__ == "__main__":
 
@@ -333,8 +408,8 @@ if __name__ == "__main__":
     date_series = [datetime2utc_time(x) for x in date_series]
     data_KW = {"lat": [40, 50],
                "lon": [0, 10]}
-    data_KW = {"lat": [40],
-               "lon": [0]}
+    #data_KW = {"lat": [40],
+    #           "lon": [0]}
 
     props = {'ref_year': 2008}
     inputs = {'date': date_series, 'KW': data_KW}
