@@ -5,9 +5,8 @@ from core.util import Input, Output, Property
 # imports for database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import os
-from Models import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
-    Kraftwerksleistung, Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis, create_dummy_data
+from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Kraftwerkstyp, Brennstofftyp, \
+    Kraftwerksleistung, Brennstoffpreis, Entsorgungspreis, Co2Preis, create_dummy_data
 
 # general imports
 import datetime
@@ -44,6 +43,7 @@ class Model(Supermodel):
         self.db = None
 
     async def func_birth(self):
+        # TODO necessary in final version?
         # create database
         self.db = start_db()
 
@@ -65,50 +65,42 @@ class Model(Supermodel):
         # only first time value for interpolation
         kw_time = t_in[0]
 
+        """
+        Naming conventions for queried and interpolated data:
+        
+        db_ : Queried directly from database or taken from another db_ value.
+        kw_ : Value valid for a single power plant
+        _int : interpolated values       
+        """
         # query Kraftwerk
         db_kw = self.db.query(Kraftwerk).all()
-        db_kw_id = self.db.query(Kraftwerk.id).order_by(Kraftwerk.id).all()
-        db_kw_bez = self.db.query(Kraftwerk.bezeichnung).order_by(Kraftwerk.id).all()
-        db_kw_fk_kwt = self.db.query(Kraftwerk.fk_kraftwerkstyp).order_by(Kraftwerk.id).all()
-        db_kw_long = self.db.query(Kraftwerk.long).order_by(Kraftwerk.id).all()
-        db_kw_lat = self.db.query(Kraftwerk.lat).order_by(Kraftwerk.id).all()
+        db_kw_id = [i.id for i in db_kw]
+        db_kw_bez = [i.bezeichnung for i in db_kw]
+        db_kw_fk_kwt = [i.fk_kraftwerkstyp for i in db_kw]
+        db_kw_long = [i.long for i in db_kw]
+        db_kw_lat = [i.lat for i in db_kw]
 
-        # alternative
-        # db_kw_id = [i.id for i in db_kw]
-        # db_kw_bez = [i.bezeichnung for i in db_kw]
-        # db_kw_fk_kwt = [i.fk_kraftwerkstyp for i in db_kw]
-        # db_kw_long = [i.long for i in db_kw]
-        # db_kw_lat = [i.lat for i in db_kw]
-
-        # query Brennstoffpreis
-        db_bsp = self.db.query(Brennstoffpreis).all()
+        # query Kraftwerkstyp
+        db_kwt_id = [i.kraftwerkstyp.id for i in db_kw]
+        db_kwt_bez = [i.kraftwerkstyp.bezeichnung for i in db_kw]
+        db_kwt_bez_subtyp = [i.kraftwerkstyp.bezeichnung_subtyp for i in db_kw]
+        db_kwt_fk_brennstofftyp = [i.kraftwerkstyp.fk_brennstofftyp for i in db_kw]
+        db_kwt_wirkungsgrad = [i.kraftwerkstyp.wirkungsgrad for i in db_kw]
+        db_kwt_opex = [i.kraftwerkstyp.spez_opex for i in db_kw]
+        db_kwt_capex = [i.kraftwerkstyp.capex for i in db_kw]
+        db_kwt_p_typisch = [i.kraftwerkstyp.p_typisch for i in db_kw]
+        db_kwt_spez_info = [i.kraftwerkstyp.spez_info for i in db_kw]
 
         # query Brennstofftyp
-        db_bst = self.db.query(Brennstofftyp).all()
+        db_bst_id = [i.kraftwerkstyp.brennstofftyp.id for i in db_kw]
+        db_bst_bez = [i.kraftwerkstyp.brennstofftyp.bezeichnung for i in db_kw]
+        db_bst_co2emissfakt = [i.kraftwerkstyp.brennstofftyp.co2emissFakt for i in db_kw]
 
         # query Co2Preis
         db_co2 = self.db.query(Co2Preis).all()
         db_co2_t = [i.datetime for i in db_co2]
         db_co2_preis = [i.preis for i in db_co2]
 
-        # query Entsorgungspreis
-        db_ents = self.db.query(Entsorgungspreis).order_by(Entsorgungspreis.id).all()
-
-        # query Kraftwerksleistung
-        db_kwl = self.db.query(Kraftwerksleistung).order_by(Kraftwerksleistung.id).all()
-        db_kwl_id = self.db.query(Kraftwerksleistung.id).order_by(Kraftwerksleistung.id).all()
-        db_kwl_fk_kw = self.db.query(Kraftwerksleistung.fk_kraftwerk).order_by(Kraftwerksleistung.id).all()
-        db_kwl_pinst = self.db.query(Kraftwerksleistung.power_inst).order_by(Kraftwerksleistung.id).all()
-        db_kwl_datetime = self.db.query(Kraftwerksleistung.datetime).order_by(Kraftwerksleistung.id).all()
-
-        # query Kraftwerkstyp
-        db_kwt = self.db.query(Kraftwerkstyp).all()
-
-        # query Verguetung
-        db_verg = self.db.query(Verguetung).all()
-
-
-        # TODO Interpolationen fertig, outputs ordnen
         # Brennstoffpreis Interpolation
         bsp = []
         for kw in db_kw:
@@ -563,12 +555,6 @@ def start_db():
 
     # an engine is the real DB
     engine = create_engine(db_path)
-
-    # uncomment for local db
-    # db_path = 'db/powerplants.db'
-    # if not os.path.isfile(db_path):
-    # open(db_path, 'a').close()
-    # engine = create_engine('sqlite:///'+db_path)
 
     # delete all tables
     Base.metadata.drop_all(engine)
