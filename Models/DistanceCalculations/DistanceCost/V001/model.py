@@ -81,11 +81,22 @@ class Model(Supermodel):
         #  10   array(96)
         #  11   array(96)
         ###################################################################################################################
-        SPGLocations = list(Standorte.keys())
+        SPGLocations = Standorte['dist_networks']
+
+        dn_lon = Standorte['Longitude']
+        dn_lat = Standorte['Latitude']
 
         KWLocationsLats = KWDaten['latitude']
         KWLocationsLons = KWDaten['longitude']
 
+        kw_lat = KWDaten['latitude']
+        kw_lon = KWDaten['longitude']
+
+
+
+        d = [[self.GeoDistanceVincenty(kw_lat[i_kw], kw_lon[i_kw], dn_lat[i_dn], dn_lon[i_dn]) for i_dn in range(len(dn_lat))] for i_kw in range(len(kw_lat))]
+
+        '''
         def CalculateDistanceOfAllPowerPlantsFromOneSPGLocation(SPGLocation):
             SPGLocationLat = Standorte[SPGLocation]['Lat']
             SPGLocationLon = Standorte[SPGLocation]['Lon']
@@ -95,6 +106,8 @@ class Model(Supermodel):
             return DistanceCostsForOneSPGLocation
 
         DistanceCostsForAllSPGLocation = [CalculateDistanceOfAllPowerPlantsFromOneSPGLocation(loc) for loc in SPGLocations]
-
-        Distanzkosten = {'SPGLocations': SPGLocations, 'Distanzkosten': DistanceCostsForAllSPGLocation}
+        '''
+        Distanzkosten = {'distribution_networks': Standorte['dist_networks'],
+                         'power_plants': KWDaten['id'],
+                         'costs': d}
         return Distanzkosten
