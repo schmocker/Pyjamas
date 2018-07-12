@@ -16,7 +16,7 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        # self.inputs['mode'] = Input(name='modus', unit='-', info="modus (live or simulation)")
+        self.inputs['mode'] = Input(name='modus', unit='-', info="modus (live or simulation)")
         self.inputs['KW'] = Input(name='KW info', unit='-', info="KW information (id, lat, lon)")
         self.inputs['date'] = Input(name='Time vector', unit='s', info="Time in utc")
 
@@ -24,19 +24,19 @@ class Model(Supermodel):
         # self.outputs['weather_data'] = Output(name='weather data of KWs', unit='date, °C, m/s, ???', info='????')
 
         # define properties
-        # self.properties['T_offset'] = Property(default=0., data_type=float, name='temperature offset', unit='%', info="offset of temperature in %")
-        # self.properties['u_offset'] = Property(default=0., data_type=float, name='wind speed offset', unit='%', info="offset of wind speed in %")
-        # self.properties['P_offset'] = Property(default=0., data_type=float, name='radiation offset', unit='%', info="offset of radiation in %")
+        self.properties['T_offset'] = Property(default=0., data_type=float, name='temperature offset', unit='%', info="offset of temperature in %")
+        self.properties['u_offset'] = Property(default=0., data_type=float, name='wind speed offset', unit='%', info="offset of wind speed in %")
+        self.properties['P_offset'] = Property(default=0., data_type=float, name='radiation offset', unit='%', info="offset of radiation in %")
         self.properties['ref_year'] = Property(default=2000, data_type=int, name='reference year', unit='-', info="reference year for modeled weather")
 
         # define persistent variables
         self.data_hist = None
         self.data_hist_year = None
         self.ref_year = None
+        self.mode = None
 
     async def func_birth(self):
-        # read historic weather data
-        self.data_hist = self.historic_data_read()
+        pass
 
     async def func_amend(self, keys=[]):
 
@@ -44,34 +44,36 @@ class Model(Supermodel):
             self.ref_year = self.get_property('ref_year')
             self.data_hist_year = self.historic_select_year(self.data_hist, self.ref_year)
 
+        if 'mode' in keys:
+            self.mode = self.get_property('mode')
+            if (self.mode == 'simulation') & (self.data_hist == None):
+                # read historic weather data
+                self.data_hist = self.historic_data_read()
+
     async def func_peri(self, prep_to_peri=None):
 
         # get inputs
-        # mode = await self.get_input('mode')
-        KW_data = await self.get_input('KW')
+        mode = await self.get_input('mode')
+        KW_data_orig = await self.get_input('KW')
+        KW_data =1
         dates = await self.get_input('date')
 
         # set dates back to ref_year
-        # dates = [utc_time2datetime(x) for x in dates]
-        # dates = [d.replace(year=self.ref_year) for d in dates]
-        # dates = [datetime2utc_time(x) for x in dates]
         dates = self.dates_shift(dates)
 
-        # filter data
+        # filter ?historic? weather data
         data_filtered = self.data_filter(dates)
 
-        # create data base
+        # create data base of ?historic? weather data
         data_base = self.create_database(data_filtered)
+
+
 
         # interpolation
         grid_pattern = {"lat": data_filtered["lat"],
                         "lon": data_filtered["lon"],
                         "times": data_filtered["times"]}
         data_interp = self.interpolation(grid_pattern, data_base, KW_data["lat"], KW_data["lon"], dates)
-
-
-
-
 
         r = 5
         print(r)
@@ -260,10 +262,10 @@ class Model(Supermodel):
 
             data_T_interp = self.interpol_2d(db_lat, db_lon, data_T, lat_x, lon_x)
             data_u_interp = self.interpol_2d(db_lat, db_lon, data_u, lat_x, lon_x)
-            data_r_interp = self.interpol_2d(db_lat, db_lon, data_r, lat_x, lon_x)
+            data_P_interp = self.interpol_2d(db_lat, db_lon, data_r, lat_x, lon_x)
             data_time_i = np.tile(tt, lat_x.__len__())
 
-            data_2D_i = np.stack((np.array(lat_x), np.array(lon_x), data_time_i, data_T_interp, data_u_interp, data_r_interp), axis=0)
+            data_2D_i = np.stack((np.array(lat_x), np.array(lon_x), data_time_i, data_T_interp, data_u_interp, data_P_interp), axis=0)
             data_2D_i = data_2D_i.transpose()
 
             if tt_it == 0:
@@ -282,15 +284,15 @@ class Model(Supermodel):
             data_tt_1 = data_ll[:, 2]
             data_T_1 = data_ll[:, 3]
             data_u_1 = data_ll[:, 4]
-            data_r_1 = data_ll[:, 5]
+            data_P_1 = data_ll[:, 5]
 
             data_T_1_interp = self.interpol_1d(data_tt_1, data_T_1, time_x)
             data_u_1_interp = self.interpol_1d(data_tt_1, data_u_1, time_x)
-            data_r_1_interp = self.interpol_1d(data_tt_1, data_r_1, time_x)
+            data_P_1_interp = self.interpol_1d(data_tt_1, data_P_1, time_x)
             data_lat_i = np.tile(lat_ni, time_x.__len__())
             data_lon_i = np.tile(lon_ni, time_x.__len__())
 
-            data_1D_i = np.stack((data_lat_i, data_lon_i, time_x, data_T_1_interp, data_u_1_interp, data_r_1_interp), axis=0)
+            data_1D_i = np.stack((data_lat_i, data_lon_i, time_x, data_T_1_interp, data_u_1_interp, data_P_1_interp), axis=0)
             data_1D_i = data_1D_i.transpose()
 
             if ni_it == 0:
@@ -397,6 +399,7 @@ class Model(Supermodel):
 if __name__ == "__main__":
 
     # input
+    # - date
     start_date_i = datetime(2018, 12, 1, 0, 0, tzinfo=timezone('UTC'))
     end_date_i = datetime(2018+1, 2, 1, 0, 0, tzinfo=timezone('UTC'))
     dt = 15*60
@@ -406,11 +409,36 @@ if __name__ == "__main__":
         date_series.append(start_date_i)
         start_date_i += step
     date_series = [datetime2utc_time(x) for x in date_series]
-    data_KW = {"lat": [40, 50],
-               "lon": [0, 10]}
-    #data_KW = {"lat": [40],
-    #           "lon": [0]}
 
-    props = {'ref_year': 2008}
-    inputs = {'date': date_series, 'KW': data_KW}
+    # - KW
+    # data_KW = {"lat": [40, 50],
+    #           "lon": [0, 10]}
+    # data_KW = {"lat": [40],
+    #           "lon": [0]}
+    data_KW = {'id': [1, 2, 3, 4, 5, 6, 8, 10, 11, 12, 13, 14],
+               'fk_kwt': [2, 1, 2, 1, 2, 1, 5, 3, 3, 6, 4, 4],
+               'kw_bezeichnung': ['WT', 'PV', 'WT', 'PV', 'WT', 'PV', 'Others', 'Laufwasserkraftwerk',
+                                       'Laufwasserkraftwerk', 'Others', 'Speicherwasserkraftwerk',
+                                       'Speicherwasserkraftwerk'],
+               'power': [1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 8000000, 10000000, 11000000,
+                              12000000, 13000000, 14000000],
+               'spez_info': [{'NH': 150, 'Z0': 0.03}, {}, {'NH': 100, 'Z0': 0.2}, {}, {'NH': 250, 'Z0': 0.03}, {},
+                                  {}, {}, {}, {}, {}, {}, ],
+               'capex': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+               'opex': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12],
+               'lon': [-7, 0, 5, -4, 7, 8, 8, 15, 23, 22, 16.5, 20],
+               'lat': [40, 40, 45, 44, 52, 53, 46, 40, 40, 52, 50, 48]
+               }
+
+    # - mode
+    mode_input = 'simulation'  # 'live'
+
+    # properties
+    T_offset = 0
+    u_offset = 0
+    P_offset = 0
+    ref_year = 2008
+
+    props = {'ref_year': ref_year, 'T_offset': T_offset, 'u_offset': u_offset, 'P_offset': P_offset}
+    inputs = {'date': date_series, 'KW': data_KW, 'mode': mode_input}
     outputs = Model.test(inputs, props)
