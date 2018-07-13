@@ -229,8 +229,7 @@ class Model(Supermodel):
                  }
         return data2
 
-    @staticmethod
-    def create_database(data_filtered):
+    def create_database(self, data_filtered):
 
         # extract number of locations (lat/lon) and number of futures
         num_points = data_filtered["lat"].__len__()
@@ -266,6 +265,11 @@ class Model(Supermodel):
         temp_vec = temp_vec[np.newaxis, :].transpose()
         wind_vec = wind_vec[np.newaxis, :].transpose()
         rad_vec = rad_vec[np.newaxis, :].transpose()
+
+        # offset for temperature, wind speed and radiation
+        temp_vec = np.multiply(temp_vec, (1 + self.get_property('T_offset') / 100))
+        wind_vec = np.multiply(wind_vec, (1 + self.get_property('u_offset') / 100))
+        rad_vec = np.multiply(rad_vec, (1 + self.get_property('P_offset') / 100))
 
         # create matrix
         data_base = np.concatenate((lat_vec, lon_vec, time_vec, temp_vec, wind_vec, rad_vec), axis=1)
