@@ -56,7 +56,7 @@ class Model(Supermodel):
         futures = await self.get_input('date')
 
         # prepare weather data
-        #islife = True
+        islife = False
         if islife:
             weather_data = self.prepare_API_weather()
         else:
