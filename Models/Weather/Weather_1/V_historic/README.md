@@ -1,6 +1,9 @@
 # Weather model
 
-...
+=> V_historic
+
+* works always in simulation mode (not live) using only historical weather data
+* forecast weather by API not implemented
 
 
 ## Inputs
