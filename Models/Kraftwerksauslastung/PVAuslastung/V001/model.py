@@ -100,7 +100,7 @@ class Model(Supermodel):
         ###################################################################################################################
 
 
-        KWBezeichnung = 'PV' #ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
+        KWBezeichnung = 'Photovoltaik' #ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
         KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
 
         # Extracting data corresponding solely to Photovoltaic power plant

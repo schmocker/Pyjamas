@@ -1,5 +1,6 @@
 .env
 .idea
+.vscode
 venv
 instance
 data
@@ -10,3 +11,4 @@ workspace.xml
 __pycache__/
 
 confidential
+confidential.zip

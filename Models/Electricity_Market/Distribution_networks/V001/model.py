@@ -19,7 +19,7 @@ class Model(Supermodel):
 
         # define properties
         # - distribution network
-        self.properties['distNets'] = Property(default='{"Baden": {"Lat": 47.47256, "Lon": 8.30850}', data_type=str, name='distribution network', unit='-',
+        self.properties['distNets'] = Property(default='{"Baden": {"Lat": 47.47256, "Lon": 8.30850}}', data_type=str, name='distribution network', unit='-',
                                                info="distribution network with lon and lat",
                                                example='{"Baden": {"Lat": 47.47256, "Lon": 8.30850}, '
                                                        '"Brugg": {"Lat": 47.48420, "Lon": 8.20706}, '

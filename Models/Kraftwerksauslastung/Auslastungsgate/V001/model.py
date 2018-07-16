@@ -15,6 +15,7 @@ class Model(Supermodel):
         self.inputs['LaufwasserKWAuslastung'] = Input('LoadRunningWaterPowerPlant', info='value[0-1]')
         self.inputs['SpeicherwasserKWAuslastung'] = Input('LoadStoragePowerPlant', info='value[0-1]')
         self.inputs['KWDaten'] = Input('PowerPlantsData', info='IDs extracted from PowerPlantData')
+        self.inputs['futures'] = Input('Futures', info='Number of timestamps')
 
         # define outputs
         self.outputs['GemeinsameAuslastung'] = Output('CombinedLoad', info='value[0-1]')
@@ -26,16 +27,17 @@ class Model(Supermodel):
         LWKWAuslastung = await self.get_input('LaufwasserKWAuslastung')
         SWKWAuslastung = await self.get_input('SpeicherwasserKWAuslastung')
         KWDaten = await self.get_input('KWDaten')
+        Futures = await self.get_input('futures')
 
         # calculate
-        GemeinsameAuslastung = self.auslastungallerKWs(WTAuslastung, PVAuslastung, LWKWAuslastung, SWKWAuslastung, KWDaten)
+        GemeinsameAuslastung = self.auslastungallerKWs(WTAuslastung, PVAuslastung, LWKWAuslastung, SWKWAuslastung, KWDaten, Futures)
 
         # set output
         self.set_output("GemeinsameAuslastung", GemeinsameAuslastung)
 
 
     # define additional methods (normal)
-    def auslastungallerKWs(self, WTauslastung, PVauslastung, LWKWauslastung, SWKWAuslastung, KWDaten):
+    def auslastungallerKWs(self, WTauslastung, PVauslastung, LWKWauslastung, SWKWauslastung, KWDaten, Futures):
         # Determine the load(Auslastung) of each power plant according to incoming Power plant key /Foreign Keys
         # separately and then combine them together in a matrix to form combined loading
         ###################################################################################################################
@@ -87,23 +89,95 @@ class Model(Supermodel):
         #   6    array(96)
         ###################################################################################################################
 
-        WTauslastungID = np.array([WTauslastung['id']]).transpose()     #shape(3,1)
-        WTauslastungLoad = WTauslastung['load']                         #shape(3,96)
-        WTauslastung = np.hstack((WTauslastungID, WTauslastungLoad))
+        KWDatenID = KWDaten['id']
+        WTids = WTauslastung['id']
+        PVids = PVauslastung['id']
+        LWKWids = LWKWauslastung['id']
+        SWKWids = SWKWauslastung['id']
+        ids =[]
+        load =[]
+        def make_load_for_one_plant(kw_id):
+            if kw_id in WTids:
+                ids.append(kw_id)
+                index_of_kwid_in_WTauslastung = WTauslastung['id'].index(kw_id)
+                auslastung_for_kwid = WTauslastung['load'][index_of_kwid_in_WTauslastung]
+                load.append(auslastung_for_kwid)
+            elif kw_id in PVids:
+                ids.append(kw_id)
+                index_of_kwid_in_PVauslastung = PVauslastung['id'].index(kw_id)
+                auslastung_for_kwid = PVauslastung['load'][index_of_kwid_in_PVauslastung]
+                load.append(auslastung_for_kwid)
+            elif kw_id in LWKWids:
+                ids.append(kw_id)
+                index_of_kwid_in_LWKWauslastung = LWKWauslastung['id'].index(kw_id)
+                auslastung_for_kwid = LWKWauslastung['load'][index_of_kwid_in_LWKWauslastung]
+                load.append(auslastung_for_kwid)
+            elif kw_id in SWKWids:
+                ids.append(kw_id)
+                index_of_kwid_in_SWKWauslastung = SWKWauslastung['id'].index(kw_id)
+                auslastung_for_kwid = SWKWauslastung['load'][index_of_kwid_in_SWKWauslastung]
+                load.append(auslastung_for_kwid)
 
-        PVauslastungID = np.array([PVauslastung['id']]).transpose()  # shape(3,1)
-        PVauslastungLoad = PVauslastung['load']                      # shape(3,96)
-        PVauslastung = np.hstack((PVauslastungID, PVauslastungLoad))
+            return
 
-        LWKWauslastungID = np.array([LWKWauslastung['id']]).transpose()  # shape(3,1)
-        LWKWauslastungLoad = LWKWauslastung['load']  # shape(3,96)
-        LWKWauslastung = np.hstack((LWKWauslastungID, LWKWauslastungLoad))
+        [make_load_for_one_plant(id) for id in KWDatenID]
 
-        SWKWAuslastungID = np.array([SWKWAuslastung['id']]).transpose()  # shape(3,1)
-        SWKWAuslastungLoad = SWKWAuslastung['load']  # shape(3,96)
-        SWKWAuslastung = np.hstack((SWKWAuslastungID, SWKWAuslastungLoad))
 
-        AuslastungWtPvLwSw = np.vstack((WTauslastung, PVauslastung, LWKWauslastung, SWKWAuslastung))
+        def find_ids_of_other_powerplant(kwid):
+            if kwid in ids:
+                pass
+            else:
+                ids.append(kwid)
+                load.append([1]*len(Futures))
+            return
+
+        [find_ids_of_other_powerplant(id) for id in KWDatenID]
+
+
+        AuslastungAllerKWs = {'id': ids, 'load': load}
+        return AuslastungAllerKWs
+
+
+'''
+        WTids = WTauslastung['id']
+        PVids = PVauslastung['id']
+        LWKWids = LWKWauslastung['id']
+        SWKWids = SWKWauslastung['id']
+
+        if not WTids:  # if WTids == []
+            noWT = True
+        else:
+            WTauslastungID = np.array([WTauslastung['id']]).transpose()     #shape(3,1)
+            WTauslastungLoad = WTauslastung['load']                         #shape(3,96)
+            WTauslastung = np.hstack((WTauslastungID, WTauslastungLoad))
+
+        if not PVids:   # if PVids == []
+            noPV = True
+        else:
+            PVauslastungID = np.array([PVauslastung['id']]).transpose()  # shape(3,1)
+            PVauslastungLoad = PVauslastung['load']                      # shape(3,96)
+            PVauslastung = np.hstack((PVauslastungID, PVauslastungLoad))
+
+        if not LWKWids:
+            noLWKW = True
+        else:
+            LWKWauslastungID = np.array([LWKWauslastung['id']]).transpose()  # shape(3,1)
+            LWKWauslastungLoad = LWKWauslastung['load']  # shape(3,96)
+            LWKWauslastung = np.hstack((LWKWauslastungID, LWKWauslastungLoad))
+
+        if not SWKWids:
+            noSWKW = True
+        else:
+            SWKWAuslastungID = np.array([SWKWauslastung['id']]).transpose()  # shape(3,1)
+            SWKWAuslastungLoad = SWKWauslastung['load']  # shape(3,96)
+            SWKWAuslastung = np.hstack((SWKWAuslastungID, SWKWAuslastungLoad))
+
+        if noPV:
+            AuslastungWtPvLwSw = np.vstack((WTauslastung, LWKWauslastung, SWKWAuslastung))
+        elif noWT:
+            AuslastungWtPvLwSw = np.vstack((PVauslastung, LWKWauslastung, SWKWAuslastung))
+        else:
+            AuslastungWtPvLwSw = np.vstack((WTauslastung, PVauslastung, LWKWauslastung, SWKWAuslastung))
 
         # Filtering elements in KWDaten that are not in AuslastungWtPvLwSw, representing power plants other than PV,
         # Wind, Running-Water, or Storage
@@ -120,4 +194,4 @@ class Model(Supermodel):
         AuslastungAllerKWs = np.vstack((AuslastungWtPvLwSw, OtherPowerPlantsAuslastung))
         AuslastungAllerKWs = {'id': AuslastungAllerKWs[:,0].tolist(), 'load': AuslastungAllerKWs[:,1:].tolist()}
         return AuslastungAllerKWs
-
+        '''

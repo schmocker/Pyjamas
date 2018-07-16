@@ -4,7 +4,7 @@ from core.supermodel import Supermodel
 
 class Model(Supermodel):
     """
-        prints the given input
+        prints the given input during post
     """
 
     def __init__(self, uuid, name :str):
@@ -12,7 +12,7 @@ class Model(Supermodel):
 
         self.inputs['to_print'] = Input('To Print', unit='String')
 
-    async def func_peri(self, prep_to_peri=None):
+    async def func_post(self, peri_to_post=None):
 
         txt = await self.get_input("to_print")
         print(str(txt))

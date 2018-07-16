@@ -196,7 +196,7 @@ class Model(Supermodel):
         #   6    array(96)
         ###################################################################################################################
 
-        KWBezeichnung = 'WT' #ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
+        KWBezeichnung = 'Windturbine' #ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
 
         KWDaten = np.array([ KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
         # Wetter = np.array([ WetterDaten['id'], WetterDaten['wetter']]).transpose()
