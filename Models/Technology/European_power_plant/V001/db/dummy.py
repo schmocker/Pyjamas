@@ -1,5 +1,5 @@
-from Models import Kraftwerk, Kraftwerkstyp, \
-    Kraftwerksleistung, Brennstofftyp, Brennstoffpreis, Verguetung, Entsorgungspreis, Co2Preis
+from Models.Technology.European_power_plant.V001.db import Kraftwerk, Kraftwerkstyp, \
+    Kraftwerksleistung, Brennstofftyp, Brennstoffpreis, Entsorgungspreis, Co2Preis
 
 from sqlalchemy import exc
 import datetime
@@ -114,26 +114,6 @@ def create_dummy_data(session):
                                      datetime=datetime.datetime.now()+random.randint(0, 20) *
                                               datetime.timedelta(days=365))
             session.add(kwl)
-            try:
-                session.commit()
-            except exc.IntegrityError as e:
-                print(e)
-                session.rollback()
-
-    # ################### Verguetungen #############################
-    session.query(Verguetung).delete()
-    session.commit()
-
-    kwts = session.query(Kraftwerkstyp).all()
-    for kwt in kwts:
-        for _ in range(random.randint(1, 5)):
-            verg = Verguetung(fk_kraftwerkstyp=kwt.id,
-                              long=random.random() * 60 - 20,
-                              lat=random.random() * 60 + 20,
-                              datetime=datetime.datetime.now() + random.randint(0, 5) *
-                                       datetime.timedelta(days=365),
-                              beitrag=random.random()*150)
-            session.add(verg)
             try:
                 session.commit()
             except exc.IntegrityError as e:

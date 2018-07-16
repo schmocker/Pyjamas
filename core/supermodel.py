@@ -18,7 +18,6 @@ class Supermodel:
         name {str} -- the name of the model
     """
 
-
     def __init__(self, uuid, name :str):
         self.id = uuid
         self.name = name

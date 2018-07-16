@@ -168,7 +168,8 @@ class Model(Supermodel):
 
 
         # formatting
-        data_t = list(map(list, zip(*data)))
+        #data_t = list(map(list, zip(*data)))
+        data_t = []
         date = [datetime.strptime(x, '%Y-%m-%d %H:%M') for x in data_t[0]]
         date_s = np.asarray(date)
         date_s = date_s[np.newaxis, :]
@@ -232,9 +233,9 @@ class Model(Supermodel):
         else:
             print('NOT IN LIST -> INTERPOLATION')
             list_lat = np.repeat(1,1)
-            list_long =
-            weather_data = self.interpol_3d(self, list(data_hist.Date), db_lat, db_long, db_values, interp_lat, interp_long, interp_time)
-
+            list_long = 0
+            #weather_data = self.interpol_3d(self, list(data_hist.Date), db_lat, db_long, db_values, interp_lat, interp_long, interp_time)
+            weather_data = 0
         return weather_data
 
     # 3D Interpolation based on 3D Interpolation European_power_plant
