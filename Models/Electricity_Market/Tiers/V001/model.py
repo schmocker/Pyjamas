@@ -24,19 +24,15 @@ class Model(Supermodel):
         self.inputs['Abgaben'] = Input(name='', unit='', info="")
 
         # define outputs
-        self.outputs['tiers_prices'] = Output(name='???', unit='???', info='???')
+        self.outputs['el_rate'] = Output(name='electricity rate', unit='???', info='electricity rate')
 
         # define properties
         ET_def = {"border": [-1., -0.8, -0.3, 0., 0.3, 0.8, 1.],
-              "weight": [-2., -1.25, -0.75, 0.75, 1.25, 2.]}
+                  "weight": [-2., -1.25, -0.75, 0.75, 1.25, 2.]}
         NT_def = {"border": [-1., -0.7, -0.4, 0., 0.4, 0.7, 1.],
-              "weight": [-1.75, -1., -0.5, 0.5, 1., 1.75]}
+                  "weight": [-1.75, -1., -0.5, 0.5, 1., 1.75]}
         self.properties['weight_ET'] = Property(default=ET_def, data_type=dict, name='energy tiers', unit='-', info='borders and weights of energy tiers')
         self.properties['weight_NT'] = Property(default=NT_def, data_type=dict, name='net tiers', unit='-', info='borders and weights of net tiers')
-
-
-        # define persistent variables
-        #self.data_hist = None
 
     async def func_birth(self):
         pass
@@ -46,17 +42,54 @@ class Model(Supermodel):
 
     async def func_peri(self, prep_to_peri=None):
 
-        # read and determine borders and tiers
-        border_tiers = self.det_border_tiers()
+        # locations information
+        loc_vec = self.get_property('weight_ET')['location']
+        len_loc = len(loc_vec)
 
+        # DLK
+        DLK_val = await self.get_input('DLK')
 
-        print(border_tiers)
+        # Abgaben
+        abgaben_val = await self.get_input('Abgaben')
 
-    def det_border_tiers(self):
+        # electricity rate
+        el_rate = []
+        border_tiers = []
+        for nt in range(0, len_loc):
+
+            # read and determine borders and tiers
+            border_tiers_i = self.det_border_tiers(nt)
+
+            # read distribution costs
+            dn_costs_input = await self.get_input('distnet_costs')
+            dn_costs = dn_costs_input['costs'][nt]
+
+            # read prices
+            stock_prices_input = await self.get_input('stock_ex_price')
+            stock_prices = stock_prices_input['prices'][nt]
+
+            el_rate_i = []
+            for mt in stock_prices:
+
+                el_rate_ii = mt*border_tiers_i['ET_tiers'] + dn_costs*border_tiers_i['NT_tiers'] + DLK_val + abgaben_val
+                el_rate_i.append(el_rate_ii)
+
+            el_rate.append(el_rate_i)
+            border_tiers.append(border_tiers_i)
+
+        output = {'Stao_ID': loc_vec,
+                  'values': el_rate,
+                  'borders': border_tiers
+                  }
+
+        # set output
+        self.set_output("el_rate", output)
+
+    def det_border_tiers(self, it):
 
         # read borders
-        ET_border = self.get_property('weight_ET')["border"]
-        NT_border = self.get_property('weight_NT')["border"]
+        ET_border = self.get_property('weight_ET')["border"][it]
+        NT_border = self.get_property('weight_NT')["border"][it]
 
         ET_border = np.array(ET_border)
         NT_border = np.array(NT_border)
@@ -66,8 +99,8 @@ class Model(Supermodel):
         borders = np.unique(borders)
 
         # read tiers
-        ET_tiers_orig = self.get_property('weight_ET')["weight"]
-        NT_tiers_orig = self.get_property('weight_NT')["weight"]
+        ET_tiers_orig = self.get_property('weight_ET')["weight"][it]
+        NT_tiers_orig = self.get_property('weight_NT')["weight"][it]
 
         # create tiers corresponding to border
         ind_ET = 0
@@ -90,7 +123,7 @@ class Model(Supermodel):
             else:
                 NT_tiers = np.append(NT_tiers, NT_tiers_orig[ind_NT])
 
-            print(it)
+            #print(it)
 
         # return dict
         border_tiers = {'borders': borders,
@@ -100,27 +133,22 @@ class Model(Supermodel):
         return border_tiers
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
 
     # input
-    stock_ex_price = {'distribution_netowrks': ['Baden', 'Brugg'],
+    stock_ex_price = {'distribution_networks': ['Baden', 'Brugg'],
                       'prices': [[1, 2, 3], [1.1, 2.2, 3.3]]}
-    distnet_costs = {'distribution_networks': stock_ex_price['distribution_netowrks'],
+    distnet_costs = {'distribution_networks': stock_ex_price['distribution_networks'],
                     'costs': [100, 111]}
     DLK = [0.5]
     abgaben = [0.25]
 
     # properties
-    ET = {"border": [-1., -0.8, -0.3, 0., 0.3, 0.8, 1.],
-          "weight": [-2., -1.25, -0.75, 0.75, 1.25, 2.]}
-    NT = {"border": [-1., -0.7, -0.4, 0., 0.4, 0.7, 1.],
-          "weight": [-1.75, -1., -0.5, 0.5, 1., 1.75]}
+    ET = {"location": ['Baden', 'Brugg'],
+          "border": [[-1., -0.8, -0.3, 0., 0.3, 0.8, 1.], [-1., -0.85, -0.35, 0., 0.35, 0.85, 1.]],
+          "weight": [[-2., -1.25, -0.75, 0.75, 1.25, 2.], [-2., -1.3, -0.8, 0.8, 1.3, 2.]]}
+    NT = {"border": [[-1., -0.7, -0.4, 0., 0.4, 0.7, 1.], [-1., -0.75, -0.45, 0., 0.45, 0.75, 1.]],
+          "weight": [[-1.75, -1., -0.5, 0.5, 1., 1.75], [-1.8, -1.05, -0.55, 0.55, 1.05, 1.8]]}
 
     inputs = {'stock_ex_price': stock_ex_price,
               'distnet_costs': distnet_costs,
