@@ -2,7 +2,6 @@ from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
 import math
-import matplotlib.pyplot as plt
 
 
 # define the model class and inherit from class "Supermodel"
@@ -13,11 +12,11 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input('WeatherData', info='dict')
-        self.inputs['kwDaten'] = Input('PowerPlantsData', info='dict')
+        self.inputs['weather'] = Input('WeatherData', unit='Wind speed[m/s], Wind measurement height[m]', info='dict')
+        self.inputs['kwDaten'] = Input('PowerPlantsData',unit='Hub-height[m], Ground roughness length[m]', info='dict')
 
         # define outputs
-        self.outputs['load'] = Output('Load', info='value[0-1]')
+        self.outputs['load'] = Output('Load', info='load of all wind turbines, value[0-1]')
 
     '''   
         # define properties
@@ -57,13 +56,13 @@ class Model(Supermodel):
     def hubheightVSdiameter(self, Nabenhoehe):
         # Determin diameter from the given hub height
         # Use case: Internally called by windturbine()
-        ###################################################################################################################
+        ################################################################################################################
         # Input Arguments:
         # Nabenhoehe: Hub-height of wind turbine [m]
         #
         # Output Arguments:
         # Radius: Calculated radius at hub height [m]
-        ###################################################################################################################
+        ################################################################################################################
         #  Since the biggest wind turbine(Adwen AD - 180) so far made w.r.t the rotor diameter has a diameter of 180m,
         #  the parameters a and b in this equation are tuned so that it can deliver accurate results upto the rotor diameter
         #  of 478m and hub height of 250m
@@ -71,25 +70,24 @@ class Model(Supermodel):
         a = 3.413
         b = 0.6958
         HubHeight = Nabenhoehe
-        #print("Nabenhoehe :", HubHeight)
         Diameter = 10 ** ((np.log10(HubHeight / a)) / b)
-        #print("Diameter :", Diameter)
         Radius = Diameter / 2
-        #print("Radius :", Radius)
         return Radius
 
 
     def windgeschwindigkeit(self, WindDaten, Nabenhoehe, BodenRauhigkeit, WindMesshoehe):
-        # Calculates the wind speed a specified incoming hub-height(Nabenhoehe)
+        # Calculates the wind speed at specified incoming hub-height(Nabenhoehe)
         # Use case: Internally called by windturbine()
-        ###################################################################################################################
+        ################################################################################################################
         # Input Arguments:
-        # WindDaten: Measured values of wind data [m/sec]
+        # WindDaten: Measured values of wind data [m/s]
         # Nabenhoehe: Hub-height of wind turbine [m]
+        # BodenRauhigkeit: Bodenrauigkeitslänge [m]
+        # WindMesshoehe: Höhe der Windmessung [m]
         #
         # Output Arguments:
-        # Cwi_h: Calculated wind speed at hub height
-        ###################################################################################################################
+        # Cwi_h: Calculated wind speed at hub height [m/s]
+        ################################################################################################################
         #
         # Windgeschwindkeiten auf verschiedene Nabenhöhen
         # Formel: Cwi,h = Cwi,ref*(ln(h/z0)/ln(href/z0))
@@ -98,28 +96,29 @@ class Model(Supermodel):
         # h: interessierende Höhe [m] (typischerweise Nabenhöhe der Windenergieanlage)
         # Cwi,h: Windgeschwindigkeit auf interessierender Höhe h [m/s]
         # Cwi,ref: Windgeschwindigkeit referenzhöhe(Messungshöhe) [m/s]
-        # z0: Rauhigkeitslänge, Für die Rauhigkeitslänge können Werte der Tabelle 1.1-1 in WiWa_Skript_V26 verwendet werden
+        # z0: Rauigkeitslänge, Für die Werte der Rauhigkeitslänge siehe der Tabelle 1.1-1 in WiWa_Skript_V26
 
         href = WindMesshoehe
         Cwi_ref = WindDaten
         h = Nabenhoehe  # z.B. 100m
-        z0 = BodenRauhigkeit  # z.B 0.03 für offenes landwirtschaftliches Gelände ohne Zäune und Hecken,
-        # evtl. mitweitläufig verstreuten Gebäuden und sehr sanfte Hügel
+        z0 = BodenRauhigkeit    # z.B 0.03 für offenes landwirtschaftliches Gelände ohne Zäune und Hecken,
+                                # evtl. mitweitläufig verstreuten Gebäuden und sehr sanfte Hügel
         Cwi_h = Cwi_ref * ((math.log(h / z0)) / (math.log(href / z0)))
-        #print("Wind at hub height :", Cwi_h)
         return Cwi_h
 
 
     def windturbine(self, WindDaten, Nabenhoehe, BodenRauhigkeit, WindMesshoehe):
         # Simulates wind power plant for specified incoming hub-hight(Nabenhoehe)
-        ###################################################################################################################
+        ################################################################################################################
         # Input Arguments:
         # WindDaten: Measured values of wind data [m/sec]
         # Nabenhoehe: Hub-height of wind turbine [m]
+        # BodenRauhigkeit: Bodenrauigkeitslänge [m]
+        # WindMesshoehe: Höhe der Windmessung [m]
         #
         # Output Arguments:
-        # Auslastung: Calculated Auslastung at incoming hub-height(Nabenhoehe), output values are between [0-1]
-        ###################################################################################################################
+        # Auslastung: Calculated Auslastung at incoming hub-height, output values are between [0-1]
+        ################################################################################################################
         rho = 1.23  # Air density[kg / m ^ 3]
         Vnominal = 12  # Wind velocity which generates nominal output power[m/sec]
         r = self.hubheightVSdiameter(Nabenhoehe)  # Blade length or Radius[m]
@@ -128,12 +127,9 @@ class Model(Supermodel):
 
         # Maximum generated output power[Watt] by the wind turbine
         GeneratorNominalPower = (1 / 2) * (rho * A * (Vnominal ** 3)) * Cp
-        #print("GeneratorNominalPower :", GeneratorNominalPower)
 
         # Produced power at different wind speeds
         # Power = (1/2)*(rho*A*(v.^3))*Cp
-        #
-        # v = 0:30; # Wind velocity[m/sec]  # temporary for testing purposes, will be removed
         v = self.windgeschwindigkeit(WindDaten, Nabenhoehe, BodenRauhigkeit, WindMesshoehe)  # Wind velocity[m/sec] at specific (e.g. 100m) hub height
         TheoraticalPower = (1 / 2) * (rho * A * (v ** 3)) * Cp
 
@@ -148,30 +144,31 @@ class Model(Supermodel):
 
         PowerOutput = PowerOutput / 1e6  # Watt to MW conversion
         GeneratorNominalPower = GeneratorNominalPower / 1e6  # Watt to MW conversion
+
         Auslastung = PowerOutput / GeneratorNominalPower  # Auslastung = ProducedPower/Pnominal
-        #print("Auslastung eine Turbine :", Auslastung)
         return Auslastung
 
     def windturbinenauslastung(self, KWDaten, WetterDaten):
-        # Determine the load(Auslastung) wind turbine
+        # Determine the load(Auslastung) of wind turbine
         ###################################################################################################################
         # Input Arguments:
         # KWDaten: Dictionary holding the different parameters of power plants
-        # ------------------------------------------------------------------------------------
-        #   id  fk_kwt   kw_bezeichnung    power[W]         spez_info             Capex   Opex
-        # ------------------------------------------------------------------------------------
-        #   1     2          WT            1000000       NH: 150,  Z0: 0.03         1     0.01
-        #   2     1          PV            2000000       NH: 0,    Z0: {}           2     0.02
-        #   3     2          WT            3000000       NH: 200,  Z0: 0.2          3     0.03
-        #   4     1          PV            4000000       NH: 0,    Z0: {}           4     0.04
-        #   5     2          WT            5000000       NH: 250,  Z0: 0.03         5     0.05
-        #   6     1          PV            6000000       NH: 0,    Z0: {}           6     0.06
-        #   8     3        OTHER           1000000       NH: 0,    Z0: {}           7     0.07
-        #   10    3        OTHER           1000000       NH: 0,    Z0: {}           8     0.08
-        #   11    4        OTHER           1000000       NH: 0,    Z0: {}           9     0.09
-        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
+        # ----------------------------------------------------------------------------------------------
+        #   id  fk_kwt   kw_bezeichnung    power[W]          spez_info             Capex   Opex,  usw...
+        # ----------------------------------------------------------------------------------------------
+        #   1     2       Windturbine      1000000       NH: 150,  Z0: 0.03          1     0.01
+        #   2     1      Photovoltaik      2000000       NH: 0,    Z0: {}            2     0.02
+        #   3     2       Windturbine      3000000       NH: 200,  Z0: 0.2           3     0.03
+        #   4     1      Photovoltaik      4000000       NH: 0,    Z0: {}            4     0.04
+        #   5     2       Windturbine      5000000       NH: 250,  Z0: 0.03          5     0.05
+        #   6     1      Photovoltaik      6000000       NH: 0,    Z0: {}            6     0.06
+        #   8     3        Others          1000000       NH: 0,    Z0: {}            7     0.07
+        #   10    3        Others          1000000       NH: 0,    Z0: {}            8     0.08
+        #   11    4        Others          1000000       NH: 0,    Z0: {}            9     0.09
+        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex,
+        #  Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
         #
-        # WetterDaten: Dictionary holding Power plant IDs(KWIDs) and weather data for all types of power plants
+        # WetterDaten: Dictionary holding Power plant IDs(id) and weather data for all types of power plants
         # ----------------------------------------------
         #  id      windspeed   radiation   windmesshoehe
         # ----------------------------------------------
@@ -186,10 +183,10 @@ class Model(Supermodel):
         #  11      None        None            None
         #
         # Output Arguments:
-        # WTAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
-        # load(Auslastung) of wind turbine in following 96 columns, output values are between [0-1] except KWIDs
+        # WTAuslastung: Dictionary containing Power plant IDs(id) in the first list and corresponding calculated
+        # load(Auslastung) of wind turbine in second list, output values are between [0-1] except ids
         # -----------------
-        # KWIDs  Auslastung   Note: Output matrix contains only load for wind turbines
+        #   id   Auslastung   Note: Output matrix contains the load of wind turbines only
         # -----------------
         #   2    array(96)
         #   4    array(96)
@@ -199,7 +196,6 @@ class Model(Supermodel):
         KWBezeichnung = 'Windturbine' #ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
 
         KWDaten = np.array([ KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
-        # Wetter = np.array([ WetterDaten['id'], WetterDaten['wetter']]).transpose()
 
         # Extracting data corresponding solely to wind turbines
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
@@ -217,7 +213,7 @@ class Model(Supermodel):
         KWid = [kw[0] for kw in KraftwerksDaten]
         loads = [make_load_for_one_wt(kw[0], kw[2]['NH'], kw[2]['Z0']) for kw in KraftwerksDaten]
 
-        WTAuslastung = {'id': KWid, 'load': loads}
+        WTAuslastung = {'power_plant_id': KWid, 'load': loads}
         return WTAuslastung
 
 

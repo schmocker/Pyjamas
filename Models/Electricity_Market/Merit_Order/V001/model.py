@@ -48,8 +48,8 @@ class Model(Supermodel):
 
 
 
-        p_sort_order = np.argsort(powers['id'])
-        mc_sort_order = np.argsort(marginal_costs['id'])
+        p_sort_order = np.argsort(powers['power_plant_id'])
+        mc_sort_order = np.argsort(marginal_costs['power_plant_id'])
         dc_sort_order = np.argsort(distance_costs['power_plants'])
 
 
@@ -62,8 +62,8 @@ class Model(Supermodel):
             data['power_plants'].append([])
             for i_ts in range(len(demands)):
                 d = demands[i_ts]
-                pp_ids = np.array(powers['id'])[p_sort_order]
-                p = np.array(powers['ScaledPower'])[p_sort_order, i_ts]  # for each pp
+                pp_ids = np.array(powers['power_plant_id'])[p_sort_order]
+                p = np.array(powers['scaled_power'])[p_sort_order, i_ts]  # for each pp
                 m_c = np.array(marginal_costs['Grenzkosten'])[mc_sort_order, i_ts]  # for each pp
                 d_c = np.array(distance_costs['costs'])[dc_sort_order, i_dn]  # for each pp
 
