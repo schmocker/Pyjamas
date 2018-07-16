@@ -91,7 +91,8 @@ class Model(Supermodel):
             el_rate_i = []
             for i_mt in range(0, len(stock_prices)):
                 mt = stock_prices[i_mt]
-                el_rate_ii = mt*border_tiers_i['ET_tiers'] + dn_costs[i_mt]*border_tiers_i['NT_tiers'] + DLK_val + abgaben_val
+                #el_rate_ii = mt*border_tiers_i['ET_tiers'] + dn_costs[i_mt]*border_tiers_i['NT_tiers'] + DLK_val + abgaben_val
+                el_rate_ii = np.multiply(mt, border_tiers_i['ET_tiers']) + np.multiply(dn_costs[i_mt], border_tiers_i['NT_tiers']) + DLK_val + abgaben_val
                 el_rate_ii = el_rate_ii.tolist()
                 el_rate_i.append(el_rate_ii)
 
@@ -147,9 +148,9 @@ class Model(Supermodel):
             #print(it)
 
         # return dict
-        border_tiers = {'borders': borders,
-                        'ET_tiers': ET_tiers,
-                        'NT_tiers': NT_tiers}
+        border_tiers = {'borders': borders.tolist(),
+                        'ET_tiers': ET_tiers.tolist(),
+                        'NT_tiers': NT_tiers.tolist()}
 
         return border_tiers
 
