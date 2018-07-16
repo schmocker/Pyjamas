@@ -1,7 +1,7 @@
 from core import Supermodel
 from core.util import Input, Output, Property
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -11,11 +11,11 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['weather'] = Input('WeatherData', info='dict')
-        self.inputs['kwDaten'] = Input('PowerPlantsData', info='dict')
+        self.inputs['weather'] = Input('WeatherData', unit='Global radiations[W/m^2]', info='dict')
+        self.inputs['kwDaten'] = Input('PowerPlantsData', info='dict, power plant id required')
 
         # define outputs
-        self.outputs['load'] = Output('Load', info='value[0-1]')
+        self.outputs['load'] = Output('Load', info='load of all photovoltaic power plants, value[0-1]')
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -60,21 +60,22 @@ class Model(Supermodel):
         ###################################################################################################################
         # Input Arguments:
         # KWDaten: Dictionary holding the different parameters of power plants
-        # ------------------------------------------------------------------------------------
-        #   id  fk_kwt   kw_bezeichnung    power[W]         spez_info             Capex   Opex
-        # ------------------------------------------------------------------------------------
-        #   1     2          WT            1000000       NH: 150,  Z0: 0.03         1     0.01
-        #   2     1          PV            2000000       NH: 0,    Z0: {}           2     0.02
-        #   3     2          WT            3000000       NH: 200,  Z0: 0.2          3     0.03
-        #   4     1          PV            4000000       NH: 0,    Z0: {}           4     0.04
-        #   5     2          WT            5000000       NH: 250,  Z0: 0.03         5     0.05
-        #   6     1          PV            6000000       NH: 0,    Z0: {}           6     0.06
-        #   8     3        OTHER           1000000       NH: 0,    Z0: {}           7     0.07
-        #   10    3        OTHER           1000000       NH: 0,    Z0: {}           8     0.08
-        #   11    4        OTHER           1000000       NH: 0,    Z0: {}           9     0.09
-        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
+        # ----------------------------------------------------------------------------------------------
+        #   id  fk_kwt   kw_bezeichnung    power[W]          spez_info             Capex   Opex,  usw...
+        # ----------------------------------------------------------------------------------------------
+        #   1     2       Windturbine      1000000       NH: 150,  Z0: 0.03          1     0.01
+        #   2     1      Photovoltaik      2000000       NH: 0,    Z0: {}            2     0.02
+        #   3     2       Windturbine      3000000       NH: 200,  Z0: 0.2           3     0.03
+        #   4     1      Photovoltaik      4000000       NH: 0,    Z0: {}            4     0.04
+        #   5     2       Windturbine      5000000       NH: 250,  Z0: 0.03          5     0.05
+        #   6     1      Photovoltaik      6000000       NH: 0,    Z0: {}            6     0.06
+        #   8     3        Others          1000000       NH: 0,    Z0: {}            7     0.07
+        #   10    3        Others          1000000       NH: 0,    Z0: {}            8     0.08
+        #   11    4        Others          1000000       NH: 0,    Z0: {}            9     0.09
+        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex,
+        #  Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
         #
-        # WetterDaten: Dictionary holding Power plant IDs(KWIDs) and weather data for all types of power plants
+        # WetterDaten: Dictionary holding Power plant IDs(id) and weather data for all types of power plants
         # ----------------------------------------------
         #  id      windspeed   radiation   windmesshoehe
         # ----------------------------------------------
@@ -89,10 +90,10 @@ class Model(Supermodel):
         #  11      None        None            None
         #
         # Output Arguments:
-        # PVAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
-        # load(Auslastung) of PV power plant in following 96 columns, output values are between [0-1] except KWIDs
+        # PVAuslastung: Dictionary containing Power plant IDs(id) in the first list  and corresponding calculated
+        # load(Auslastung) of PV power plants in second list, output values are between [0-1] except ids
         # -----------------
-        # KWIDs  Auslastung   Note: Output matrix contains only load for PV power plants
+        #   id  Auslastung   Note: Output matrix contains the load for PV power plants only
         # -----------------
         #   2    array(96)
         #   4    array(96)
@@ -117,7 +118,7 @@ class Model(Supermodel):
         KWid = [kw[0] for kw in KraftwerksDaten]
         loads = [make_load_for_one_pv(kw[0]) for kw in KraftwerksDaten]
 
-        PVAuslastung = {'id': KWid, 'load': loads}
+        PVAuslastung = {'power_plant_id': KWid, 'load': loads}
         return PVAuslastung
 
 

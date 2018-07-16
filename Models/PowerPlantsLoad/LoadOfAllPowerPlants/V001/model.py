@@ -10,15 +10,15 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['WTAuslastung'] = Input('LoadWindTurbine', info='value[0-1]')
-        self.inputs['PVAuslastung'] = Input('LoadPhotovoltaic', info='value[0-1]')
-        self.inputs['LaufwasserKWAuslastung'] = Input('LoadRunningWaterPowerPlant', info='value[0-1]')
-        self.inputs['SpeicherwasserKWAuslastung'] = Input('LoadStoragePowerPlant', info='value[0-1]')
-        self.inputs['KWDaten'] = Input('PowerPlantsData', info='IDs extracted from PowerPlantData')
-        self.inputs['futures'] = Input('Futures', info='Number of timestamps')
+        self.inputs['WTAuslastung'] = Input('LoadWindTurbine', info='load of all wind turbines, value[0-1]')
+        self.inputs['PVAuslastung'] = Input('LoadPhotovoltaic', info='load of all photovoltaic power plants, value[0-1]')
+        self.inputs['LaufwasserKWAuslastung'] = Input('LoadRunningWaterPowerPlant', info='load of all running-water power plants, value[0-1]')
+        self.inputs['SpeicherwasserKWAuslastung'] = Input('LoadStoragePowerPlant', info='load of all storage power plants, value[0-1]')
+        self.inputs['KWDaten'] = Input('PowerPlantsData', info='dict, power plant id required')
+        self.inputs['futures'] = Input('Futures', unit='s', info='utc time array in seconds since epoch')
 
         # define outputs
-        self.outputs['GemeinsameAuslastung'] = Output('CombinedLoad', info='value[0-1]')
+        self.outputs['GemeinsameAuslastung'] = Output('CombinedLoad', info='combined load of all types of power plants, value[0-1]')
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -38,50 +38,69 @@ class Model(Supermodel):
 
     # define additional methods (normal)
     def auslastungallerKWs(self, WTauslastung, PVauslastung, LWKWauslastung, SWKWauslastung, KWDaten, Futures):
-        # Determine the load(Auslastung) of each power plant according to incoming Power plant key /Foreign Keys
-        # separately and then combine them together in a matrix to form combined loading
+        # Determine the load(Auslastung) of each power plant according to incoming power plant key
+        # separately and then combine them together to form combined load
         ###################################################################################################################
         # Input Arguments:
-        ## WTAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
-        # load(Auslastung) of wind turbine in following 96 columns, output values are between [0-1] except KWIDs
+        ## WTauslastung: Dictionary containing Power plant IDs(id) in the first list and corresponding calculated
+        # load(Auslastung) of wind turbines in second list, output values are between [0-1] except ids
         # -----------------
-        # KWIDs  Auslastung   Note: Output matrix contains only load for wind turbines
+        #   id  Auslastung   Note: Input matrix contains the load of wind turbines only
         # -----------------
         #   2    array(96)
         #   4    array(96)
         #   6    array(96)
         #
-        # PVAuslastung: Dictionary containing KWIDs in the first column  and corresponding calculated
-        # load(Auslastung) of PV power plant in following 96 columns, output values are between [0-1] except KWIDs
+        # PVauslastung: Dictionary containing Power plant IDs(id) in the first list and corresponding calculated
+        # load(Auslastung) of photovoltaic power plants in second list, output values are between [0-1] except ids
         # -----------------
-        # KWIDs  Auslastung   Note: Output matrix contains only load for PV power plants
+        #   id  Auslastung   Note: Input matrix contains the load of PV power plants only
         # -----------------
         #   2    array(96)
         #   4    array(96)
         #   6    array(96)
+        #
+        # LWKWauslastung: Dictionary containing Power plant IDs(id) in the first list and corresponding calculated
+        # load(Auslastung) of running-water power plants in second list, output values are between [0-1] except ids
+        # -----------------
+        #   id  Auslastung   Note: Input matrix contains the load of running-water power plants only
+        # -----------------
+        #   10    array(96)
+        #   11    array(96)
+        #
+        # SWKWauslastung: Dictionary containing Power plant IDs(id) in the first list and corresponding calculated
+        # load(Auslastung) of storage power plants in second list, output values are between [0-1] except ids
+        # -----------------
+        #   id  Auslastung   Note: Input matrix contains the load of storage power plants only
+        # -----------------
+        #   10    array(96)
+        #   11    array(96)
         #
         # KWDaten: Dictionary holding the different parameters of power plants
-        # ------------------------------------------------------------------------------------
-        #   id  fk_kwt   kw_bezeichnung    power[W]         spez_info             Capex   Opex
-        # ------------------------------------------------------------------------------------
-        #   1     2          WT            1000000       NH: 150,  Z0: 0.03         1     0.01
-        #   2     1          PV            2000000       NH: 0,    Z0: {}           2     0.02
-        #   3     2          WT            3000000       NH: 200,  Z0: 0.2          3     0.03
-        #   4     1          PV            4000000       NH: 0,    Z0: {}           4     0.04
-        #   5     2          WT            5000000       NH: 250,  Z0: 0.03         5     0.05
-        #   6     1          PV            6000000       NH: 0,    Z0: {}           6     0.06
-        #   8     3        OTHER           1000000       NH: 0,    Z0: {}           7     0.07
-        #   10    3        OTHER           1000000       NH: 0,    Z0: {}           8     0.08
-        #   11    4        OTHER           1000000       NH: 0,    Z0: {}           9     0.09
-        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex, Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
+        # ----------------------------------------------------------------------------------------------
+        #   id  fk_kwt   kw_bezeichnung    power[W]          spez_info             Capex   Opex,  usw...
+        # ----------------------------------------------------------------------------------------------
+        #   1     2       Windturbine      1000000       NH: 150,  Z0: 0.03          1     0.01
+        #   2     1      Photovoltaik      2000000       NH: 0,    Z0: {}            2     0.02
+        #   3     2       Windturbine      3000000       NH: 200,  Z0: 0.2           3     0.03
+        #   4     1      Photovoltaik      4000000       NH: 0,    Z0: {}            4     0.04
+        #   5     2       Windturbine      5000000       NH: 250,  Z0: 0.03          5     0.05
+        #   6     1      Photovoltaik      6000000       NH: 0,    Z0: {}            6     0.06
+        #   8     3        Others          1000000       NH: 0,    Z0: {}            7     0.07
+        #   10    3        Others          1000000       NH: 0,    Z0: {}            8     0.08
+        #   11    4        Others          1000000       NH: 0,    Z0: {}            9     0.09
+        # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex,
+        #  Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
+        #
+        # Futures: Incoming datetime values (produced by Scheduler/Cronjob/V2)
         #
         # Output Arguments:
-        # AuslastungAllerKWs: Dictionary containing KWIDs in the first column  and corresponding calculated
-        # load(Auslastung) of a power plant in following 96 columns, output values are between [0-1] except KWIDs
+        # AuslastungAllerKWs: Dictionary containing Power plant IDs(id) in the first list and corresponding calculated
+        # load(Auslastung) of all power plants in second list, output values are between [0-1] except ids
         # -----------------
-        # KWIDs  Auslastung   Note: Output matrix is not sorted and contains the load of wind turbines at first place
-        # -----------------         on the top, then comes the load of PV and in the last comes the load of remaining
-        #   1    array(96)          power plants(having 100% load).
+        #   id  Auslastung   Note: Output dictionary is not sorted and contains the load of wind turbines at first place
+        # -----------------        on the top, then comes the load of PV, running-water, and storage power plants
+        #   1    array(96)         respectively, in the last comes the load of remaining power plants(having 100% load).
         #   3    array(96)
         #   5    array(96)
         #   2    array(96)
@@ -90,31 +109,31 @@ class Model(Supermodel):
         ###################################################################################################################
 
         KWDatenID = KWDaten['id']
-        WTids = WTauslastung['id']
-        PVids = PVauslastung['id']
-        LWKWids = LWKWauslastung['id']
-        SWKWids = SWKWauslastung['id']
+        WTids = WTauslastung['power_plant_id']
+        PVids = PVauslastung['power_plant_id']
+        LWKWids = LWKWauslastung['power_plant_id']
+        SWKWids = SWKWauslastung['power_plant_id']
         ids =[]
         load =[]
         def make_load_for_one_plant(kw_id):
             if kw_id in WTids:
                 ids.append(kw_id)
-                index_of_kwid_in_WTauslastung = WTauslastung['id'].index(kw_id)
+                index_of_kwid_in_WTauslastung = WTauslastung['power_plant_id'].index(kw_id)
                 auslastung_for_kwid = WTauslastung['load'][index_of_kwid_in_WTauslastung]
                 load.append(auslastung_for_kwid)
             elif kw_id in PVids:
                 ids.append(kw_id)
-                index_of_kwid_in_PVauslastung = PVauslastung['id'].index(kw_id)
+                index_of_kwid_in_PVauslastung = PVauslastung['power_plant_id'].index(kw_id)
                 auslastung_for_kwid = PVauslastung['load'][index_of_kwid_in_PVauslastung]
                 load.append(auslastung_for_kwid)
             elif kw_id in LWKWids:
                 ids.append(kw_id)
-                index_of_kwid_in_LWKWauslastung = LWKWauslastung['id'].index(kw_id)
+                index_of_kwid_in_LWKWauslastung = LWKWauslastung['power_plant_id'].index(kw_id)
                 auslastung_for_kwid = LWKWauslastung['load'][index_of_kwid_in_LWKWauslastung]
                 load.append(auslastung_for_kwid)
             elif kw_id in SWKWids:
                 ids.append(kw_id)
-                index_of_kwid_in_SWKWauslastung = SWKWauslastung['id'].index(kw_id)
+                index_of_kwid_in_SWKWauslastung = SWKWauslastung['power_plant_id'].index(kw_id)
                 auslastung_for_kwid = SWKWauslastung['load'][index_of_kwid_in_SWKWauslastung]
                 load.append(auslastung_for_kwid)
 
@@ -134,11 +153,11 @@ class Model(Supermodel):
         [find_ids_of_other_powerplant(id) for id in KWDatenID]
 
 
-        AuslastungAllerKWs = {'id': ids, 'load': load}
+        AuslastungAllerKWs = {'power_plant_id': ids, 'load': load}
         return AuslastungAllerKWs
 
 
-'''
+    '''
         WTids = WTauslastung['id']
         PVids = PVauslastung['id']
         LWKWids = LWKWauslastung['id']
@@ -194,4 +213,4 @@ class Model(Supermodel):
         AuslastungAllerKWs = np.vstack((AuslastungWtPvLwSw, OtherPowerPlantsAuslastung))
         AuslastungAllerKWs = {'id': AuslastungAllerKWs[:,0].tolist(), 'load': AuslastungAllerKWs[:,1:].tolist()}
         return AuslastungAllerKWs
-        '''
+    '''
