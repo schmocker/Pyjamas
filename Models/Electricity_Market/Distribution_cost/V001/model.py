@@ -48,7 +48,6 @@ class Model(Supermodel):
 
         # locations information
         dist_nets = await self.get_input('dist_net')
-        dist_nets = json.loads(dist_nets)
         dist_loc = list(dist_nets.keys())
 
         # costs
@@ -63,7 +62,7 @@ class Model(Supermodel):
                   'costs': cost_vec}
 
         # set output
-        self.set_output("el_rate", output)
+        self.set_output("dist_cost", output)
 
 if __name__ == "__main__":
 
