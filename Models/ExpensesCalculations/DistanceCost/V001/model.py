@@ -11,11 +11,11 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['Standorte'] = Input('SPGLocations', info='dict')
-        self.inputs['KWDaten'] = Input('PowerPlantsData', info='dict')
+        self.inputs['Standorte'] = Input('SPGLocations', info='geographical coordinates[lat/lon] of SPGs required')
+        self.inputs['KWDaten'] = Input('PowerPlantsData',info='dict, geographical coordinates[lat/lon] of power plants required')
 
         # define outputs
-        self.outputs['Distanzkosten'] = Output('DistanceCost')
+        self.outputs['Distanzkosten'] = Output('DistanceCost', unit='[$/J]')
 
         self.DistanzFaktor = 0.1
 
