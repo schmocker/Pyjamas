@@ -1,6 +1,9 @@
 # Weather model
 
-...
+=> V_historic
+
+* works always in simulation mode (not live) using only historical weather data
+* forecast weather by API not implemented
 
 
 ## Inputs
@@ -15,7 +18,7 @@ The input to this model:
 The output of this model is:
 
 1. Weather data to KW's (ID, Temperature, Wind speed, Radiation
-1. Future weather (not build at the moment)
+2. Future weather: weather data base
 
 ## Properties
 The property of this model is:
@@ -31,18 +34,3 @@ The property of this model is:
 ### Implementation
 
 ....
-
-### Weather data
-
-1. Historic weather data
-1. Forecast
-
-#### Historic weather data
-
-* historic weather data from 2006-2017
-* hourly data for 25 points
-* temperature, wind speed (h= 10 m), radiation (global horizontal radiation)
-
-#### Forecast 
-
-* with API
