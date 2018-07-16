@@ -62,6 +62,12 @@ class Model(Supermodel):
         loc_vec = self.weight_ET['location']
         len_loc = len(loc_vec)
 
+        # read prices
+        stock_prices_input = await self.get_input('stock_ex_price')
+
+        # read distribution costs
+        dn_costs_input = await self.get_input('distnet_costs')
+
         # DLK
         DLK_val = await self.get_input('DLK')
 
@@ -76,12 +82,10 @@ class Model(Supermodel):
             # read and determine borders and tiers
             border_tiers_i = self.det_border_tiers(nt)
 
-            # read distribution costs
-            dn_costs_input = await self.get_input('distnet_costs')
+            # distribution costs
             dn_costs = dn_costs_input['costs'][nt]
 
-            # read prices
-            stock_prices_input = await self.get_input('stock_ex_price')
+            # stock prices
             stock_prices = stock_prices_input['prices'][nt]
 
             el_rate_i = []
@@ -147,7 +151,6 @@ class Model(Supermodel):
                         'NT_tiers': NT_tiers}
 
         return border_tiers
-
 
 if __name__ == "__main__":
 

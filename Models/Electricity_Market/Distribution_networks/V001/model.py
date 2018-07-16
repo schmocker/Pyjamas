@@ -44,7 +44,7 @@ class Model(Supermodel):
 
             # test uniqueness
             for it in range(1, locations.__len__()):
-                print(locations[it])
+                #print(locations[it])
                 for jt in range(1,it):
                     if locations[it] == locations[jt]:
                         locations[it] = locations[it] + "_1"
