@@ -62,7 +62,7 @@ class Model(Supermodel):
         l_country = country_index.size
 
         # date preparation
-        l_date = len(dates)
+        l_date = 1 #len(dates)
 
         # change time format from utc to datetime and add timezone information
         date_datetime = utc_time2datetime(dates)
