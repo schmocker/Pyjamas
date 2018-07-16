@@ -27,23 +27,39 @@ class Model(Supermodel):
         self.outputs['el_rate'] = Output(name='electricity rate', unit='???', info='electricity rate')
 
         # define properties
-        ET_def = {"border": [-1., -0.8, -0.3, 0., 0.3, 0.8, 1.],
-                  "weight": [-2., -1.25, -0.75, 0.75, 1.25, 2.]}
-        NT_def = {"border": [-1., -0.7, -0.4, 0., 0.4, 0.7, 1.],
-                  "weight": [-1.75, -1., -0.5, 0.5, 1., 1.75]}
-        self.properties['weight_ET'] = Property(default=ET_def, data_type=dict, name='energy tiers', unit='-', info='borders and weights of energy tiers')
-        self.properties['weight_NT'] = Property(default=NT_def, data_type=dict, name='net tiers', unit='-', info='borders and weights of net tiers')
+        ET_def = {"location": ['Baden', 'Brugg'],
+                  "border": [[-1., -0.8, -0.3, 0., 0.3, 0.8, 1.], [-1., -0.85, -0.35, 0., 0.35, 0.85, 1.]],
+                  "weight": [[-2., -1.25, -0.75, 0.75, 1.25, 2.], [-2., -1.3, -0.8, 0.8, 1.3, 2.]]}
+        NT_def = {"location": ['Baden', 'Brugg'],
+                  "border": [[-1., -0.7, -0.4, 0., 0.4, 0.7, 1.], [-1., -0.75, -0.45, 0., 0.45, 0.75, 1.]],
+                  "weight": [[-1.75, -1., -0.5, 0.5, 1., 1.75], [-1.8, -1.05, -0.55, 0.55, 1.05, 1.8]]}
+        ET_def = json.dumps(ET_def)
+        NT_def = json.dumps(NT_def)
+        self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers')
+        self.properties['weight_NT'] = Property(default=NT_def, data_type=str, name='net tiers', unit='-', info='borders and weights of net tiers')
+
+        # define persistent variables
+        self.weight_ET = None
+        self.weight_NT = None
+
 
     async def func_birth(self):
         pass
 
     async def func_amend(self, keys=[]):
-        pass
+
+        if 'weight_ET' in keys:
+            weight_ET_i = self.get_property('weight_ET')
+            self.weight_ET = json.loads(weight_ET_i)
+
+        if 'weight_NT' in keys:
+            weight_NT_i = self.get_property('weight_NT')
+            self.weight_NT = json.loads(weight_NT_i)
 
     async def func_peri(self, prep_to_peri=None):
 
         # locations information
-        loc_vec = self.get_property('weight_ET')['location']
+        loc_vec = self.weight_ET['location']
         len_loc = len(loc_vec)
 
         # DLK
@@ -88,8 +104,8 @@ class Model(Supermodel):
     def det_border_tiers(self, it):
 
         # read borders
-        ET_border = self.get_property('weight_ET')["border"][it]
-        NT_border = self.get_property('weight_NT')["border"][it]
+        ET_border = self.weight_ET["border"][it]
+        NT_border = self.weight_NT["border"][it]
 
         ET_border = np.array(ET_border)
         NT_border = np.array(NT_border)
@@ -99,8 +115,8 @@ class Model(Supermodel):
         borders = np.unique(borders)
 
         # read tiers
-        ET_tiers_orig = self.get_property('weight_ET')["weight"][it]
-        NT_tiers_orig = self.get_property('weight_NT')["weight"][it]
+        ET_tiers_orig = self.weight_ET["weight"][it]
+        NT_tiers_orig = self.weight_NT["weight"][it]
 
         # create tiers corresponding to border
         ind_ET = 0
@@ -139,7 +155,7 @@ if __name__ == "__main__":
     stock_ex_price = {'distribution_networks': ['Baden', 'Brugg'],
                       'prices': [[1, 2, 3], [1.1, 2.2, 3.3]]}
     distnet_costs = {'distribution_networks': stock_ex_price['distribution_networks'],
-                    'costs': [100, 111]}
+                     'costs': [100, 111]}
     DLK = [0.5]
     abgaben = [0.25]
 
@@ -147,8 +163,11 @@ if __name__ == "__main__":
     ET = {"location": ['Baden', 'Brugg'],
           "border": [[-1., -0.8, -0.3, 0., 0.3, 0.8, 1.], [-1., -0.85, -0.35, 0., 0.35, 0.85, 1.]],
           "weight": [[-2., -1.25, -0.75, 0.75, 1.25, 2.], [-2., -1.3, -0.8, 0.8, 1.3, 2.]]}
-    NT = {"border": [[-1., -0.7, -0.4, 0., 0.4, 0.7, 1.], [-1., -0.75, -0.45, 0., 0.45, 0.75, 1.]],
+    NT = {"location": ['Baden', 'Brugg'],
+          "border": [[-1., -0.7, -0.4, 0., 0.4, 0.7, 1.], [-1., -0.75, -0.45, 0., 0.45, 0.75, 1.]],
           "weight": [[-1.75, -1., -0.5, 0.5, 1., 1.75], [-1.8, -1.05, -0.55, 0.55, 1.05, 1.8]]}
+    ET = json.dumps(ET)
+    NT = json.dumps(NT)
 
     inputs = {'stock_ex_price': stock_ex_price,
               'distnet_costs': distnet_costs,

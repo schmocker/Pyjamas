@@ -25,6 +25,7 @@ class Model(Supermodel):
                                                        '"Brugg": {"Lat": 47.48420, "Lon": 8.20706}, '
                                                        '"Olten": {"Lat": 47.35212, "Lon": 7.90801}}')
 
+        # define persistent variables
         self.distNets = None
 
 
