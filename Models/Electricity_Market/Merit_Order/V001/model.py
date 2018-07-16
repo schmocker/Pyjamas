@@ -31,6 +31,8 @@ class Model(Supermodel):
         self.outputs['all_data'] = Output(name='All Data', unit='-',
                                                info='All data sorted by merit order for each distribution network and time step')
 
+
+
     async def func_peri(self, prep_to_peri=None):
         demands = await self.get_input("demand")  # f(time)
         powers = await self.get_input("power")  # f(time, pp)
