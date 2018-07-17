@@ -28,9 +28,14 @@ The property of this model is:
 1. Offset of radiation
 1. Reference year when using historical data for weather forecast
 
-
 ## Remarks
 
 ### Implementation
 
-....
+* when islife = True and futures are now or later and futures within 7 days, then API weather data is used
+* else historic data is provided by reference year
+
+### Reference year
+
+* provided are the years 2006-2017, selecting 1.1.2006 or late dates in 2017 can lead to problems, not catched so far
+* when year of futures is a leap year and reference not, then reference year is adjusted to the nearest reference leap year (2008, 2012, 2016)
