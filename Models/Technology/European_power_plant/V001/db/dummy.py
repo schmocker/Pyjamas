@@ -2,8 +2,8 @@ from Models.Technology.European_power_plant.V001.db import Kraftwerk, Kraftwerks
     Kraftwerksleistung, Brennstofftyp, Brennstoffpreis, Entsorgungspreis, Co2Preis
 
 from sqlalchemy import exc
-import datetime
 import random
+import time
 
 
 def create_dummy_data(session):
@@ -12,12 +12,16 @@ def create_dummy_data(session):
     session.query(Brennstofftyp).delete()
     session.commit()
 
-    for bst_info in [["Erdgas", 1.58],
-                     ["Biomasse", 1.2],
-                     ["Kernbrennstoff", 1.2],
-                     ["Braunkohle", 2],
-                     ["Steinkohle", 1.8],
-                     ["None", 0]]:
+    for bst_info in [["Erdgas", 0.000000056],
+                     ["Biomasse", 0.000000004],
+                     ["Kernbrennstoff", 0],
+                     ["Braunkohle", 0.0000001],
+                     ["Steinkohle", 0.000000095],
+                     ["None", 0],
+                     ["Oel", 0.000000078],
+                     ["Weitere RES", 0.000000004],
+                     ["Weitere nonRES", 0.000000056]]:
+
         bst = Brennstofftyp(bezeichnung=bst_info[0],
                             co2emissFakt=bst_info[1])
         session.add(bst)
@@ -38,8 +42,7 @@ def create_dummy_data(session):
                 bsp = Brennstoffpreis(fk_brennstofftyp=bst.id,
                                       long=random.random()*60 - 20,
                                       lat=random.random()*60 + 20,
-                                      datetime=datetime.datetime.now()+random.randint(0, 60) *
-                                               datetime.timedelta(days=30),
+                                      datetime=time.time()+random.randint(0, 60) * 30*24*60*60,
                                       preis=random.randint(500, 1500))
                 session.add(bsp)
                 try:
@@ -67,7 +70,11 @@ def create_dummy_data(session):
                      ["Steinkohlekraftwerk", "neu", "Steinkohle"],
                      ["Windturbine", "offshore", "None"],
                      ["Windturbine", "onshore schwachwind", "None"],
-                     ["Windturbine", "onshore starkwind", "None"]]:
+                     ["Windturbine", "onshore starkwind", "None"],
+                     ["Oelkraftwerk", None, "Oel"],
+                     ["Weitere RES", None, "Weitere RES"],
+                     ["Weitere nonRES", None, "Weitere nonRES"]]:
+
         bst = session.query(Brennstofftyp).filter_by(bezeichnung=kwt_info[2]).first()
         kwt = Kraftwerkstyp(bezeichnung=kwt_info[0],
                             bezeichnung_subtyp=kwt_info[1],
@@ -76,7 +83,7 @@ def create_dummy_data(session):
                             spez_opex=random.randint(400, 800),
                             capex=random.randint(5, 8)/10,
                             p_typisch=random.randint(100, 1000),
-                            spez_info="info...")
+                            spez_info="{'NH': 100, 'Z0': 0.1}")
         session.add(kwt)
         try:
             session.commit()
@@ -110,9 +117,8 @@ def create_dummy_data(session):
     for kw in kws:
         for _ in range(random.randint(1, 3)):
             kwl = Kraftwerksleistung(fk_kraftwerk=kw.id,
-                                     power_inst=random.randint(500, 1500),
-                                     datetime=datetime.datetime.now()+random.randint(0, 20) *
-                                              datetime.timedelta(days=365))
+                                     power_inst=random.randint(500000, 1500000),
+                                     datetime=time.time() + random.randint(0, 20) * 365*24*60*60)
             session.add(kwl)
             try:
                 session.commit()
@@ -131,8 +137,7 @@ def create_dummy_data(session):
                 entp = Entsorgungspreis(fk_kraftwerkstyp=kwt.id,
                                         long=random.random() * 60 - 20,
                                         lat=random.random() * 60 + 20,
-                                        datetime=datetime.datetime.now() + random.randint(0, 20) *
-                                                 datetime.timedelta(days=365),
+                                        datetime=time.time() + random.randint(0, 20) * 365*24*60*60,
                                         preis=random.randint(100, 200))
                 session.add(entp)
                 try:
@@ -146,7 +151,7 @@ def create_dummy_data(session):
     session.commit()
 
     for i in range(50):
-        co2p = Co2Preis(datetime=datetime.datetime.now() + random.randint(0, 10) * datetime.timedelta(days=365),
+        co2p = Co2Preis(datetime=time.time() + random.randint(0, 10) * 365*24*60*60,
                         preis=random.randint(100, 200))
         session.add(co2p)
         try:

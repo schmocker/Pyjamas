@@ -15,9 +15,6 @@ from scipy.interpolate import griddata
 from dotenv import load_dotenv
 from os import environ
 
-from Models._utils.time import utc_time2datetime
-from Models._utils.time import datetime2utc_time
-
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -62,9 +59,11 @@ class Model(Supermodel):
         # only first time value for interpolation
         kw_time = [t_in[0]]
 
+        print("start queries")
+
         """
         Naming conventions for queried and interpolated data:
-        
+
         db_ : Queried directly from database or taken from another db_ value.
         kw_ : Value valid for a single power plant
         _int : interpolated values       
@@ -95,7 +94,7 @@ class Model(Supermodel):
 
         # query Co2Preis
         db_co2 = self.db.query(Co2Preis).all()
-        db_co2_t = [datetime2utc_time(i.datetime) for i in db_co2]
+        db_co2_t = [i.datetime for i in db_co2]
         db_co2_preis = [i.preis for i in db_co2]
 
         print("queries finished successfully")
@@ -108,7 +107,7 @@ class Model(Supermodel):
                 kw_bs_preis = [float('nan')]
             else:
                 db_bsp = kw.kraftwerkstyp.brennstofftyp.brennstoffpreise
-                db_bsp_t = [datetime2utc_time(i.datetime) for i in db_bsp]
+                db_bsp_t = [i.datetime for i in db_bsp]
                 db_bsp_lat = [i.lat for i in db_bsp]
                 db_bsp_long = [i.long for i in db_bsp]
                 db_bsp_preis = [i.preis for i in db_bsp]
@@ -134,7 +133,7 @@ class Model(Supermodel):
                 kw_ents = [float('nan')]
 
             else:
-                db_ents_t = [datetime2utc_time(i.datetime) for i in db_ents]
+                db_ents_t = [i.datetime for i in db_ents]
                 db_ents_lat = [i.lat for i in db_ents]
                 db_ents_long = [i.long for i in db_ents]
                 db_ents_preis = [i.preis for i in db_ents]
@@ -149,7 +148,7 @@ class Model(Supermodel):
         for kw in db_kw:
             print("P inst", kw.id, kw.bezeichnung)
             db_pinst = kw.kraftwerksleistungen
-            db_pinst_t = [datetime2utc_time(i.datetime) for i in db_pinst]
+            db_pinst_t = [i.datetime for i in db_pinst]
             db_pinst_p = [i.power_inst for i in db_pinst]
 
             pinst_int = pinst_int + self.interpol_1d(db_pinst_t, db_pinst_p, kw_time)
@@ -176,10 +175,10 @@ class Model(Supermodel):
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
             bs_kosten = bs_kosten + [bs_preis_int[idx] / wirkungsgrad]
 
-         # TODO Alle Namen prüfen
+        # TODO Alle Namen prüfen
         # TODO Namenskonvention!! (db, kwp,...)
         kwp = {"id": db_kw_id,
-               "bezeichnung": db_kw_bez,
+               "kw_bezeichnung": db_kw_bez,
                "lat": db_kw_lat,
                "long": db_kw_long,
                "p_inst": pinst_int,
@@ -188,7 +187,7 @@ class Model(Supermodel):
                "bez_kraftwerkstyp": db_kwt_bez,
                "bez_subtyp": db_kwt_bez_subtyp,
                "wirkungsgrad": db_kwt_wirkungsgrad,
-               "spez_opex": db_kwt_opex,
+               "opex": db_kwt_opex,
                "capex": db_kwt_capex,
                "p_typisch": db_kwt_p_typisch,
                "spez_info": db_kwt_spez_info,
@@ -197,11 +196,11 @@ class Model(Supermodel):
                "brennstofftyp_id": db_bst_id,
                "bez_brennstofftyp": db_bst_bez,
                "co2emissfakt": db_bst_co2emissfakt,
-               "bs_preis_int": bs_preis_int,
-               "co2_preis_int": co2_preis_int,
+               "bs_preis": bs_preis_int,
+               "co2_preis": co2_preis_int,
                "co2_kosten": co2_kosten,
-               "ents_kosten": ents_kosten,
-               "bs_kosten": bs_kosten,
+               "entsorgungskosten": ents_kosten,
+               "brennstoffkosten": bs_kosten,
                }
 
         self.set_output("kw_park", kwp)
@@ -379,6 +378,20 @@ def start_db():
     # an engine is the real DB
     engine = create_engine(db_path)
 
+    # a session is used to communicate with the DB
+    Base.metadata.bind = engine
+    session = sessionmaker(bind=engine)()
+
+    return session
+
+
+def create_db():
+    load_dotenv()
+    db_path = environ.get("KW_DB")
+
+    # an engine is the real DB
+    engine = create_engine(db_path)
+
     # delete all tables
     Base.metadata.drop_all(engine)
     # create all tables
@@ -393,13 +406,13 @@ def start_db():
 
 
 if __name__ == "__main__":
-    # db = start_db()
+    # db = create_db()
     #
     # kws = db.query(Kraftwerk).all()
     # kw = db.query(Kraftwerk).first()
     #
     # stop = 1
-    #
+
     # define Input
     dt = 900
     t0 = time.time()
