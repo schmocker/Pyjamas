@@ -35,8 +35,8 @@ class Model(Supermodel):
                   "weight": [[-1.75, -1., -0.5, 0.5, 1., 1.75], [-1.8, -1.05, -0.55, 0.55, 1.05, 1.8]]}
         ET_def = json.dumps(ET_def)
         NT_def = json.dumps(NT_def)
-        self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers')
-        self.properties['weight_NT'] = Property(default=NT_def, data_type=str, name='net tiers', unit='-', info='borders and weights of net tiers')
+        self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers', example=ET_def)
+        self.properties['weight_NT'] = Property(default=NT_def, data_type=str, name='net tiers', unit='-', info='borders and weights of net tiers', example=NT_def)
 
         # define persistent variables
         self.weight_ET = None

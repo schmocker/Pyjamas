@@ -1,25 +1,25 @@
 # Tiers
 
-...
+Calculation of the electricity rate based on the stock price, the distribution network costs, service costs and taxes
 
 ## Inputs
-The input to this model:
+The inputs to this model are:
 
-1. Stock price (for each location and futures)
-1. Distribution network costs (for each network)
-1. Dienstleistungskosten (konstant)
-1. Abgaben (konstant)
+1. stock price (for each location and futures)
+1. distribution network costs (for each network)
+1. service costs (constant)
+1. taxes (constant)
 
 ## Outputs
 The output of this model is:
 
 1. dict of 
-    1. location ID
-    1. electricity rate (values; for each location and futures)
-    1. borders of tiers (energy and network)
+    * location ID
+    * electricity rate (values; for each location and futures)
+    * borders of tiers (energy and network)
 
 ## Properties
-The property of this model is:
+The properties of this model are:
 
 1. energy tiers
 1. distribution network tiers

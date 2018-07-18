@@ -88,7 +88,7 @@ class Model(Supermodel):
             auslastung_for_kwid = CombinedLoad['load'][index_of_kwid_in_CombinedLoad]
             auslastung = np.array(auslastung_for_kwid)
             index_of_kwid_in_KWDaten = KWDaten['id'].index(kw_id)
-            power_for_kwid = KWDaten['power'][index_of_kwid_in_KWDaten]
+            power_for_kwid = KWDaten['p_inst'][index_of_kwid_in_KWDaten]
 
             ScaledPowerOnePlant = power_for_kwid * auslastung
             return ScaledPowerOnePlant.tolist()

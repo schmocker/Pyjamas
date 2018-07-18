@@ -17,8 +17,19 @@ class Model(Supermodel):
         # define outputs
         self.outputs['Distanzkosten'] = Output('DistanceCost', unit='[$/J]')
 
+        # define properties
+        #self.properties['dis_factor'] = Property('DistanceFactor', default=0.1, data_type=float, unit='[$/m*J]')
+
         self.DistanzFaktor = 0.1
 
+    '''
+    async def func_birth(self):
+        await self.func_amend(['dis_factor'])
+
+    async def func_amend(self, keys=[]):
+        if 'dis_factor' in keys:
+            self.DistanzFaktor = self.get_property('dis_factor')
+    '''
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -87,8 +98,8 @@ class Model(Supermodel):
         dn_lon = Standorte['Longitude']
         dn_lat = Standorte['Latitude']
 
-        kw_lat = KWDaten['latitude']
-        kw_lon = KWDaten['longitude']
+        kw_lat = KWDaten['lat']
+        kw_lon = KWDaten['long']
 
         # Distance costs for all SPG locations
         costs = [[self.DistanzFaktor * self.GeoDistanceVincenty(kw_lat[i_kw], kw_lon[i_kw], dn_lat[i_dn], dn_lon[i_dn]) for i_dn in range(len(dn_lat))] for i_kw in range(len(kw_lat))]

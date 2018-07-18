@@ -1,14 +1,7 @@
 from core import Supermodel
 from core.util import Input, Output, Property
-from datetime import datetime, timedelta
-from Models._utils.time import datetime2utc_time, utc_time2datetime
 import numpy as np
-from pytz import timezone
 import json
-from scipy.interpolate import griddata
-import pandas as pd
-import requests
-import os
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -22,12 +15,12 @@ class Model(Supermodel):
         self.inputs['futures'] = Input(name='futures networks', unit='s', info='futures')
 
         # define outputs
-        self.outputs['dist_cost'] = Output(name='distribution cost', unit='???', info='distribution cost')
+        self.outputs['dist_cost'] = Output(name='distribution cost', unit='undet', info='distribution cost')
 
         # define properties
         cost_constant_def = [100, 110, 120]
         cost_constant_def = json.dumps(cost_constant_def)
-        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='-', info='constant distribution costs')
+        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='-', info='constant distribution costs', example='[100, 110, 120]')
 
         # persistent variables
         self.cost_constant = None
@@ -55,7 +48,7 @@ class Model(Supermodel):
         for ni in range(0, len(dist_loc)):
 
             cost_i = np.repeat(self.cost_constant[ni], len_futures)
-            cost_vec.append(cost_i)
+            cost_vec.append(cost_i.tolist())
 
         # output
         output = {'distribution_networks': list(dist_nets.keys()),
