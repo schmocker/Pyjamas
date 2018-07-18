@@ -24,14 +24,15 @@ class Model(Supermodel):
         self.inputs['date'] = Input(name='Futures', unit='s', info="Time vector of futures in utc timestamp [s]")
 
         # define outputs
-        self.outputs['KW_weather'] = Output(name='weather data of KWs', unit='date, °C, m/s, W/m^2', info='weather data of KWs')
-        self.outputs['Futures_weather'] = Output(name='weather data', unit='date, °C, m/s, W/m^2', info='(future) weather data (temperature, wind speed, radiation)')
+        self.outputs['KW_weather'] = Output(name='weather data of KWs', unit='dict{id, windspeed, radiation, windmesshoehe}', info='weather data of KWs')
+        self.outputs['Futures_weather'] = Output(name='weather data', unit='s, °C, m/s, W/m^2', info='weather data for 25 points (time, temperature, wind speed, radiation)')
 
         # define properties
-        self.properties['T_offset'] = Property(default=0., data_type=float, name='temperature offset', unit='%', info="offset of temperature in %")
-        self.properties['u_offset'] = Property(default=0., data_type=float, name='wind speed offset', unit='%', info="offset of wind speed in %")
-        self.properties['P_offset'] = Property(default=0., data_type=float, name='radiation offset', unit='%', info="offset of radiation in %")
-        self.properties['ref_year'] = Property(default=2007, data_type=int, name='reference year', unit='-', info="reference year for modeled weather")
+        self.properties['T_offset'] = Property(default=0., data_type=float, name='temperature offset', unit='%', info="offset of temperature in %", example='100: doubles the value')
+        self.properties['u_offset'] = Property(default=0., data_type=float, name='wind speed offset', unit='%', info="offset of wind speed in %", example='100: doubles the value')
+        self.properties['P_offset'] = Property(default=0., data_type=float, name='radiation offset', unit='%', info="offset of radiation in %", example='100: doubles the value')
+        self.properties['ref_year'] = Property(default=2007, data_type=int, name='reference year', unit='-', info="reference year for modeled weather (2007-2016; provided data for 2006-2017)",
+                                               example='2007')
 
         # define persistent variables
         self.data_hist = None

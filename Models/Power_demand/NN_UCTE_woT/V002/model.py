@@ -22,7 +22,7 @@ class Model(Supermodel):
         self.outputs['p_dem'] = Output(name='power demand', unit='W', info="power demand of UCTE in W")
 
         # define properties
-        self.properties['offset'] = Property(default=0, data_type=float, name='demand offset', unit='%', info="offset of demand in %")
+        self.properties['offset'] = Property(default=0, data_type=float, name='demand offset', unit='%', info="offset of demand in %", example='100: doubles the value')
 
         # define persistent variables
         self.model_para = None
