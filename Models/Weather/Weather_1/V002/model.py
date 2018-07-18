@@ -35,7 +35,6 @@ class Model(Supermodel):
 
         # define persistent variables
         self.data_hist = None
-        self.data_hist_year = None
         self.ref_year = None
 
     async def func_birth(self):
@@ -70,11 +69,11 @@ class Model(Supermodel):
         if future_indicator:
             # current weather forecast by API
             weather_data = self.prepare_API_weather()
-            #print('API')
+            print('API')
         else:
             # historic weather data from a reference year
             weather_data = self.prepare_historic_weather(futures)
-            #print('hist')
+            print('hist')
 
         # KW weather
         # interpolate weather data in times and locations for the different KW's
@@ -82,7 +81,7 @@ class Model(Supermodel):
 
         # futures weather
         # editing weather data for further use (e.g. power demand model)
-        futures_weather_data = self.future_weather_data(futures, weather_data)
+        futures_weather_data = self.future_weather_data(weather_data)
 
         # set output
         self.set_output("KW_weather", KW_weather_data)
@@ -219,8 +218,8 @@ class Model(Supermodel):
 
         # leap year
         # - if future and reference year do not correspond in leap year or not, adjust reference year
-        first_future = utc_time2datetime(futures[0])
-        year_first_future = first_future.year
+        first_future_y = utc_time2datetime(futures[0])
+        year_first_future = first_future_y.year
         leap_futures = self.det_leap_year(year_first_future)
         leap_refyear = self.det_leap_year(self.ref_year)
         leapyear_inref = np.array([2008, 2012, 2016])
@@ -251,7 +250,7 @@ class Model(Supermodel):
 
         time_filter = time_vec[index_first:index_last]
         # - shift historic time to future
-        time_filter + delta_shift
+        time_filter = time_filter + delta_shift
 
         temp_filter = []
         wind_filter = []
@@ -517,12 +516,27 @@ class Model(Supermodel):
 
         return interp_values
 
-    def future_weather_data(self, futures, weather_data):
+    def future_weather_data(self, weather_data):
 
+        # extract latitudes and longitudes
+        lat_vec = self.data_hist["lat"]
+        lon_vec = self.data_hist["lon"]
 
+        # extract data for each point
+        weather_list = []
+        for ni in range(0, len(lat_vec)):
+            weather_i = weather_data[(weather_data[:, 0] == lat_vec[ni]) & (weather_data[:, 1] == lon_vec[ni])]
+            weather_i = weather_i[:, 2:6].tolist()
+            weather_list.append(weather_i)
 
-        # not implemented so far
-        future_weather_data = weather_data.tolist()
+        dict_weather = {"ids": self.data_hist["ids"],
+                        "lat": lat_vec,
+                        "lon": lon_vec,
+                        "weather": weather_list}
+
+        # output
+        #future_weather_data = weather_data.tolist()
+        future_weather_data = dict_weather
         return future_weather_data
 
 if __name__ == "__main__":
