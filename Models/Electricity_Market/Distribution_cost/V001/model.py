@@ -1,14 +1,7 @@
 from core import Supermodel
 from core.util import Input, Output, Property
-from datetime import datetime, timedelta
-from Models._utils.time import datetime2utc_time, utc_time2datetime
 import numpy as np
-from pytz import timezone
 import json
-from scipy.interpolate import griddata
-import pandas as pd
-import requests
-import os
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):

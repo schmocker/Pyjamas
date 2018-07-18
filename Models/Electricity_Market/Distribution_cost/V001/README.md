@@ -1,9 +1,9 @@
 # Distribution cost
 
-...
+Calculation of the distribution costs for each distribution networks
 
 ## Inputs
-The input to this model:
+The inputs to this model are:
 
 1. distribution networks 
 2. futures
@@ -12,8 +12,8 @@ The input to this model:
 The output of this model is:
 
 1. dict of 
-    1. location ID
-    1. distribution costs in time
+    * location ID
+    * distribution costs (time resolved)
 
 ## Properties
 The property of this model is:
