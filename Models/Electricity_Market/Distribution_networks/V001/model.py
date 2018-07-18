@@ -11,7 +11,6 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        #self.inputs['mode'] = Input(name='modus', unit='-', info="modus (live or simulation)")
 
         # define outputs
         self.outputs['distNets'] = Output(name='Distribution Networks', unit='{Location: [], Latidude: [], Longitude []}',
@@ -44,7 +43,7 @@ class Model(Supermodel):
 
             # test uniqueness
             for it in range(1, locations.__len__()):
-                print(locations[it])
+                #print(locations[it])
                 for jt in range(1,it):
                     if locations[it] == locations[jt]:
                         locations[it] = locations[it] + "_1"

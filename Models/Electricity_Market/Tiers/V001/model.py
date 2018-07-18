@@ -35,8 +35,8 @@ class Model(Supermodel):
                   "weight": [[-1.75, -1., -0.5, 0.5, 1., 1.75], [-1.8, -1.05, -0.55, 0.55, 1.05, 1.8]]}
         ET_def = json.dumps(ET_def)
         NT_def = json.dumps(NT_def)
-        self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers')
-        self.properties['weight_NT'] = Property(default=NT_def, data_type=str, name='net tiers', unit='-', info='borders and weights of net tiers')
+        self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers', example=ET_def)
+        self.properties['weight_NT'] = Property(default=NT_def, data_type=str, name='net tiers', unit='-', info='borders and weights of net tiers', example=NT_def)
 
         # define persistent variables
         self.weight_ET = None
@@ -62,6 +62,12 @@ class Model(Supermodel):
         loc_vec = self.weight_ET['location']
         len_loc = len(loc_vec)
 
+        # read prices
+        stock_prices_input = await self.get_input('stock_ex_price')
+
+        # read distribution costs
+        dn_costs_input = await self.get_input('distnet_costs')
+
         # DLK
         DLK_val = await self.get_input('DLK')
 
@@ -76,18 +82,18 @@ class Model(Supermodel):
             # read and determine borders and tiers
             border_tiers_i = self.det_border_tiers(nt)
 
-            # read distribution costs
-            dn_costs_input = await self.get_input('distnet_costs')
+            # distribution costs
             dn_costs = dn_costs_input['costs'][nt]
 
-            # read prices
-            stock_prices_input = await self.get_input('stock_ex_price')
+            # stock prices
             stock_prices = stock_prices_input['prices'][nt]
 
             el_rate_i = []
-            for mt in stock_prices:
-
-                el_rate_ii = mt*border_tiers_i['ET_tiers'] + dn_costs*border_tiers_i['NT_tiers'] + DLK_val + abgaben_val
+            for i_mt in range(0, len(stock_prices)):
+                mt = stock_prices[i_mt]
+                #el_rate_ii = mt*border_tiers_i['ET_tiers'] + dn_costs[i_mt]*border_tiers_i['NT_tiers'] + DLK_val + abgaben_val
+                el_rate_ii = np.multiply(mt, border_tiers_i['ET_tiers']) + np.multiply(dn_costs[i_mt], border_tiers_i['NT_tiers']) + DLK_val + abgaben_val
+                el_rate_ii = el_rate_ii.tolist()
                 el_rate_i.append(el_rate_ii)
 
             el_rate.append(el_rate_i)
@@ -142,12 +148,11 @@ class Model(Supermodel):
             #print(it)
 
         # return dict
-        border_tiers = {'borders': borders,
-                        'ET_tiers': ET_tiers,
-                        'NT_tiers': NT_tiers}
+        border_tiers = {'borders': borders.tolist(),
+                        'ET_tiers': ET_tiers.tolist(),
+                        'NT_tiers': NT_tiers.tolist()}
 
         return border_tiers
-
 
 if __name__ == "__main__":
 
