@@ -7,7 +7,6 @@ from pytz import timezone
 import json
 from scipy.interpolate import griddata
 import pandas as pd
-import requests
 import os
 
 # define the model class and inherit from class "Supermodel"
