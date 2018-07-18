@@ -9,6 +9,7 @@ from scipy.interpolate import griddata
 import pandas as pd
 import requests
 import os
+import itertools
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -43,58 +44,45 @@ class Model(Supermodel):
 
     async def func_amend(self, keys=[]):
 
-        # if the refence year changes, select new historic reference data based on ref_year
+        # reference year
         if 'ref_year' in keys:
             self.ref_year = self.get_property('ref_year')
-            #self.data_hist_year = self.historic_select_year()
 
     async def func_peri(self, prep_to_peri=None):
 
-        # get inputs
+        # inputs
         islive = await self.get_input('mode')
         KW_data_orig = await self.get_input('KW')
         KW_data = {k: KW_data_orig[k] for k in ('id', 'kw_bezeichnung', 'latitude', 'longitude')}
         futures = await self.get_input('date')
 
-        # prepare weather data, dependent on modus live or not
-        # - test first future is equal or later than now
+        # weather data
+        # - test first future is equal or later than now, and less than 7 days
         date_now = datetime.now()
         date_now_s = date_now.timestamp()
-        # if futures[0] >= date_now_s:
-        #     future_indicator = True
-#
-        #     # - test length of futures
-        #     dt_future = futures[len(futures)-1] - futures[0]
-        #     dt_limit = 7*24*60*60
-        #     if dt_future > dt_limit:
-        #         future_indicator = False
-        # else:
-        #     future_indicator = False
         dt_limit = 7*24*60*60
         if (futures[0] >= date_now_s) & (futures[len(futures)-1] < (date_now_s + dt_limit)):
             future_indicator = True
         else:
             future_indicator = False
 
-        #islive = False
-        #islive = True
-        #if islive and future_indicator:
+        # dependent on future, select weather source (API or historic)
         if future_indicator:
-            # live: take current weather data forecast by API
+            # current weather forecast by API
             weather_data = self.prepare_API_weather()
-            print('API')
+            #print('API')
         else:
-            # not live: take historic weather data from a reference year
+            # historic weather data from a reference year
             weather_data = self.prepare_historic_weather(futures)
-            print('hist')
+            #print('hist')
 
         # KW weather
         # interpolate weather data in times and locations for the different KW's
-        KW_weather_data = self.KW_weather_data(KW_data, weather_data, futures, islive)
+        KW_weather_data = self.KW_weather_data(KW_data, weather_data, futures)
 
         # futures weather
         # editing weather data for further use (e.g. power demand model)
-        futures_weather_data =  self.future_weather_data(futures, weather_data)
+        futures_weather_data = self.future_weather_data(futures, weather_data)
 
         # set output
         self.set_output("KW_weather", KW_weather_data)
@@ -111,47 +99,12 @@ class Model(Supermodel):
             data_hist = json.load(f)
         return data_hist
 
-    def historic_select_year(self):
-
-        # copy all historical data to new dict
-        data = dict((k, v) for k, v in self.data_hist.items())
-
-        # define start and date of the reference year
-        start_date = datetime(self.ref_year, 1, 1, 0, 0)
-        start_date = datetime2utc_time(start_date)
-        end_date = datetime(self.ref_year+1, 1, 1, 0, 0)
-        end_date = datetime2utc_time(end_date)
-
-        # extract time, temperature, wind speed and radiation from dict
-        time = np.array(data["times"])
-        time = time[np.newaxis, :]
-        temp = np.array(data["temperature"]["values"])
-        wind = np.array(data["windspeed"]["values"])
-        rad = np.array(data["radiation"]["values"])
-
-        # create numpy array of time, temperature, wind speed and radiation
-        # and select the ones within the reference year
-        matrix = np.append(time, temp, axis=0)
-        matrix = np.append(matrix, wind, axis=0)
-        matrix = np.append(matrix, rad, axis=0)
-        matrix = matrix.transpose()
-        matrix = matrix[(matrix[:, 0] >= start_date) & (matrix[:, 0] <= end_date)]
-        matrix = matrix.transpose()
-
-        # write selected data back to dict
-        data["times"] = matrix[0, :].tolist()
-        data["temperature"]["values"] = matrix[1:26, :].tolist()
-        data["windspeed"]["values"] = matrix[26:51, :].tolist()
-        data["radiation"]["values"] = matrix[51:76, :].tolist()
-
-        return data
-
     def prepare_API_weather(self):
 
-        # test if newer data is available
+        # test if new data is available
         # - current time
         date_now = datetime.utcnow()
-        # - shift 12 h back (running time of forecast
+        # - shift 12 h back (considering running time of forecast)
         date_forecast = date_now - timedelta(hours=12)
         if date_forecast.hour >= 12:
             date_comp = date_forecast.strftime('%Y_%m_%d_12_00')
@@ -187,14 +140,12 @@ class Model(Supermodel):
         # read API_keys
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        #filename = os.path.join(dir_path, 'confidential', 'API_Key_3')
         filename = os.path.join(dir_path, 'confidential', 'API_Key')
         with open(filename, "r") as f:
             API_key = f.read().splitlines()
 
         data_API_all = []
         for url_api in API_key:
-            #data_API_i = []
             data_API_i = requests.get(url_api).json()
             data_API_all.append(data_API_i)
 
@@ -221,24 +172,31 @@ class Model(Supermodel):
         # for all locations, fill vectors
         for it in range(0, num_points):
             len_time = len(data_API[it]['data_1h']['time'])
-            lat_vec.append(np.repeat(data_API[it]['metadata']['latitude'], len_time))
-            lon_vec.append(np.repeat(data_API[it]['metadata']['longitude'], len_time))
-            time_vec.append(data_API[it]['data_1h']['time'])
+            lat_vec.append(np.repeat(data_API[it]['metadata']['latitude'], len_time).tolist())
+            lon_vec.append(np.repeat(data_API[it]['metadata']['longitude'], len_time).tolist())
+            time_vec.append(np.array(data_API[it]['data_1h']['time']).tolist())
             temp_vec.append(data_API[it]['data_1h']['temperature'])
             wind_vec.append(data_API[it]['data_1h']['windspeed'])
             rad_vec.append(data_API[it]['data_1h']['ghi_instant'])
 
+        # flatten list
+        lat_vec = list(itertools.chain(*lat_vec))
+        lon_vec = list(itertools.chain(*lon_vec))
+        time_vec = list(itertools.chain(*time_vec))
+        temp_vec = list(itertools.chain(*temp_vec))
+        wind_vec = list(itertools.chain(*wind_vec))
+        rad_vec = list(itertools.chain(*rad_vec))
+
         # chance format to arrays and transpose
-        lat_vec = np.array(lat_vec).ravel()
-        lon_vec = np.array(lon_vec).ravel()
-        time_vec = np.array(time_vec).ravel()
+        lat_vec = np.array(lat_vec)
+        lon_vec = np.array(lon_vec)
         # - change time format from string to seconds
         time_vec = [datetime.strptime(xi, '%Y-%m-%d %H:%M') for xi in time_vec]
         time_vec = [datetime2utc_time(xi) for xi in time_vec]
-        time_vec = np.array(time_vec).ravel()
-        temp_vec = np.array(temp_vec).ravel()
-        wind_vec = np.array(wind_vec).ravel()
-        rad_vec = np.array(rad_vec).ravel()
+        time_vec = np.array(time_vec)
+        temp_vec = np.array(temp_vec)
+        wind_vec = np.array(wind_vec)
+        rad_vec = np.array(rad_vec)
 
         lat_vec = lat_vec[np.newaxis, :].transpose()
         lon_vec = lon_vec[np.newaxis, :].transpose()
@@ -260,6 +218,7 @@ class Model(Supermodel):
     def prepare_historic_weather(self, futures):
 
         # leap year
+        # - if future and reference year do not correspond in leap year or not, adjust reference year
         first_future = utc_time2datetime(futures[0])
         year_first_future = first_future.year
         leap_futures = self.det_leap_year(year_first_future)
@@ -267,29 +226,31 @@ class Model(Supermodel):
         leapyear_inref = np.array([2008, 2012, 2016])
         if leap_futures != leap_refyear:
             if leap_futures:
+                # adjust to nearest leap year
                 idx = (np.abs(leapyear_inref-self.ref_year)).argmin()
                 self.ref_year = leapyear_inref[idx]
             else:
+                # adjust to year before
                 self.ref_year = self.ref_year - 1
 
         # define range (one day before till one day after futures)
         first_future = futures[0]
         last_future = futures[len(futures)-1]
         first_future_date = utc_time2datetime(first_future)
-        #last_future_date = utc_time2datetime(last_future)
         first_hist_date = first_future_date.replace(year=self.ref_year)
         first_hist = datetime2utc_time(first_hist_date)
         delta_shift = first_future-first_hist
         before_first_hist = first_hist - 24*60*60
         after_last_hist = last_future - delta_shift + 24*60*60
 
-        # filter data
+        # filter data to one before and one after
         time_vec = np.array(self.data_hist["times"])
+        # - determine indexes
         index_first = (np.abs(time_vec-before_first_hist).argmin())
         index_last = (np.abs(time_vec-after_last_hist).argmin())
 
         time_filter = time_vec[index_first:index_last]
-        # shift to futures
+        # - shift historic time to future
         time_filter + delta_shift
 
         temp_filter = []
@@ -309,7 +270,6 @@ class Model(Supermodel):
         # - initialize vectors
         lat_vec = []
         lon_vec = []
-        time_vec = []
         temp_vec = []
         wind_vec = []
         rad_vec = []
@@ -341,7 +301,7 @@ class Model(Supermodel):
         wind_vec = np.multiply(wind_vec, (1 + self.get_property('u_offset') / 100))
         rad_vec = np.multiply(rad_vec, (1 + self.get_property('P_offset') / 100))
 
-        # create matrix
+        # create data base
         data_base = np.concatenate((lat_vec, lon_vec, time_vec, temp_vec, wind_vec, rad_vec), axis=1)
 
         return data_base
@@ -362,15 +322,10 @@ class Model(Supermodel):
 
         return leap
 
-    def KW_weather_data(self, KW_data, weather_data, futures, islive):
+    def KW_weather_data(self, KW_data, weather_data, futures):
 
-        # naming of columns
-        # - of KW_data (ones to be extracted)
+        # naming of columns of KW_data (ones to be extracted)
         KW_data_columns = ['id', 'kw_bezeichnung', 'latitude', 'longitude']
-
-        # shift futures back (to agree with historic data)
-        if islive == None:
-            futures = self.dates_shift(futures)
 
         # create data frame from KW_data dict
         KW_data_df = pd.DataFrame(KW_data)
@@ -564,6 +519,8 @@ class Model(Supermodel):
 
     def future_weather_data(self, futures, weather_data):
 
+
+
         # not implemented so far
         future_weather_data = weather_data.tolist()
         return future_weather_data
@@ -572,8 +529,10 @@ if __name__ == "__main__":
 
     # input
     # - date
-    start_date_i = datetime(2018, 12, 1, 0, 0, tzinfo=timezone('UTC'))
-    end_date_i = datetime(2018+1, 2, 1, 0, 0, tzinfo=timezone('UTC'))
+    #start_date_i = datetime(2018, 12, 1, 0, 0, tzinfo=timezone('UTC'))
+    #end_date_i = datetime(2018+1, 2, 1, 0, 0, tzinfo=timezone('UTC'))
+    start_date_i = datetime(2018, 7, 17, 17, 15, tzinfo=timezone('UTC'))
+    end_date_i = datetime(2018+1, 7, 18, 12, 0, tzinfo=timezone('UTC'))
     dt = 15*60
     step = timedelta(seconds=dt)
     date_series = []
