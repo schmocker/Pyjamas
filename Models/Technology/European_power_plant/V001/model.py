@@ -104,7 +104,7 @@ class Model(Supermodel):
         for kw in db_kw:
             print("Brennstoffpreis", kw.id, kw.bezeichnung)
             if kw.kraftwerkstyp.brennstofftyp.bezeichnung == "None":
-                kw_bs_preis = [float('nan')]
+                kw_bs_preis = [float(0)]
             else:
                 db_bsp = kw.kraftwerkstyp.brennstofftyp.brennstoffpreise
                 db_bsp_t = [i.datetime for i in db_bsp]
@@ -130,7 +130,7 @@ class Model(Supermodel):
             db_ents = kw.kraftwerkstyp.entsorgungspreise
 
             if len(db_ents) == 0:
-                kw_ents = [float('nan')]
+                kw_ents = [float(0)]
 
             else:
                 db_ents_t = [i.datetime for i in db_ents]
