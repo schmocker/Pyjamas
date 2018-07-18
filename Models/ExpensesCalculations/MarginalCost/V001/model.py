@@ -89,12 +89,12 @@ class Model(Supermodel):
             OPEXP = np.array(OPEX_for_kwid)
             index_of_kwid_in_KWDaten = KWDaten['id'].index(kw_id)
             brennstoffkosten_for_kwid = KWDaten['brennstoffkosten'][index_of_kwid_in_KWDaten]
-            co2kosten_for_kwid = KWDaten['co2kosten'][index_of_kwid_in_KWDaten]
+            co2kosten_for_kwid = KWDaten['co2_kosten'][index_of_kwid_in_KWDaten]
             entsorgungskosten_for_kwid = KWDaten['entsorgungskosten'][index_of_kwid_in_KWDaten]
-            kev_for_kwid = KWDaten['kev'][index_of_kwid_in_KWDaten]
-            KEV = np.array(kev_for_kwid)
+            #kev_for_kwid = KWDaten['kev'][index_of_kwid_in_KWDaten]
+            #KEV = np.array(kev_for_kwid)
 
-            Grenzkosten = OPEXP + brennstoffkosten_for_kwid + co2kosten_for_kwid + entsorgungskosten_for_kwid - KEV
+            Grenzkosten = OPEXP + brennstoffkosten_for_kwid + co2kosten_for_kwid + entsorgungskosten_for_kwid
             return Grenzkosten.tolist()
 
         GrenzkostenForAllPlants = [make_cost_for_one_plant(id) for id in KWDatenID]

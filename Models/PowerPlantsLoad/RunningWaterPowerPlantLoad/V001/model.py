@@ -69,7 +69,7 @@ class Model(Supermodel):
         #   11    array(96)
         ###################################################################################################################
         KWBezeichnung = 'Laufwasserkraftwerk'  # ForeignKeyKWTyp = 1  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
-        KWDaten = np.array([KWDaten['id'], KWDaten['kw_bezeichnung'], KWDaten['spez_info']]).transpose()
+        KWDaten = np.array([KWDaten['id'], KWDaten['bez_kraftwerkstyp'], KWDaten['spez_info']]).transpose()
 
         # Extracting data corresponding solely to running water power plant
         KraftwerksDaten = KWDaten[KWDaten[:, 1] == KWBezeichnung]
