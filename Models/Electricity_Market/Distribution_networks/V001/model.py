@@ -11,7 +11,6 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        #self.inputs['mode'] = Input(name='modus', unit='-', info="modus (live or simulation)")
 
         # define outputs
         self.outputs['distNets'] = Output(name='Distribution Networks', unit='{Location: [], Latidude: [], Longitude []}',
