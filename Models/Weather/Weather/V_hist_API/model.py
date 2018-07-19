@@ -53,7 +53,7 @@ class Model(Supermodel):
         # inputs
         islive = await self.get_input('mode')
         KW_data_orig = await self.get_input('KW')
-        KW_data = {k: KW_data_orig[k] for k in ('id', 'kw_bezeichnung', 'latitude', 'longitude')}
+        KW_data = {k: KW_data_orig[k] for k in ('id', 'bez_kraftwerkstyp', 'lat', 'long')}
         futures = await self.get_input('date')
 
         # weather data
@@ -70,11 +70,11 @@ class Model(Supermodel):
         if future_indicator:
             # current weather forecast by API
             weather_data = self.prepare_API_weather()
-            print('API')
+            #print('API')
         else:
             # historic weather data from a reference year
             weather_data = self.prepare_historic_weather(futures)
-            print('hist')
+            #print('hist')
 
         # KW weather
         # interpolate weather data in times and locations for the different KW's
@@ -325,7 +325,7 @@ class Model(Supermodel):
     def KW_weather_data(self, KW_data, weather_data, futures):
 
         # naming of columns of KW_data (ones to be extracted)
-        KW_data_columns = ['id', 'kw_bezeichnung', 'latitude', 'longitude']
+        KW_data_columns = ['id', 'bez_kraftwerkstyp', 'lat', 'long']
 
         # create data frame from KW_data dict
         KW_data_df = pd.DataFrame(KW_data)
@@ -408,7 +408,7 @@ class Model(Supermodel):
         for n_id in range(0, KW_data[KW_data_columns[0]].__len__()):
             l_id.append(KW_data[KW_data_columns[0]][n_id])
 
-            if KW_data[KW_data_columns[1]][n_id] is 'Windturbine':
+            if KW_data[KW_data_columns[1]][n_id] == 'Windturbine':
                 l_ws_i = WT_weather_1D[WT_weather_1D['id'] == KW_data[KW_data_columns[0]][n_id]]['value'].tolist()
                 l_ws.append(l_ws_i)
                 l_wm.append(l_wm_set)
@@ -416,7 +416,7 @@ class Model(Supermodel):
                 l_ws.append(None)
                 l_wm.append(None)
 
-            if KW_data[KW_data_columns[1]][n_id] is 'Photovoltaik':
+            if KW_data[KW_data_columns[1]][n_id] == 'Photovoltaik':
                 l_rad_i = PV_weather_1D[PV_weather_1D['id'] == KW_data[KW_data_columns[0]][n_id]]['value'].tolist()
                 l_rad.append(l_rad_i)
             else:
