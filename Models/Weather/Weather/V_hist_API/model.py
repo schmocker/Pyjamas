@@ -53,7 +53,7 @@ class Model(Supermodel):
         # inputs
         islive = await self.get_input('mode')
         KW_data_orig = await self.get_input('KW')
-        KW_data = {k: KW_data_orig[k] for k in ('id', 'kw_bezeichnung', 'latitude', 'longitude')}
+        KW_data = {k: KW_data_orig[k] for k in ('id', 'bez_kraftwerkstyp', 'lat', 'long')}
         futures = await self.get_input('date')
 
         # weather data
