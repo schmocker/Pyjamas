@@ -2,7 +2,6 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime, Tex
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
-
 # Base is the superclass of each table
 Base = declarative_base()
 
@@ -22,7 +21,7 @@ class Brennstoffpreis(Base):
     fk_brennstofftyp = Column(Integer, ForeignKey('brennstofftyp.id', ondelete="CASCADE"))
     long = Column(Float, nullable=False)
     lat = Column(Float, nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(Integer, nullable=False)
     preis = Column(Float, nullable=False)
     # declare relations
     brennstofftyp = relationship("Brennstofftyp", foreign_keys=[fk_brennstofftyp],
@@ -65,7 +64,7 @@ class Kraftwerksleistung(Base):
     id = Column(Integer, primary_key=True)
     fk_kraftwerk = Column(Integer, ForeignKey('kraftwerk.id', ondelete="CASCADE"))
     power_inst = Column(Float, nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(Integer, nullable=False)
     # declare relations
     kraftwerk = relationship("Kraftwerk", foreign_keys=[fk_kraftwerk],
                              backref=backref("kraftwerksleistungen", cascade="all, delete-orphan", lazy=True))
@@ -78,7 +77,7 @@ class Entsorgungspreis(Base):
     fk_kraftwerkstyp = Column(Integer, ForeignKey('kraftwerkstyp.id', ondelete="CASCADE"))
     long = Column(Float, nullable=False)
     lat = Column(Float, nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(Integer, nullable=False)
     preis = Column(Float, nullable=False)
     # declare relations
     kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp],
@@ -89,5 +88,5 @@ class Co2Preis(Base):
     __tablename__ = 'co2preis'
     # declare columns
     id = Column(Integer, primary_key=True)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(Integer, nullable=False)
     preis = Column(Float, nullable=False)
