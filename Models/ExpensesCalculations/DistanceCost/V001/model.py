@@ -18,7 +18,7 @@ class Model(Supermodel):
         self.outputs['Distanzkosten'] = Output('DistanceCost', unit='[$/J]')
 
         # define properties
-        self.properties['dis_factor'] = Property('DistanceFactor', default=0.1, data_type=float, unit='[$/m*J]')
+        self.properties['dis_factor'] = Property('DistanceFactor', default=0.01, data_type=float, unit='[$/m*J]')
 
         self.DistanzFaktor = 0.1
 
