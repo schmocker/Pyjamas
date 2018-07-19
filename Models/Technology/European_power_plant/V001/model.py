@@ -14,7 +14,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from dotenv import load_dotenv
 from os import environ
-
+import ast
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -85,7 +85,7 @@ class Model(Supermodel):
         db_kwt_opex = [i.kraftwerkstyp.spez_opex for i in db_kw]
         db_kwt_capex = [i.kraftwerkstyp.capex for i in db_kw]
         db_kwt_p_typisch = [i.kraftwerkstyp.p_typisch for i in db_kw]
-        db_kwt_spez_info = [i.kraftwerkstyp.spez_info for i in db_kw]
+        db_kwt_spez_info = [ast.literal_eval(i.kraftwerkstyp.spez_info) for i in db_kw]
 
         # query Brennstofftyp
         db_bst_id = [i.kraftwerkstyp.brennstofftyp.id for i in db_kw]
@@ -102,7 +102,7 @@ class Model(Supermodel):
         # Brennstoffpreis Interpolation
         bs_preis_int = []
         for kw in db_kw:
-            print("Brennstoffpreis", kw.id, kw.bezeichnung)
+            # print("Brennstoffpreis", kw.id, kw.bezeichnung)
             if kw.kraftwerkstyp.brennstofftyp.bezeichnung == "None":
                 kw_bs_preis = [float(0)]
             else:
@@ -120,13 +120,13 @@ class Model(Supermodel):
         # CO2-Preis Interpolation
         co2_preis_int = []
         for kw in db_kw:
-            print("CO2 Preis", kw.id, kw.bezeichnung)
+            # print("CO2 Preis", kw.id, kw.bezeichnung)
             co2_preis_int = co2_preis_int + self.interpol_1d(db_co2_t, db_co2_preis, kw_time)
 
         # Entsorgungspreis Interpolation
         ents_preis_int = []
         for kw in db_kw:
-            print("Entsorgungspreis", kw.id, kw.bezeichnung)
+            # print("Entsorgungspreis", kw.id, kw.bezeichnung)
             db_ents = kw.kraftwerkstyp.entsorgungspreise
 
             if len(db_ents) == 0:
@@ -146,7 +146,7 @@ class Model(Supermodel):
         # P_inst Interpolation
         pinst_int = []
         for kw in db_kw:
-            print("P inst", kw.id, kw.bezeichnung)
+            # print("P inst", kw.id, kw.bezeichnung)
             db_pinst = kw.kraftwerksleistungen
             db_pinst_t = [i.datetime for i in db_pinst]
             db_pinst_p = [i.power_inst for i in db_pinst]
@@ -156,7 +156,7 @@ class Model(Supermodel):
         # Berechnung CO2-Kosten
         co2_kosten = []
         for idx, kw in enumerate(db_kw):
-            print("CO2 Kosten", kw.id, kw.bezeichnung)
+            # print("CO2 Kosten", kw.id, kw.bezeichnung)
             co2_emissfakt = kw.kraftwerkstyp.brennstofftyp.co2emissFakt
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
             co2_kosten = co2_kosten + [co2_preis_int[idx] * co2_emissfakt / wirkungsgrad]
@@ -164,14 +164,14 @@ class Model(Supermodel):
         # Berechnung Entsorgungskosten
         ents_kosten = []
         for idx, kw in enumerate(db_kw):
-            print("Entsorgungskosten", kw.id, kw.bezeichnung)
+            # print("Entsorgungskosten", kw.id, kw.bezeichnung)
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
             ents_kosten = ents_kosten + [ents_preis_int[idx] / wirkungsgrad]
 
         # Berechnung Brennstoffkosten
         bs_kosten = []
         for idx, kw in enumerate(db_kw):
-            print("Brennstoffkosten", kw.id, kw.bezeichnung)
+            # print("Brennstoffkosten", kw.id, kw.bezeichnung)
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
             bs_kosten = bs_kosten + [bs_preis_int[idx] / wirkungsgrad]
 
