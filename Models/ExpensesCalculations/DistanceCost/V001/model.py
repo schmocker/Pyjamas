@@ -18,18 +18,15 @@ class Model(Supermodel):
         self.outputs['Distanzkosten'] = Output('DistanceCost', unit='[$/J]')
 
         # define properties
-        #self.properties['dis_factor'] = Property('DistanceFactor', default=0.1, data_type=float, unit='[$/m*J]')
+        self.properties['dis_factor'] = Property('DistanceFactor', default=0.01, data_type=float, unit='[$/m*J]')
 
         self.DistanzFaktor = 0.1
 
-    '''
-    async def func_birth(self):
-        await self.func_amend(['dis_factor'])
+
 
     async def func_amend(self, keys=[]):
         if 'dis_factor' in keys:
             self.DistanzFaktor = self.get_property('dis_factor')
-    '''
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
