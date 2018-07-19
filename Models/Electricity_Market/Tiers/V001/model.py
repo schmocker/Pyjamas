@@ -86,6 +86,9 @@ class Model(Supermodel):
             else:           # if not in list, take default values
                 idx = 0
 
+            # distribution cost
+            dist_costs = dn_costs_input['costs'][nt]
+
             # read and determine borders and tiers
             border_tiers_i = self.det_border_tiers(idx)
 
@@ -96,10 +99,8 @@ class Model(Supermodel):
             for i_mt in range(0, len(stock_prices)):
                 # stock price
                 mt = stock_prices[i_mt]
-                # distribution net cost
-                cost_i = dn_costs_input['costs'][i_mt][idx]
                 # electricity rate
-                el_rate_ii = np.multiply(mt, border_tiers_i['ET_tiers']) + np.multiply(cost_i, border_tiers_i['NT_tiers']) + DLK_val + abgaben_val
+                el_rate_ii = np.multiply(mt, border_tiers_i['ET_tiers']) + np.multiply(dist_costs, border_tiers_i['NT_tiers']) + DLK_val + abgaben_val
                 el_rate_ii = el_rate_ii.tolist()
                 el_rate_i.append(el_rate_ii)
 

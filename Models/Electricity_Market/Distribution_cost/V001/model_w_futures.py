@@ -12,6 +12,7 @@ class Model(Supermodel):
 
         # define inputs
         self.inputs['dist_net'] = Input(name='distribution networks', unit='-', info='distribution networks')
+        self.inputs['futures'] = Input(name='futures networks', unit='s', info='futures')
 
         # define outputs
         self.outputs['dist_cost'] = Output(name='distribution cost', unit='undet', info='distribution cost')
@@ -34,19 +35,23 @@ class Model(Supermodel):
 
     async def func_peri(self, prep_to_peri=None):
 
+        # time information - futures
+        futures = await self.get_input('futures')
+        len_futures = len(futures)
+
         # locations information
         dist_nets = await self.get_input('dist_net')
-        dist_loc = dist_nets['dist_networks']
+        dist_loc = list(dist_nets.keys())
 
         # costs
         cost_vec = []
         for ni in range(0, len(dist_loc)):
 
-            cost_i = self.cost_constant
-            cost_vec.append(cost_i)
+            cost_i = np.repeat(self.cost_constant[ni], len_futures)
+            cost_vec.append(cost_i.tolist())
 
         # output
-        output = {'distribution_networks': dist_loc,
+        output = {'distribution_networks': list(dist_nets.keys()),
                   'costs': cost_vec}
 
         # set output
