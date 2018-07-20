@@ -18,13 +18,13 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['stock_ex_price'] = Input(name='', unit='', info="")
-        self.inputs['distnet_costs'] = Input(name='', unit='', info="")
-        self.inputs['DLK'] = Input(name='', unit='', info="")
-        self.inputs['Abgaben'] = Input(name='', unit='', info="")
+        self.inputs['stock_ex_price'] = Input(name='Stock exchange price', unit='', info="stock exchange price")
+        self.inputs['distnet_costs'] = Input(name='Distribution network cost', unit='', info="distribution network cost")
+        self.inputs['service_cost'] = Input(name='Service cost', unit='', info="service cost")
+        self.inputs['taxes'] = Input(name='Taxes', unit='', info="taxes")
 
         # define outputs
-        self.outputs['el_rate'] = Output(name='electricity rate', unit='???', info='electricity rate')
+        self.outputs['el_rate'] = Output(name='Electricity rate', unit='???', info='electricity rate')
 
         # define properties
         ET_def = {"location": ['Baden'],
@@ -70,10 +70,10 @@ class Model(Supermodel):
         len_loc_distnet = len(loc_distnet)
 
         # DLK
-        DLK_val = await self.get_input('DLK')
+        DLK_val = await self.get_input('service_cost')
 
         # Abgaben
-        abgaben_val = await self.get_input('Abgaben')
+        abgaben_val = await self.get_input('taxes')
 
         # electricity rate
         el_rate = []
@@ -184,8 +184,8 @@ if __name__ == "__main__":
 
     inputs = {'stock_ex_price': stock_ex_price,
               'distnet_costs': distnet_costs,
-              'DLK': DLK,
-              'Abgaben': abgaben}
+              'service_cost': DLK,
+              'taxes': abgaben}
     props = {'weight_ET': ET,
              'weight_NT': NT}
 
