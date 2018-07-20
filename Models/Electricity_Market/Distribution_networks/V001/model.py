@@ -33,8 +33,8 @@ class Model(Supermodel):
 
     async def func_amend(self, keys=[]):
         if 'distNets' in keys:
-            distNets = self.get_property('distNets')
-            dict_distNets = json.loads(distNets)
+            distNets_prop = self.get_property('distNets')
+            dict_distNets = json.loads(distNets_prop)
 
             # formatting
             locations = list(dict_distNets.keys())
