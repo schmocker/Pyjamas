@@ -11,10 +11,10 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['dist_net'] = Input(name='distribution networks', unit='-', info='distribution networks')
+        self.inputs['dist_net'] = Input(name='Distribution networks', unit='-', info='distribution networks')
 
         # define outputs
-        self.outputs['dist_cost'] = Output(name='distribution cost', unit='undet', info='distribution cost')
+        self.outputs['dist_cost'] = Output(name='Distribution cost', unit='', info='distribution cost')
 
         # define properties
         cost_constant_def = [100]

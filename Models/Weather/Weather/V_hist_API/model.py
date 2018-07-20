@@ -24,8 +24,8 @@ class Model(Supermodel):
         self.inputs['date'] = Input(name='Futures', unit='s', info="Time vector of futures in utc timestamp [s]")
 
         # define outputs
-        self.outputs['KW_weather'] = Output(name='weather data of KWs', unit='dict{id, windspeed, radiation, windmesshoehe}', info='weather data of KWs')
-        self.outputs['Futures_weather'] = Output(name='weather data', unit='s, °C, m/s, W/m^2', info='weather data for 25 points (time, temperature, wind speed, radiation)')
+        self.outputs['KW_weather'] = Output(name='Weather data of KWs', unit='dict{id, windspeed, radiation, windmesshoehe}', info='weather data of KWs')
+        self.outputs['Futures_weather'] = Output(name='Weather data', unit='s, °C, m/s, W/m^2', info='weather data for 25 points (time, temperature, wind speed, radiation)')
 
         # define properties
         self.properties['T_offset'] = Property(default=0., data_type=float, name='temperature offset', unit='%', info="offset of temperature in %", example='100: doubles the value')

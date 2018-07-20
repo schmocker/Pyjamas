@@ -14,7 +14,7 @@ class Model(Supermodel):
 
         # define outputs
         self.outputs['distNets'] = Output(name='Distribution Networks', unit='{Location: [], Latidude: [], Longitude []}',
-                                          info='Diestribuation Networks with their location, latitude and longitude')
+                                          info='Distribuation Networks with their location, latitude and longitude')
 
         # define properties
         # - distribution network
