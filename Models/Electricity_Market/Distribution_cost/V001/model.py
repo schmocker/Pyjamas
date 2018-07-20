@@ -19,7 +19,7 @@ class Model(Supermodel):
         # define properties
         cost_constant_def = [100]
         cost_constant_def = json.dumps(cost_constant_def)
-        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='-', info='constant distribution costs', example='[100, 110, 120]')
+        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='-', info='constant distribution costs', example='[100]')
 
         # persistent variables
         self.cost_constant = None
