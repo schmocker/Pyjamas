@@ -19,7 +19,7 @@ class Model(Supermodel):
         # define outputs
         self.outputs['load'] = Output('Load', info='load of all running-water power plants, value[0-1]')
 
-        self.ref_year = 2018
+        self.ref_year = 2016
         ref_dates = [[self.ref_year, 1, 1], [self.ref_year, 4, 1], [self.ref_year, 8, 1], [self.ref_year + 1, 1, 1]]
         self.ref_dates = np.array([datetime2utc_time(dt(d[0], d[1], d[2])) for d in ref_dates])
         self.ref_loads = np.array([0.3, 0.5, 1, 0.3])
