@@ -18,21 +18,21 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['stock_ex_price'] = Input(name='', unit='', info="")
-        self.inputs['distnet_costs'] = Input(name='', unit='', info="")
-        self.inputs['DLK'] = Input(name='', unit='', info="")
-        self.inputs['Abgaben'] = Input(name='', unit='', info="")
+        self.inputs['stock_ex_price'] = Input(name='Stock exchange price', unit='', info="stock exchange price")
+        self.inputs['distnet_costs'] = Input(name='Distribution network cost', unit='', info="distribution network cost")
+        self.inputs['service_cost'] = Input(name='Service cost', unit='', info="service cost")
+        self.inputs['taxes'] = Input(name='Taxes', unit='', info="taxes")
 
         # define outputs
-        self.outputs['el_rate'] = Output(name='electricity rate', unit='???', info='electricity rate')
+        self.outputs['el_rate'] = Output(name='Electricity rate', unit='???', info='electricity rate')
 
         # define properties
-        ET_def = {"location": ['Baden', 'Brugg'],
-                  "border": [[-1., -0.8, -0.3, 0., 0.3, 0.8, 1.], [-1., -0.85, -0.35, 0., 0.35, 0.85, 1.]],
-                  "weight": [[-2., -1.25, -0.75, 0.75, 1.25, 2.], [-2., -1.3, -0.8, 0.8, 1.3, 2.]]}
-        NT_def = {"location": ['Baden', 'Brugg'],
-                  "border": [[-1., -0.7, -0.4, 0., 0.4, 0.7, 1.], [-1., -0.75, -0.45, 0., 0.45, 0.75, 1.]],
-                  "weight": [[-1.75, -1., -0.5, 0.5, 1., 1.75], [-1.8, -1.05, -0.55, 0.55, 1.05, 1.8]]}
+        ET_def = {"location": ['Baden'],
+                  "border": [[-1., -0.8, -0.3, 0., 0.3, 0.8, 1.]],
+                  "weight": [[-2., -1.25, -0.75, 0.75, 1.25, 2.]]}
+        NT_def = {"location": ['Baden'],
+                  "border": [[-1., -0.7, -0.4, 0., 0.4, 0.7, 1.]],
+                  "weight": [[-1.75, -1., -0.5, 0.5, 1., 1.75]]}
         ET_def = json.dumps(ET_def)
         NT_def = json.dumps(NT_def)
         self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers', example=ET_def)
@@ -59,47 +59,55 @@ class Model(Supermodel):
     async def func_peri(self, prep_to_peri=None):
 
         # locations information
-        loc_vec = self.weight_ET['location']
-        len_loc = len(loc_vec)
+        loc_tiers = self.weight_ET['location']
 
         # read prices
         stock_prices_input = await self.get_input('stock_ex_price')
 
         # read distribution costs
         dn_costs_input = await self.get_input('distnet_costs')
+        loc_distnet = dn_costs_input['distribution_networks']
+        len_loc_distnet = len(loc_distnet)
 
         # DLK
-        DLK_val = await self.get_input('DLK')
+        DLK_val = await self.get_input('service_cost')
 
         # Abgaben
-        abgaben_val = await self.get_input('Abgaben')
+        abgaben_val = await self.get_input('taxes')
 
         # electricity rate
         el_rate = []
         border_tiers = []
-        for nt in range(0, len_loc):
+        for nt in range(0, len_loc_distnet):
+
+            # compare location of distribution network with tiers locations, in it?
+            if loc_distnet[nt] in loc_tiers:
+                idx = loc_tiers.index(loc_distnet[nt])
+            else:           # if not in list, take default values
+                idx = 0
+
+            # distribution cost
+            dist_costs = dn_costs_input['costs'][nt]
 
             # read and determine borders and tiers
-            border_tiers_i = self.det_border_tiers(nt)
-
-            # distribution costs
-            dn_costs = dn_costs_input['costs'][nt]
+            border_tiers_i = self.det_border_tiers(idx)
 
             # stock prices
             stock_prices = stock_prices_input['prices'][nt]
 
             el_rate_i = []
             for i_mt in range(0, len(stock_prices)):
+                # stock price
                 mt = stock_prices[i_mt]
-                #el_rate_ii = mt*border_tiers_i['ET_tiers'] + dn_costs[i_mt]*border_tiers_i['NT_tiers'] + DLK_val + abgaben_val
-                el_rate_ii = np.multiply(mt, border_tiers_i['ET_tiers']) + np.multiply(dn_costs[i_mt], border_tiers_i['NT_tiers']) + DLK_val + abgaben_val
+                # electricity rate
+                el_rate_ii = np.multiply(mt, border_tiers_i['ET_tiers']) + np.multiply(dist_costs, border_tiers_i['NT_tiers']) + DLK_val + abgaben_val
                 el_rate_ii = el_rate_ii.tolist()
                 el_rate_i.append(el_rate_ii)
 
             el_rate.append(el_rate_i)
             border_tiers.append(border_tiers_i)
 
-        output = {'Stao_ID': loc_vec,
+        output = {'Stao_ID': loc_distnet,
                   'values': el_rate,
                   'borders': border_tiers
                   }
@@ -176,8 +184,8 @@ if __name__ == "__main__":
 
     inputs = {'stock_ex_price': stock_ex_price,
               'distnet_costs': distnet_costs,
-              'DLK': DLK,
-              'Abgaben': abgaben}
+              'service_cost': DLK,
+              'taxes': abgaben}
     props = {'weight_ET': ET,
              'weight_NT': NT}
 

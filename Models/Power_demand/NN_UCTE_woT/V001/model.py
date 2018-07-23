@@ -16,10 +16,10 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['futures'] = Input(name='futures', unit='s', info="time array in utc [s]")
+        self.inputs['futures'] = Input(name='Futures', unit='s', info="time array in utc [s]")
 
         # define outputs
-        self.outputs['p_dem'] = Output(name='power demand', unit='W', info="power demand of UCTE in W")
+        self.outputs['p_dem'] = Output(name='Power demand', unit='W', info="power demand of UCTE in W")
 
         # define properties
         self.properties['offset'] = Property(default=0, data_type=float, name='demand offset', unit='%', info="offset of demand in %", example='100: doubles the value')

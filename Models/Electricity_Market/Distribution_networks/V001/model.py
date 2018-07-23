@@ -14,7 +14,7 @@ class Model(Supermodel):
 
         # define outputs
         self.outputs['distNets'] = Output(name='Distribution Networks', unit='{Location: [], Latidude: [], Longitude []}',
-                                          info='Diestribuation Networks with their location, latitude and longitude')
+                                          info='Distribuation Networks with their location, latitude and longitude')
 
         # define properties
         # - distribution network
@@ -33,8 +33,8 @@ class Model(Supermodel):
 
     async def func_amend(self, keys=[]):
         if 'distNets' in keys:
-            distNets = self.get_property('distNets')
-            dict_distNets = json.loads(distNets)
+            distNets_prop = self.get_property('distNets')
+            dict_distNets = json.loads(distNets_prop)
 
             # formatting
             locations = list(dict_distNets.keys())

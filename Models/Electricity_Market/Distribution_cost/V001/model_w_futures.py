@@ -11,15 +11,16 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['dist_net'] = Input(name='Distribution networks', unit='-', info='distribution networks')
+        self.inputs['dist_net'] = Input(name='distribution networks', unit='-', info='distribution networks')
+        self.inputs['futures'] = Input(name='futures networks', unit='s', info='futures')
 
         # define outputs
-        self.outputs['dist_cost'] = Output(name='Distribution cost', unit='', info='distribution cost')
+        self.outputs['dist_cost'] = Output(name='distribution cost', unit='undet', info='distribution cost')
 
         # define properties
         cost_constant_def = [100]
         cost_constant_def = json.dumps(cost_constant_def)
-        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='-', info='constant distribution costs', example='[100]')
+        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='-', info='constant distribution costs', example='[100, 110, 120]')
 
         # persistent variables
         self.cost_constant = None
@@ -34,19 +35,23 @@ class Model(Supermodel):
 
     async def func_peri(self, prep_to_peri=None):
 
+        # time information - futures
+        futures = await self.get_input('futures')
+        len_futures = len(futures)
+
         # locations information
         dist_nets = await self.get_input('dist_net')
-        dist_loc = dist_nets['dist_networks']
+        dist_loc = list(dist_nets.keys())
 
         # costs
         cost_vec = []
         for ni in range(0, len(dist_loc)):
 
-            cost_i = self.cost_constant
-            cost_vec.append(cost_i)
+            cost_i = np.repeat(self.cost_constant[ni], len_futures)
+            cost_vec.append(cost_i.tolist())
 
         # output
-        output = {'distribution_networks': dist_loc,
+        output = {'distribution_networks': list(dist_nets.keys()),
                   'costs': cost_vec}
 
         # set output

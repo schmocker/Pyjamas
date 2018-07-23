@@ -6,7 +6,7 @@ Calculation of the electricity rate based on the stock price, the distribution n
 The inputs to this model are:
 
 1. stock price (for each location and futures)
-1. distribution network costs (for each network)
+1. distribution network costs (for each network and futures)
 1. service costs (constant)
 1. taxes (constant)
 
@@ -28,5 +28,7 @@ The properties of this model are:
 ## Remarks
 
 ### Implementation
+
+* when distribution network is not in tiers location, the values of the default are taken 
 
 ....
