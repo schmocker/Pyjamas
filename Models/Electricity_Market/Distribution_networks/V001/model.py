@@ -14,12 +14,12 @@ class Model(Supermodel):
 
         # define outputs
         self.outputs['distNets'] = Output(name='Distribution Networks', unit='{Location: [], Latidude: [], Longitude []}',
-                                          info='Distribuation Networks with their location, latitude and longitude')
+                                          info='Distribution Networks with their location, latitude and longitude')
 
         # define properties
         # - distribution network
         self.properties['distNets'] = Property(default='{"Baden": {"Lat": 47.47256, "Lon": 8.30850}}', data_type=str, name='distribution network', unit='-',
-                                               info="distribution network with lon and lat",
+                                               info="Distribution network with lon and lat",
                                                example='{"Baden": {"Lat": 47.47256, "Lon": 8.30850}, '
                                                        '"Brugg": {"Lat": 47.48420, "Lon": 8.20706}, '
                                                        '"Olten": {"Lat": 47.35212, "Lon": 7.90801}}')

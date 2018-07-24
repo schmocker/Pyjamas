@@ -43,7 +43,7 @@ class Model(Supermodel):
         # Input Arguments:
         # KWDaten: Dictionary holding the different parameters of power plants
         # ----------------------------------------------------------------------------------------------
-        #   id  fk_kwt   kw_bezeichnung    power[W]          spez_info             Capex   Opex,  usw...
+        #   id  fk_kwt   kw_bezeichnung    power[W]          spez_info             Capex   Spez_Opex,  usw...
         # ----------------------------------------------------------------------------------------------
         #   1     2       Windturbine      1000000       NH: 150,  Z0: 0.03          1     0.01
         #   2     1      Photovoltaik      2000000       NH: 0,    Z0: {}            2     0.02
@@ -55,7 +55,7 @@ class Model(Supermodel):
         #   10    3        Others          1000000       NH: 0,    Z0: {}            8     0.08
         #   11    4        Others          1000000       NH: 0,    Z0: {}            9     0.09
         # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex,
-        #  Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
+        #  Spez_Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
         #
         # Futures: Incoming datetime values (produced by Scheduler/Cronjob/V2), required for interpolation
         #
@@ -96,7 +96,7 @@ if __name__ == "__main__":
              'power': [1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 8000000, 9000000, 7000000],
              'spez_info': [{'NH': 150, 'Z0': 0.03}, {}, {'NH': 100, 'Z0': 0.2}, {}, {'NH': 250, 'Z0': 0.03}, {}, {}, {}, {}],
              'capex': [1, 2, 3, 4, 5, 6, 7, 8, 9],
-             'opex': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09]}
+             'spez_opex': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09]}
 
     Props={}
     Inputs = {
