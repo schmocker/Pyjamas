@@ -17,8 +17,8 @@ class Model(Supermodel):
                                           info='Service costs')
 
         # define properties
-        self.properties['serv_cost'] = Property(default=15000, data_type=float, name='service costs', unit='€/J',
-                                          info="service costs", example='0.15')
+        self.properties['serv_cost'] = Property(default=0.2, data_type=float, name='service costs', unit='€/J',
+                                          info="service costs", example='0.2')
 
         # define persistent variables
         self.service_cost = None

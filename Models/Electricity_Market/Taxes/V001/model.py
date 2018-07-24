@@ -17,8 +17,8 @@ class Model(Supermodel):
                                           info='Taxes')
 
         # define properties
-        self.properties['tax'] = Property(default=10000, data_type=float, name='taxes', unit='€/J',
-                                          info="taxes", example='0.05')
+        self.properties['tax'] = Property(default=0.1, data_type=float, name='taxes', unit='€/J',
+                                          info="taxes", example='0.1')
 
         # define persistent variables
         self.taxes = None
