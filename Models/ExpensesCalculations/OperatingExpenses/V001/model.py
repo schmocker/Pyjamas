@@ -88,7 +88,7 @@ class Model(Supermodel):
 
             index_of_kwid_in_KWDaten = KWDaten['id'].index(kw_id)
             capex_for_kwid = KWDaten['capex'][index_of_kwid_in_KWDaten]
-            opex_for_kwid = KWDaten['opex'][index_of_kwid_in_KWDaten]
+            opex_for_kwid = KWDaten['spez_opex'][index_of_kwid_in_KWDaten]
             expenses = capex_for_kwid * opex_for_kwid
 
             # boolean mask to avoid divide by zero
