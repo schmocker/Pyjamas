@@ -13,11 +13,11 @@ class Model(Supermodel):
         # define inputs
 
         # define outputs
-        self.outputs['taxes'] = Output(name='Taxes', unit='',
+        self.outputs['taxes'] = Output(name='Taxes', unit='€/J',
                                           info='Taxes')
 
         # define properties
-        self.properties['tax'] = Property(default=0.05, data_type=float, name='taxes', unit='',
+        self.properties['tax'] = Property(default=10000, data_type=float, name='taxes', unit='€/J',
                                           info="taxes", example='0.05')
 
         # define persistent variables

@@ -13,11 +13,11 @@ class Model(Supermodel):
         # define inputs
 
         # define outputs
-        self.outputs['service_cost'] = Output(name='Service costs', unit='',
+        self.outputs['service_cost'] = Output(name='Service costs', unit='€/J',
                                           info='Service costs')
 
         # define properties
-        self.properties['serv_cost'] = Property(default=0.15, data_type=float, name='service costs', unit='',
+        self.properties['serv_cost'] = Property(default=15000, data_type=float, name='service costs', unit='€/J',
                                           info="service costs", example='0.15')
 
         # define persistent variables
@@ -30,7 +30,6 @@ class Model(Supermodel):
     async def func_amend(self, keys=[]):
         if 'serv_cost' in keys:
             serv_cost = self.get_property('serv_cost')
-
             self.service_cost = serv_cost
 
     async def func_peri(self, prep_to_peri=None):
