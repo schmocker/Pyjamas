@@ -13,12 +13,11 @@ class Model(Supermodel):
         # define inputs
 
         # define outputs
-        self.outputs['service_cost'] = Output(name='Service costs', unit='€/J',
-                                          info='Service costs')
+        self.outputs['service_cost'] = Output(name='Service costs', unit='€/J', info='Service costs')
 
         # define properties
         self.properties['serv_cost'] = Property(default=0.2, data_type=float, name='service costs', unit='€/J',
-                                          info="service costs", example='0.2')
+                                                info="service costs", example='0.2')
 
         # define persistent variables
         self.service_cost = None
