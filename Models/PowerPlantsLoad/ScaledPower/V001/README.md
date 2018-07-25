@@ -1,6 +1,7 @@
-# OPEX - Operating Expenses
+# Scaled power
 
-Determine the operating expenses of each power plant
+Determine the output power[W] of each power plant
+
 
 ## Inputs
 The inputs to this model are:
@@ -12,8 +13,8 @@ The inputs to this model are:
 ## Outputs
 The output of this model is:
 
-1. OPEX - Dictionary containing power plant ids in one list and corresponding calculated operating expenses of all
-power plant in other list
+1. Power - Dictionary containing power plant ids in one list  and corresponding calculated power[W] of a power plant in 
+second list
 
 
 ## Properties

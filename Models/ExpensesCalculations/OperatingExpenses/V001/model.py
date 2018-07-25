@@ -11,10 +11,10 @@ class Model(Supermodel):
 
         # define inputs
         self.inputs['AuslastungallerKWs'] = Input('CombinedLoad', info='combined load of all types of power plants, value[0-1]')
-        self.inputs['KWDaten'] = Input('PowerPlantsData', unit='capex[$/W], spez_opex[1/s]', info='dict')
+        self.inputs['KWDaten'] = Input('PowerPlantsData', unit='capex[€/W], spez_opex[1/s]', info='dict')
 
         # define outputs
-        self.outputs['opex'] = Output('OPEX', unit='[$/J]')
+        self.outputs['opex'] = Output('OPEX', unit='[€/J]')
 
 
 
@@ -68,7 +68,7 @@ class Model(Supermodel):
         # opex: Dictionary containing power plant ids in one list and corresponding calculated operating
         # expenses of all power plant in other list
         # -----------------
-        # id      opex   Note: Output matrix is sorted according to the incoming id's of KWDaten.
+        # id      opex   Note: Output dictionary is sorted according to the incoming id's of KWDaten.
         # -----------------
         #  1    array(96)
         #  2    array(96)

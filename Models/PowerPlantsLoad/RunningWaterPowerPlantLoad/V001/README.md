@@ -6,8 +6,8 @@ Determines the load of multiple run-of-river power stations for the given interv
 ## Inputs
 The inputs to this model are:
 
-1. Power plants data
-1. Futures
+1. Futures - Timestamps
+1. PowerPlantsData - Dictionary holding the different required parameters of power plants
 
 
 ## Outputs

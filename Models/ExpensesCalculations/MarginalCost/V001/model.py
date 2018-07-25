@@ -11,11 +11,11 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['opex'] = Input('OPEX', unit='[$/J]')
-        self.inputs['KWDaten'] = Input('PowerPlantsData', unit='[$/J]', info='brennstoff-, co2- und entsorgungskosten')
+        self.inputs['opex'] = Input('OPEX', unit='[€/J]')
+        self.inputs['KWDaten'] = Input('PowerPlantsData', unit='[€/J]', info='brennstoff-, co2- und entsorgungskosten')
 
         # define outputs
-        self.outputs['Grenzkosten'] = Output('MarginalCost', unit='[$/J]')
+        self.outputs['Grenzkosten'] = Output('MarginalCost', unit='[€/J]')
 
 
 
@@ -69,7 +69,7 @@ class Model(Supermodel):
         # Grenzkosten: Dictionary containing power plant ids in one list and corresponding calculated
         # marginal cost of all power plants in other list
         # -----------------
-        # id   Grenzkosten   Note: Output matrix is sorted according to the incoming id's of KWDaten.
+        # id   Grenzkosten   Note: Output dictionary is sorted according to the incoming id's of KWDaten.
         # -----------------
         #  1    array(96)
         #  2    array(96)
@@ -99,5 +99,5 @@ class Model(Supermodel):
 
         GrenzkostenForAllPlants = [make_cost_for_one_plant(id) for id in KWDatenID]
 
-        Grenzkosten = {'power_plant_id': KWDatenID, 'Grenzkosten': GrenzkostenForAllPlants}
+        Grenzkosten = {'power_plant_id': KWDatenID, 'MarginalCost': GrenzkostenForAllPlants}
         return Grenzkosten

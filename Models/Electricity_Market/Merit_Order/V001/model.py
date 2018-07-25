@@ -64,7 +64,7 @@ class Model(Supermodel):
                 d = demands[i_ts]
                 pp_ids = np.array(powers['power_plant_id'])[p_sort_order]
                 p = np.array(powers['scaled_power'])[p_sort_order, i_ts]  # for each pp
-                m_c = np.array(marginal_costs['Grenzkosten'])[mc_sort_order, i_ts]  # for each pp
+                m_c = np.array(marginal_costs['MarginalCost'])[mc_sort_order, i_ts]  # for each pp
                 d_c = np.array(distance_costs['costs'])[dc_sort_order, i_dn]  # for each pp
 
                 # sort all by arrays by the ascending costs

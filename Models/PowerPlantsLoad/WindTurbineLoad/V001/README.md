@@ -6,9 +6,8 @@ Determines the load of multiple wind turbines for the given values of hub-height
 ## Inputs
 The inputs to this model are:
 
-1. Power plants data
-1. Weather data
-
+1. WeatherData - Dictionary holding Power plant ids and corresponding required weather data for all power plants
+1. PowerPlantsData - Dictionary holding the different required parameters of power plants
 
 ## Outputs
 The output of this model is:

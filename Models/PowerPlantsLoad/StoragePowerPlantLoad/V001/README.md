@@ -6,8 +6,8 @@ Determines the load of multiple storage power plants for the given interval of t
 ## Inputs
 The inputs to this model are:
 
-1. Power plants data
-1. Futures
+1. Futures - Timestamps
+1. PowerPlantsData - Dictionary holding the different required parameters of power plants
 
 
 ## Outputs

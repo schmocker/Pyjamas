@@ -51,7 +51,7 @@ class Model(Supermodel):
         return distance
 
     def distancecost(self, Standorte, KWDaten):
-        # Determine the distance cost[€/J] of each power plant
+        # Determine the distance cost[$/J] of each power plant
         ################################################################################################################
         # Input Arguments:
         # Standorte: Dictionary containing latitude and longitude coordinates of Signal price generator locations
