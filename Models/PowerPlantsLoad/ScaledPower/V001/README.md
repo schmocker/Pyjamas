@@ -1,6 +1,6 @@
 # Scaled power
 
-Determine the output power[W] of each power plant
+Determine the output power of each power plant
 
 
 ## Inputs
@@ -13,7 +13,7 @@ The inputs to this model are:
 ## Outputs
 The output of this model is:
 
-1. Power - Dictionary containing power plant ids in one list  and corresponding calculated power[W] of a power plant in 
+1. Power - Dictionary containing power plant ids in one list  and corresponding calculated power of a power plant in 
 second list
 
 
