@@ -17,7 +17,7 @@ The output of this model is:
 
 
 ## Properties
-The model has no properties
+
 
 ## Remarks
 
