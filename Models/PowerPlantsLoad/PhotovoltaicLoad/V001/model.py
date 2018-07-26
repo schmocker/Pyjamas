@@ -40,7 +40,7 @@ class Model(Supermodel):
         # Auslastung: Calculated load(Auslastung), output values are between [0-1]
         ###################################################################################################################
         # 75% of total global radiation are captured by the tilted surface oriented towards specified direction (e.g south)
-        GlobalRadiationLoss = 0.25
+        GlobalRadiationLoss = 0.20
         RadiationOnTiltedSurface = (1 - GlobalRadiationLoss) * GlobalRadiations
 
         Tmodule = 25  # Standard Test Condition temperature

@@ -11,15 +11,15 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['dist_net'] = Input(name='distribution networks', unit='-', info='distribution networks')
+        self.inputs['dist_net'] = Input(name='Distribution networks', unit='{-, {Grad, Grad}}', info='distribution networks')
 
         # define outputs
-        self.outputs['dist_cost'] = Output(name='distribution cost', unit='undet', info='distribution cost')
+        self.outputs['dist_cost'] = Output(name='Distribution cost', unit='€/J', info='distribution cost')
 
         # define properties
         cost_constant_def = [100]
         cost_constant_def = json.dumps(cost_constant_def)
-        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='-', info='constant distribution costs', example='[100, 110, 120]')
+        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='€/J', info='constant distribution costs', example='[100]')
 
         # persistent variables
         self.cost_constant = None
@@ -55,9 +55,12 @@ class Model(Supermodel):
 if __name__ == "__main__":
 
     # input
-    distnets = {"Baden": {"Lat": 47.47256, "Lon": 8.30850},
-                     "Brugg": {"Lat": 47.48420, "Lon": 8.20706},
-                     "Olten": {"Lat": 47.35212, "Lon": 7.90801}}
+    # distnets = {"Baden": {"Lat": 47.47256, "Lon": 8.30850},
+    #             "Brugg": {"Lat": 47.48420, "Lon": 8.20706},
+    #             "Olten": {"Lat": 47.35212, "Lon": 7.90801}}
+    distnets = {"dist_networks": ["Baden", "Brugg", "Olten"],
+                "Latitude": [47.47256, 47.48420, 47.35212],
+                "Longitude": [8.30850, 8.20706, 7.90801]}
     distnets = json.dumps(distnets)
 
     future_vec = [1531746402, 1531746403, 1531746404, 1531746405]

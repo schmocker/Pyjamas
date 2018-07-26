@@ -90,7 +90,7 @@ def web_sim_gui():
                     results['result'] = filtered_results
                 json_str = json.dumps(results)
                 if sys.getsizeof(json_str) > 1E6:
-                    raise ValueError(f"to much data in result (max result size is set to 1E6 bytes)")
+                    raise ValueError(f"too much data in result (max result size is set to 1E6 bytes)")
 
                 return json_str
 

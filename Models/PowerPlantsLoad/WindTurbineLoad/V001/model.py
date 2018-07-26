@@ -18,26 +18,6 @@ class Model(Supermodel):
         # define outputs
         self.outputs['load'] = Output('Load', info='load of all wind turbines, value[0-1]')
 
-    '''   
-        # define properties
-        # Property(<initial value>,<type>,<info dictionary>)
-        self.properties['Nabenhoehe'] = Property(10, float, name='hub height', unit='m')
-        self.properties['Bodenrauigkeit'] = Property(10, float, name='Surface Roughness', unit='m')
-
-        self.nabenhoehe = None
-        self.bodenrauhigkeit = None
-
-    async  def func_birth(self):
-        await self.func_amend(['Nabenhoehe', 'Bodenrauigkeit'])
-
-    async def func_amend(self, keys=[]):
-        if 'Nabenhoehe' in keys:
-            self.nabenhoehe = self.get_property('Nabenhoehe')
-
-        if 'Bodenrauigkeit' in keys:
-            self.nabenhoehe = self.get_property('Bodenrauigkeit')
-    '''
-
 
     async def func_peri(self, prep_to_peri=None):
         # get inputs
@@ -119,7 +99,7 @@ class Model(Supermodel):
         # Output Arguments:
         # Auslastung: Calculated Auslastung at incoming hub-height, output values are between [0-1]
         ################################################################################################################
-        rho = 1.23  # Air density[kg / m ^ 3]
+        rho = 1.23  # Air density[kg/m^3]
         Vnominal = 12  # Wind velocity which generates nominal output power[m/sec]
         r = self.hubheightVSdiameter(Nabenhoehe)  # Blade length or Radius[m]
         Cp = 0.40  # Efficiency[%] or Power coefficient
@@ -150,7 +130,7 @@ class Model(Supermodel):
 
     def windturbinenauslastung(self, KWDaten, WetterDaten):
         # Determine the load(Auslastung) of wind turbine
-        ###################################################################################################################
+        ################################################################################################################
         # Input Arguments:
         # KWDaten: Dictionary holding the different parameters of power plants
         # ----------------------------------------------------------------------------------------------
@@ -191,7 +171,7 @@ class Model(Supermodel):
         #   2    array(96)
         #   4    array(96)
         #   6    array(96)
-        ###################################################################################################################
+        ################################################################################################################
 
         KWBezeichnung = 'Windturbine' #ForeignKeyKWTyp = 2  # ForeignKey Kraftwerkstyp z.B. 1= PV-Anlage, 2= WindKraftwerk
 
