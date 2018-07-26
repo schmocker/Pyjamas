@@ -4,7 +4,7 @@ from core.supermodel import Supermodel
 
 class Model(Supermodel):
     """
-        takes a number as input and returns it as output the following round
+        takes something as input and returns it as output the following run
     """
 
     def __init__(self, uuid, name: str):
@@ -17,6 +17,6 @@ class Model(Supermodel):
     
     async def func_peri(self, prep_to_peri=None):
 
-        self.set_output("stored",self.stored)
+        self.set_output('stored',self.stored)
 
-        self.stored = await self.get_input("to_store")
+        self.stored = await self.get_input('to_store')
