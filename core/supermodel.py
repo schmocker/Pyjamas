@@ -10,7 +10,7 @@ import traceback
 
 
 class Supermodel:
-    """Parent class for every model.
+    """Base class for every model.
     Provides the necessary steps to run and connect the model with others in a simulation.
 
     Arguments:
@@ -450,7 +450,5 @@ class Supermodel:
             return outputs
         else:
             return None
-
-
 
 #endregion test model

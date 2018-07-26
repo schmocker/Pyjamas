@@ -20,7 +20,7 @@ class Agent():
         DEBUG {bool} -- if True, will log on debug level (default: {False})
     """
 
-    def __init__(self, agent_id, name: str, controller_queue, agent_queue, logging_path: str=None, DEBUG: bool=False):
+    def __init__(self, agent_id: 'Any', name: str, controller_queue, agent_queue, logging_path: str=None, DEBUG: bool=False):
         super(Agent,self).__init__()
 
         # controller to agent queue

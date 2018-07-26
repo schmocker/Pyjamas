@@ -8,7 +8,19 @@ import json
 
 
 class Port():
-    def __init__(self, name, unit='undefined', info='-', example='-', **kwargs):
+    """base class for all ports
+    
+    Arguments:
+        name {str} -- the name of the port
+    
+    Keyword Arguments:
+        unit {str} -- the unit of the data (default: {'undefined'})
+        info {str} -- optional info for this port (default: {'-'})
+        example {str} -- a data example (default: {'-'})
+    """
+
+    def __init__(self, name: str, unit: str='undefined', info: str='-', example: str='-', **kwargs):
+
         self.items = dict()
         self.items['info'] = kwargs if kwargs is not None else dict()
         self.items['info']['name'] = name
@@ -21,6 +33,16 @@ class Port():
 
 
 class Input(Port):
+    """input port
+    
+    Arguments:
+        name {str} -- the name of the port
+    
+    Keyword Arguments:
+        unit {str} -- the unit of the data (default: {'undefined'})
+        info {str} -- optional info for this port (default: {'-'})
+        example {str} -- a data example (default: {'-'})
+    """
 
     def add_link(self, output_model, output_name: str):
         self.items['value'] = (output_model, output_name)
@@ -39,6 +61,16 @@ class Input(Port):
 
 
 class Output(Port):
+    """output port
+    
+    Arguments:
+        name {str} -- the name of the port
+    
+    Keyword Arguments:
+        unit {str} -- the unit of the data (default: {'undefined'})
+        info {str} -- optional info for this port (default: {'-'})
+        example {str} -- a data example (default: {'-'})
+    """
     
     def clean_output(self):
         self.items['value'] = asyncio.Future()
@@ -51,8 +83,20 @@ class Output(Port):
 
 
 class Property(Port):
+    """property port
+    
+    Arguments:
+        name {str} -- the name of the port
+    
+    Keyword Arguments:
+        default {'Any'} -- default value (default: {0})
+        data_type {type} -- type of the data (default: {int})
+        unit {str} -- the unit of the data (default: {'undefined'})
+        info {str} -- optional info for this port (default: {'-'})
+        example {str} -- a data example (default: {'-'})
+    """
 
-    def __init__(self, name, default=0, data_type=int, unit='undefined', info='-', example='-', **kwargs):
+    def __init__(self, name: str, default: 'Any'=0, data_type: type=int, unit: str='undefined', info: str='-', example: str='-', **kwargs):
         super(Property, self).__init__(name, unit=unit, info=info, example=example, **kwargs)
         self.property_type = data_type
         self.amend_value = None
@@ -78,7 +122,13 @@ class Property(Port):
     def set_amend_property(self, property_value):
         self.amend_value = property_value
 
-    def amend(self):
+    def amend(self) -> bool:
+        """replaces the current property value with the amended one
+        
+        Returns:
+            bool -- True if value could be replaced, False otherwise
+        """
+
         if self.amend_value != None:
             try:
                 self.set_property(self.amend_value)
@@ -92,6 +142,10 @@ class Property(Port):
 
 
 class CreateDirFileHandler(logging.FileHandler):
+    """file handler that creates the folders if needed
+    https://stackoverflow.com/a/20667049/9625050
+    """
+
     def __init__(self, filename, mode='a', encoding=None, delay=0):
         self.create_dir(os.path.dirname(filename))
         super(CreateDirFileHandler,self).__init__(filename, mode, encoding, delay)
