@@ -15,10 +15,10 @@ class Model(Supermodel):
         self.inputs['KWDaten'] = Input('PowerPlantsData',info='dict, geographical coordinates[lat/lon] of power plants required')
 
         # define outputs
-        self.outputs['Distanzkosten'] = Output('DistanceCost', unit='[$/J]')
+        self.outputs['Distanzkosten'] = Output('DistanceCost', unit='[€/J]')
 
         # define properties
-        self.properties['dis_factor'] = Property('DistanceFactor', default=0.01, data_type=float, unit='[$/m*J]')
+        self.properties['dis_factor'] = Property('DistanceFactor', default=0.01, data_type=float, unit='[€/m*J]')
 
         self.DistanzFaktor = 0.1
 
@@ -82,9 +82,9 @@ class Model(Supermodel):
         # -----------------------------------
         #     Baden         1     cost matrix
         #     Brugg         2                   PP1      PP2     PP3      PP4      PP5      PP6      PP7      PP8    ...
-        #     Olten         3     Standort1   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]
-        #                   4     Standort2   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]
-        #                   5     Standort3   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]   c[$/J]
+        #     Olten         3     Standort1   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]
+        #                   4     Standort2   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]
+        #                   5     Standort3   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]   c[€/J]
         #                   .
         #                   .
         #                   .

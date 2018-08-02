@@ -3,6 +3,8 @@ from core.util import Input, Output, Property
 from core.supermodel import Supermodel
 
 class Model(Supermodel):
+    """outputs a string representing a sliding window on the full_text property
+    """
 
     def __init__(self, uuid, name: str):
         super(Model, self).__init__(uuid,name)

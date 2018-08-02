@@ -10,8 +10,14 @@ from core.util import CreateDirFileHandler
 import traceback
 
 class Controller():
+    """Controlls all Agents and the Communication with them over IPC
+    
+    Keyword Arguments:
+        logging_path {str} -- the path for the logging files, if None no logging will occure (default: {None})
+        DEBUG {bool} -- if True will log on DEBUG level, else on INFO level (default: {False})
+    """
 
-    def __init__(self, logging_path=None, DEBUG=False):
+    def __init__(self, logging_path: str=None, DEBUG: bool=False):
         self.agents = {}
         self.agents_running = {}
         self.agents_paused = []
@@ -30,7 +36,14 @@ class Controller():
 
 #region logging
 
-    def create_logger(self, logging_path, DEBUG):
+    def create_logger(self, logging_path: str, DEBUG: bool):
+        """creates the logger for the controller
+        
+        Arguments:
+            logging_path {str} -- the path for the logging files, if None no logging will occure
+            DEBUG {bool} -- if True will log on DEBUG level, else on INFO level
+        """
+
         if logging_path:
             self.logger = logging.getLogger(__name__)
             if self.DEBUG:
@@ -50,11 +63,11 @@ class Controller():
         else:
             self.logger = None
 
-    def log_debug(self, msg):
+    def log_debug(self, msg: str):
         if self.logger:
             self.logger.debug(f"[CONTROLLER][{__name__}] : {msg}")
 
-    def log_warning(self, msg):
+    def log_warning(self, msg: str):
         print(f"[WARNING][CONTROLLER][{__name__}] : {msg}")
         print(traceback.format_exc())
         if self.logger:
@@ -65,7 +78,17 @@ class Controller():
 
 #region agent
 
-    def add_agent(self, agent_id, agent_name: str):
+    def add_agent(self, agent_id: 'Any', agent_name: str) -> bool:
+        """create and add a new agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id that the agent will have
+            agent_name {str} -- the name of the agent
+        
+        Returns:
+            bool -- True if the agent could get created and added, False otherwise
+        """
+
         self.log_debug('starting add_agent')
         try:
             if agent_id in self.agents:
@@ -78,21 +101,42 @@ class Controller():
             self.agents[agent_id] = a
             self.log_debug(f'added agent (agent_id = {a.id} agent_name = {a.name})')
             if not self.thread_running:
-                self.start()
+                self.start_queue_reading()
                 self.log_debug(f'started queue reading thread')
             return True
         except Exception:
             self.log_debug(f'agent {agent_id} could not be added')
         return False
 
-    def force_add_agent(self, agent_id, agent_name):
+    def force_add_agent(self, agent_id: 'Any', agent_name: str) -> bool:
+        """creates and adds a new agent
+        if there is already a agent with this id it will be removed
+        
+        Arguments:
+            agent_id {'Any'} -- the id that the agent will have 
+            agent_name {str} -- the name of the agent
+        
+        Returns:
+            bool -- True if the agent could get created and added, False otherwise
+        """
+
         self.log_debug('starting force_add_agent')
         if self.is_existing_agent(agent_id):
             if not self.remove_agent(agent_id):
                 return False
         return self.add_agent(agent_id, agent_name)
 
-    def remove_agent(self, agent_id):
+    def remove_agent(self, agent_id: 'Any') -> bool:
+        """removes an agent
+        if the agent is running it will be terminated first
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+        
+        Returns:
+            bool -- True if the agent could be removed, False otherwise
+        """
+
         self.log_debug('starting remove_agent')
         try:
             if self.is_agent_running(agent_id):
@@ -115,14 +159,14 @@ class Controller():
                 self.agents_paused.remove(agent_id)
             self.log_debug(f'agent {agent_id} removed')
             if len(self.agents) <= 0:
-                self.stop()
+                self.stop_queue_reading()
                 self.log_debug(f'stopped queue reading thread')
             return True
         except Exception:
             self.log_warning(f'agent {agent_id} could not be removed')
         return False
 
-    def get_agent_info(self, agent_id):
+    def get_agent_info(self, agent_id: 'Any'):
         if self.is_existing_agent(agent_id):
             return self.agents[agent_id].get_info()
         return None
@@ -131,11 +175,27 @@ class Controller():
 
 #region model
 
-    def add_model(self, agent_id, model_path: str, model_id, model_name: str):
+    def add_model(self, agent_id: 'Any', model_path: str, model_id: 'Any', model_name: str) -> bool:
+        """Create a model and add it to an agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+            model_path {str} -- the path to the python file of the model
+            model_id {'Any'} -- the id the model will have
+            model_name {str} -- the name of the model
+        
+        Returns:
+            bool -- True if the model could be created and added, False otherwise
+        """
+
         self.log_debug('starting add_model')
         if self.is_existing_agent(agent_id):
             if not self.is_agent_running(agent_id):
-                mod = importlib.import_module(f"Models.{model_path}").Model(model_id,model_name)
+                try:
+                    mod = importlib.import_module(f"Models.{model_path}").Model(model_id,model_name)
+                except Exception:
+                    self.log_warning(f'Model could not be created with provided model_path ({model_path})')
+                    return False
                 self.log_debug(f'created model (model_id = {model_id} model_name = {model_name})')
                 
                 if self.agents[agent_id].add_model(mod):
@@ -144,10 +204,20 @@ class Controller():
                 else:
                     self.log_warning(f'model (model_id = {model_id} model_name = {model_name}) could not be added')
             else:
-                self.log_debug(f'agent {agent_id} is running -> model was not added')
+                self.log_warning(f'agent {agent_id} is running -> model was not added')
         return False
+ 
+    def remove_model(self, agent_id: 'Any', model_id: 'Any') -> bool:
+        """remove a model from an agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+            model_id {'Any'} -- the id of the model
+        
+        Returns:
+            bool -- True if the model could be removed, False otherwise
+        """
 
-    def remove_model(self, agent_id, model_id):
         self.log_debug('starting remove_model')
         if self.is_existing_agent(agent_id):
             if not self.is_agent_running(agent_id):
@@ -158,10 +228,23 @@ class Controller():
                 else:
                     self.log_warning(f'model {model_id} could not be removed')
             else:
-                self.log_debug(f'agent {agent_id} is running -> model was not removed')
+                self.log_warning(f'agent {agent_id} is running -> model was not removed')
         return False
     
-    def link_models(self, agent_id, output_model_id, output_name: str, input_model_id, input_name: str):
+    def link_models(self, agent_id: 'Any', output_model_id: 'Any', output_name: str, input_model_id: 'Any', input_name: str) -> bool:
+        """link the output of a model to the input of another in an agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+            output_model_id {'Any'} -- the id of the model providing the output
+            output_name {str} -- the name of the output
+            input_model_id {'Any'} -- the id of the model providing the input
+            input_name {str} -- the name of the input
+        
+        Returns:
+            bool -- True if the models could be linked, False otherwise
+        """
+
         self.log_debug('starting link_models')
         if self.is_existing_agent(agent_id):
             if not self.is_agent_running(agent_id):
@@ -174,7 +257,20 @@ class Controller():
                 self.log_debug(f'agent {agent_id} is running -> models were not linked')
         return False
 
-    def unlink_models(self, agent_id, output_model_id, output_name: str, input_model_id, input_name: str):
+    def unlink_models(self, agent_id: 'Any', output_model_id: 'Any', output_name: str, input_model_id: 'Any', input_name: str) -> bool:
+        """remove the link between two models
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+            output_model_id {'Any'} -- the id of the model providing the output
+            output_name {str} -- the name of the output
+            input_model_id {'Any'} -- the id of the model providing the input
+            input_name {str} -- the name of the input
+        
+        Returns:
+            bool -- True if the models could be unlinked, False otherwise
+        """
+
         self.log_debug('starting unlink_models')
         if self.is_existing_agent(agent_id):
             if not self.is_agent_running(agent_id):
@@ -187,7 +283,19 @@ class Controller():
                 self.log_debug(f'agent {agent_id} is running -> models were not unlinked')
         return False
 
-    def set_property(self, agent_id, model_id, property_name: str, property_value):
+    def set_property(self, agent_id: 'Any', model_id: 'Any', property_name: str, property_value: 'Any') -> bool:
+        """set a new value for a property of a model in an agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+            model_id {'Any'} -- the id of the model
+            property_name {str} -- the name of the property
+            property_value {'Any'} -- the value of the property
+        
+        Returns:
+            bool -- True if the property could be changed or the order could be sent (if running), False otherwise
+        """
+
         self.log_debug('starting set_property')
         if self.is_existing_agent(agent_id):
             if self.is_agent_running(agent_id):
@@ -206,7 +314,16 @@ class Controller():
 
 #region simulation
 
-    def start_agent(self, agent_id):
+    def start_agent(self, agent_id: 'Any') -> bool:
+        """start or unpause an existing agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+        
+        Returns:
+            bool -- True if the agent could be started or unpaused, False otherwise
+        """
+
         self.log_debug('starting start_agent')
         if self.is_existing_agent(agent_id):
             if self.is_agent_paused(agent_id):
@@ -215,6 +332,7 @@ class Controller():
                     self.log_debug(f'agent {agent_id} unpaused')
                     return True
             elif not self.is_agent_running(agent_id):
+                # starting a new process
                 p = multiprocessing.Process(target=self.agents[agent_id].run)
                 self.agents_running[agent_id] = p
                 p.start()
@@ -224,7 +342,16 @@ class Controller():
                 self.log_debug(f'agent {agent_id} is already running')
         return False
 
-    def pause_agent(self, agent_id):
+    def pause_agent(self, agent_id: 'Any') -> bool:
+        """pause a running agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+        
+        Returns:
+            bool -- True if the agent could be paused, False otherwise
+        """
+
         self.log_debug(f'starting pause_agent')
         if self.is_existing_agent(agent_id):
             if self.is_agent_paused(agent_id):
@@ -236,7 +363,16 @@ class Controller():
                     return True
         return False
 
-    def unpause_agent(self, agent_id):
+    def unpause_agent(self, agent_id: 'Any') -> bool:
+        """unpause a running agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+        
+        Returns:
+            bool -- True if the agent could be unpaused, False otherwise
+        """
+
         self.log_debug('starting unpause_agent')
         if self.is_existing_agent(agent_id):
             if self.is_agent_running(agent_id):
@@ -252,7 +388,16 @@ class Controller():
                 return True
         return False
 
-    def stop_agent(self, agent_id):
+    def stop_agent(self, agent_id: 'Any') -> bool:
+        """stop a running agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+        
+        Returns:
+            bool -- True if the stop order could be sent, False otherwise
+        """
+
         self.log_debug(f'starting stop_agent')
         if self.is_existing_agent(agent_id):
             if self.is_agent_running(agent_id):
@@ -262,7 +407,16 @@ class Controller():
                 self.log_debug(f'agent {agent_id} is not running')
         return False
 
-    def kill_agent(self, agent_id):
+    def kill_agent(self, agent_id: 'Any') -> bool:
+        """kill the process of a running agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+        
+        Returns:
+            bool -- True if the process could be killed
+        """
+
         self.log_debug(f'starting kill_agent')
         if self.is_existing_agent(agent_id):
             if self.is_agent_running(agent_id):
@@ -279,7 +433,17 @@ class Controller():
                 return True
         return False
 
-    def get_model_result(self, agent_id, model_id):
+    def get_model_result(self, agent_id: 'Any', model_id: 'Any') -> dict:
+        """get the result data of a model from an agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+            model_id {'Any'} -- the id of the model
+        
+        Returns:
+            dict -- a dictionary containing the last results of all outputs of the model
+        """
+
         self.log_debug(f'starting get_model_result')
         try:
             return self.result_data[agent_id][model_id]
@@ -287,7 +451,18 @@ class Controller():
             pass
         return None
     
-    def get_model_results_newer_than(self, agent_id, model_id, run):
+    def get_model_results_newer_than(self, agent_id: 'Any', model_id: 'Any', run: int) -> dict:
+        """get the result data of a model from an agent if it is newer than the provided run number
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+            model_id {'Any'} -- the id of the model
+            run {int} -- the run number
+        
+        Returns:
+            dict -- a dictionary containing the last results of all outputs of the model
+        """
+
         try:
             cur_run = self.model_runs[agent_id][model_id]
             if run < cur_run:
@@ -297,7 +472,17 @@ class Controller():
             pass
         return None
 
-    def get_model_properties(self, agent_id, model_id):
+    def get_model_properties(self, agent_id: 'Any', model_id: 'Any') -> dict:
+        """get the current properties of a model from an agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+            model_id {'Any'} -- the id of the model
+
+        Returns:
+            dict -- a dictionary containing the current properties of the model
+        """
+
         self.log_debug(f'starting get_model_properties')
         try:
             return self.property_data[agent_id][model_id]
@@ -309,35 +494,42 @@ class Controller():
 
 #region util
 
-    # TODO: @Simon: add function "get_status" to return ['running' || 'paused' || 'stopped']
-
-    def is_existing_agent(self, agent_id):
+    def is_existing_agent(self, agent_id: 'Any') -> bool:
         if agent_id in self.agents:
             return True
         self.log_warning(f'agent {agent_id} is not existing')
         return False
 
-    def is_agent_running(self, agent_id):
+    def is_agent_running(self, agent_id: 'Any') -> bool:
         if agent_id in self.agents_running:
             return True
         return False
 
-    def is_agent_paused(self, agent_id):
+    def is_agent_paused(self, agent_id: 'Any') -> bool:
         if agent_id in self.agents_paused:
             return True
         return False
 
-    def get_agent_status(self, agent_id):
+    def get_agent_status(self, agent_id: 'Any') -> str:
+        """get the current status of an agent
+        
+        Arguments:
+            agent_id {'Any'} -- the id of the agent
+        
+        Returns:
+            str -- 'paused', 'running' or 'stopped'
+        """
+
         if self.is_agent_paused(agent_id):
             return "paused"
         if self.is_agent_running(agent_id):
             return "running"
         return "stopped"
 
-    def get_agents_running(self):
-        return list(self.agents_running)
+    def get_agents_running(self) -> list:
+        return list(self.agents_running.keys())
 
-    def get_agents(self):
+    def get_agents(self) -> list:
         return list(self.agents.keys())
 
 #endregion util
@@ -346,13 +538,13 @@ class Controller():
 
     # queue reader
 
-    def start(self):
+    def start_queue_reading(self):
         self.thread_running = True
         thread = Thread(target=self.read_queue)
         thread.daemon = True
         thread.start()
 
-    def stop(self):
+    def stop_queue_reading(self):
         self.thread_running = False
 
     def read_queue(self):
@@ -365,35 +557,48 @@ class Controller():
                 print(e)
         self.log_debug(f'finished controller queue thread')
 
-    def handle_order(self, msg):
+    def handle_order(self, msg: dict):
         try:
             self.log_debug(f'recieved order {msg["order"]} from agent {msg["agent"]}')
+
             if msg["order"] == "dead":
+                # agent finished running
                 self.handle_dead_order(msg)
+
             elif msg['order'] == 'data':
+                # new model output data
                 self.handle_data_order(msg)
+
             elif msg['order'] == 'cpro':
+                # new model property data
                 self.handle_cpro_order(msg)
+
             elif msg['order'] == 'kill':
+                # agent requesting to get killed
                 self.handle_kill_order(msg)
         except KeyError:
             self.log_warning(f'message {msg} could not be handled correctly')
 
-    def handle_dead_order(self, msg):
+    # order handling
+
+    def handle_dead_order(self, msg: dict):
         agent_id = msg['agent']
         if self.is_agent_running(agent_id):
             self.agents_running[agent_id].terminate()
             self.log_debug(f'agent {agent_id} terminated')
-            del self.agents_running[agent_id]
+            try:
+                del self.agents_running[agent_id]
+            except KeyError:
+                pass
         if self.is_agent_paused(agent_id):
             self.agents_paused.remove(agent_id)
         self.log_debug(f'agent {agent_id} removed from running list')
 
-    def handle_kill_order(self, msg):
+    def handle_kill_order(self, msg: dict):
         agent_id = msg['agent']
         self.kill_agent(agent_id)
 
-    def handle_data_order(self, msg):
+    def handle_data_order(self, msg: dict):
         agent_id = msg['agent']
         model_id = msg['model']
         data = msg['text']
@@ -410,7 +615,7 @@ class Controller():
         for name, result in data[1:]:
             self.result_data[agent_id][model_id][name] = result
 
-    def handle_cpro_order(self, msg):
+    def handle_cpro_order(self, msg: dict):
         agent_id = msg['agent']
         model_id = msg['model']
         props = msg['text']
@@ -423,9 +628,10 @@ class Controller():
         for key, prop in props.items():
             self.property_data[agent_id][model_id][key] = prop
 
-    # orders
 
-    def send_set_property_order(self, agent_id, model_id, property_name, property_value):
+    # sending orders
+
+    def send_set_property_order(self, agent_id: 'Any', model_id: 'Any', property_name: str, property_value: 'Any') -> bool:
         text = {}
         text["property_name"] = property_name
         text["property_value"] = property_value
@@ -438,28 +644,28 @@ class Controller():
 
         return self.send_order(agent_id, order)
 
-    def send_stop_order(self, agent_id):
+    def send_stop_order(self, agent_id: 'Any') -> bool:
         order = {}
         order["order"] = "stop"
         order["agent"] = agent_id
 
         return self.send_order(agent_id, order)
 
-    def send_halt_order(self, agent_id):
+    def send_halt_order(self, agent_id: 'Any') -> bool:
         order = {}
         order["order"] = "halt"
         order["agent"] = agent_id
         
         return self.send_order(agent_id, order)
 
-    def send_cont_order(self, agent_id):
+    def send_cont_order(self, agent_id: 'Any') -> bool:
         order = {}
         order["order"] = "cont"
         order["agent"] = agent_id
         
         return self.send_order(agent_id, order)
 
-    def send_order(self, agent_id, order):
+    def send_order(self, agent_id: 'Any', order: dict) -> bool:
         try:
             self.agent_queues[agent_id].put(order)
             self.log_debug(f'sent order {order["order"]} to agent {order["agent"]}')

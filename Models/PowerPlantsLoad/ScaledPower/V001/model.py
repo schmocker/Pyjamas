@@ -68,7 +68,7 @@ class Model(Supermodel):
         # ScaledPower: Dictionary containing power plant ids in one list  and corresponding calculated
         # power of a power plant in the other list
         # -----------------
-        # id  Auslastung   Note: Output matrix is sorted according to the incoming id's in KWDaten.
+        # id  Auslastung   Note: Output dictionary is sorted according to the incoming id's in KWDaten.
         # -----------------
         #  1    array(96)
         #  2    array(96)

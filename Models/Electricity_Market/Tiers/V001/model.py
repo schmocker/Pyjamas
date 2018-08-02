@@ -19,9 +19,9 @@ class Model(Supermodel):
 
         # define inputs
         self.inputs['stock_ex_price'] = Input(name='Stock exchange price', unit='', info="stock exchange price")
-        self.inputs['distnet_costs'] = Input(name='Distribution network cost', unit='', info="distribution network cost")
-        self.inputs['service_cost'] = Input(name='Service cost', unit='', info="service cost")
-        self.inputs['taxes'] = Input(name='Taxes', unit='', info="taxes")
+        self.inputs['distnet_costs'] = Input(name='Distribution network cost', unit='{-, €/J}', info="distribution network cost")
+        self.inputs['service_cost'] = Input(name='Service cost', unit='€/J', info="service cost")
+        self.inputs['taxes'] = Input(name='Taxes', unit='€/J', info="taxes")
 
         # define outputs
         self.outputs['el_rate'] = Output(name='Electricity rate', unit='???', info='electricity rate')

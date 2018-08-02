@@ -20,9 +20,33 @@ class Model(Supermodel):
         self.outputs['load'] = Output('Load', info='load of all running-water power plants, value[0-1]')
 
         self.ref_year = 2016
-        ref_dates = [[self.ref_year, 1, 1], [self.ref_year, 4, 1], [self.ref_year, 8, 1], [self.ref_year + 1, 1, 1]]
+        ref_dates = [[self.ref_year, 1, 1],   [self.ref_year, 1, 8],   [self.ref_year, 1, 12],  [self.ref_year, 1, 17],  [self.ref_year, 1, 26],
+                     [self.ref_year, 2, 1],   [self.ref_year, 2, 8],   [self.ref_year, 2, 10],  [self.ref_year, 2, 12],  [self.ref_year, 2, 14], [self.ref_year, 2, 20], [self.ref_year, 2, 26],
+                     [self.ref_year, 3, 1],   [self.ref_year, 3, 6],   [self.ref_year, 3, 14],  [self.ref_year, 3, 28],
+                     [self.ref_year, 4, 7],   [self.ref_year, 4, 11],  [self.ref_year, 4, 19],  [self.ref_year, 4, 22],  [self.ref_year, 4, 24], [self.ref_year, 4, 30],
+                     [self.ref_year, 5, 2],   [self.ref_year, 5, 8],   [self.ref_year, 5, 11],  [self.ref_year, 5, 13],  [self.ref_year, 5, 22],
+                     [self.ref_year, 6, 1],
+                     [self.ref_year, 7, 7],   [self.ref_year, 7, 10],  [self.ref_year, 7, 13],  [self.ref_year, 7, 20],  [self.ref_year, 7, 30],
+                     [self.ref_year, 8, 4],   [self.ref_year, 8, 5],   [self.ref_year, 8, 7],   [self.ref_year, 8, 16],  [self.ref_year, 8, 19],
+                     [self.ref_year, 9, 4],   [self.ref_year, 9, 6],   [self.ref_year, 9, 18],  [self.ref_year, 9, 19],
+                     [self.ref_year, 10, 14], [self.ref_year, 10, 24], [self.ref_year, 10, 26],
+                     [self.ref_year, 11, 4],  [self.ref_year, 11, 6],  [self.ref_year, 11, 9],  [self.ref_year, 11, 11], [self.ref_year, 11, 16], [self.ref_year, 11, 19],
+                     [self.ref_year, 12, 1],  [self.ref_year, 12, 11], [self.ref_year, 12, 18], [self.ref_year, 12, 1],
+                     [self.ref_year + 1, 1, 1]]
         self.ref_dates = np.array([datetime2utc_time(dt(d[0], d[1], d[2])) for d in ref_dates])
-        self.ref_loads = np.array([0.3, 0.5, 1, 0.3])
+        self.ref_loads = np.array([0.300, 0.512,  1.0,   0.5447, 0.432,
+                                   1,     0.748,  0.834, 0.742,  0.8473, 0.6227, 0.7887,
+                                   0.674, 0.8247, 0.541, 0.431,
+                                   0.646, 0.5747, 1.0,   0.8,    0.9687, 0.778,
+                                   0.925, 0.6827, 0.682, 1.0,    0.994,
+                                   1.0,
+                                   1.0,   0.882,  1.0,   1.0,    0.827,
+                                   0.774, 1.0,    1.0,   0.742,  0.805,
+                                   0.550, 0.77,   0.524, 0.552,
+                                   0.328, 0.336,  0.542,
+                                   0.372, 0.534,  0.49, 0.762, 0.534, 0.704,
+                                   0.425, 0.340,  0.316, 0.284,
+                                   0.300])
 
 
     async def func_peri(self, prep_to_peri=None):
@@ -43,7 +67,7 @@ class Model(Supermodel):
         # Input Arguments:
         # KWDaten: Dictionary holding the different parameters of power plants
         # ----------------------------------------------------------------------------------------------
-        #   id  fk_kwt   kw_bezeichnung    power[W]          spez_info             Capex   Opex,  usw...
+        #   id  fk_kwt   kw_bezeichnung    power[W]          spez_info             Capex   Spez_Opex,  usw...
         # ----------------------------------------------------------------------------------------------
         #   1     2       Windturbine      1000000       NH: 150,  Z0: 0.03          1     0.01
         #   2     1      Photovoltaik      2000000       NH: 0,    Z0: {}            2     0.02
@@ -55,7 +79,7 @@ class Model(Supermodel):
         #   10    3        Others          1000000       NH: 0,    Z0: {}            8     0.08
         #   11    4        Others          1000000       NH: 0,    Z0: {}            9     0.09
         # [KWID, FKKWT, KWBezeichnung, Power, Weitere spezifische parameter(Nabenhoehe, Z0, usw.), Capex,
-        #  Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
+        #  Spez_Opex, KEV, Brennstoffkosten, Entsorgungskostne, CO2-Kosten, usw.]
         #
         # Futures: Incoming datetime values (produced by Scheduler/Cronjob/V2), required for interpolation
         #
@@ -96,7 +120,7 @@ if __name__ == "__main__":
              'power': [1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 8000000, 9000000, 7000000],
              'spez_info': [{'NH': 150, 'Z0': 0.03}, {}, {'NH': 100, 'Z0': 0.2}, {}, {'NH': 250, 'Z0': 0.03}, {}, {}, {}, {}],
              'capex': [1, 2, 3, 4, 5, 6, 7, 8, 9],
-             'opex': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09]}
+             'spez_opex': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09]}
 
     Props={}
     Inputs = {

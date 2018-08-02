@@ -11,7 +11,7 @@ class Model(Supermodel):
 
         self.inputs['number'] = Input('Number', unit='-', info="The number that gets multiplied", example='2')
 
-        self.properties['multiplier'] = Property('Multiplier', unit='-', info='The multiplier', example='2')
+        self.properties['multiplier'] = Property('Multiplier', default=1, data_type=float, unit='float', info='The multiplier', example='2')
 
         self.outputs['product'] = Output('Product', unit='-', info="The resulting product", example='2')
 

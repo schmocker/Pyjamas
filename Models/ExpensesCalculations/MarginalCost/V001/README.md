@@ -1,19 +1,25 @@
-# Template Model
+# Marginal cost
 
-This Model can do some fantastic things!
-
-* crazy calculations
-* mind blowing diagrams
+Determine the marginal cost of each power plant
 
 ## Inputs
-There are two inputs to this model:
+The inputs to this model are:
 
-1. Wind speed
-1. Wind direction
-1. Wind direction
-1. Wind direction
+1. OPEX - Dictionary containing power plant ids and operating expenses of all power plants
+1. PowerPlantsData - Dictionary holding the different required parameters of power plants
 
-* A
-* B
 
 ## Outputs
+The output of this model is:
+
+1. MarginalCost - Dictionary containing power plant ids in one list and corresponding calculated marginal cost of all
+power plants in other list
+
+
+## Properties
+
+
+## Remarks
+Output dictionary is sorted according to the incoming id's in PowerPlantData.
+
+### Implementation
