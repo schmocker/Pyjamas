@@ -80,7 +80,7 @@ def create_dummy_data(session):
                             bezeichnung_subtyp=kwt_info[1],
                             fk_brennstofftyp=bst.id,
                             wirkungsgrad=random.randint(5, 10)/10,
-                            spez_opex=random.randint(400, 800),
+                            opex=random.randint(400, 800),
                             capex=random.randint(5, 8)/10,
                             p_typisch=random.randint(100, 1000),
                             spez_info="{'NH': 100, 'Z0': 0.1}")

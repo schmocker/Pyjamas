@@ -65,7 +65,7 @@ class Model(Supermodel):
         db_kwt_bez_subtyp = [i.kraftwerkstyp.bezeichnung_subtyp for i in db_kw]
         db_kwt_fk_brennstofftyp = [i.kraftwerkstyp.fk_brennstofftyp for i in db_kw]
         db_kwt_wirkungsgrad = [i.kraftwerkstyp.wirkungsgrad for i in db_kw]
-        db_kwt_opex = [i.kraftwerkstyp.spez_opex for i in db_kw]
+        db_kwt_opex = [i.kraftwerkstyp.opex for i in db_kw]
         db_kwt_capex = [i.kraftwerkstyp.capex for i in db_kw]
         db_kwt_p_typisch = [i.kraftwerkstyp.p_typisch for i in db_kw]
         db_kwt_spez_info = [ast.literal_eval(i.kraftwerkstyp.spez_info) for i in db_kw]  # change string to dict
@@ -155,6 +155,11 @@ class Model(Supermodel):
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
             bs_kosten = bs_kosten + [bs_preis_int[idx] / wirkungsgrad]
 
+        # TODO opex abklären, welche Einheit, wie berechnen?
+        # calculation Spez_Opex
+        sec_per_year = 365*24*60*60
+        spez_opex = [db_kwt_opex[i]*pinst_int[i]/sec_per_year for i in range(len(db_kw))]  # [€/W]*[W]/[s]
+
         # units in comments
         kwp = {"id": db_kw_id,  # [-]
                "kw_bezeichnung": db_kw_bez,  # [-]
@@ -166,7 +171,7 @@ class Model(Supermodel):
                "bez_kraftwerkstyp": db_kwt_bez,  # [-]
                "bez_subtyp": db_kwt_bez_subtyp,  # [-]
                "wirkungsgrad": db_kwt_wirkungsgrad,  # [-]
-               "spez_opex": db_kwt_opex,  # [1/s]
+               "spez_opex": spez_opex,  # [1/s]  # TODO Einheit
                "capex": db_kwt_capex,  # [€/W_el]
                "p_typisch": db_kwt_p_typisch,  # [W]
                "spez_info": db_kwt_spez_info,  # dict with "NH" [m] and "Z0" [m]
