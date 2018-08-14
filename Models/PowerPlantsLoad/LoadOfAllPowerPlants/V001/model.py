@@ -113,8 +113,9 @@ class Model(Supermodel):
         PVids = PVauslastung['power_plant_id']
         LWKWids = LWKWauslastung['power_plant_id']
         SWKWids = SWKWauslastung['power_plant_id']
-        ids =[]
-        load =[]
+        ids = []
+        load = []
+
         def make_load_for_one_plant(kw_id):
             if kw_id in WTids:
                 ids.append(kw_id)

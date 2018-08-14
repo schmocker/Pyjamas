@@ -102,7 +102,7 @@ class Model(Supermodel):
                     result = 0
                 return result
 
-            Opex = [safedivide(val, divider =auslastung_for_kwid[idx]) for idx, val in enumerate(boolmask)]
+            Opex = [safedivide(val, divider=auslastung_for_kwid[idx]) for idx, val in enumerate(boolmask)]
             return Opex
 
         OpexForAllPlants = [make_opex_for_one_plant(id) for id in KWDatenID]
