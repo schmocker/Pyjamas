@@ -65,7 +65,7 @@ class Model(Supermodel):
         db_kwt_bez_subtyp = [i.kraftwerkstyp.bezeichnung_subtyp for i in db_kw]
         db_kwt_fk_brennstofftyp = [i.kraftwerkstyp.fk_brennstofftyp for i in db_kw]
         db_kwt_wirkungsgrad = [i.kraftwerkstyp.wirkungsgrad for i in db_kw]
-        db_kwt_opex = [i.kraftwerkstyp.opex for i in db_kw]
+        db_kwt_opex = [i.kraftwerkstyp.spez_opex for i in db_kw]
         db_kwt_capex = [i.kraftwerkstyp.capex for i in db_kw]
         db_kwt_p_typisch = [i.kraftwerkstyp.p_typisch for i in db_kw]
         db_kwt_spez_info = [ast.literal_eval(i.kraftwerkstyp.spez_info) for i in db_kw]  # change string to dict

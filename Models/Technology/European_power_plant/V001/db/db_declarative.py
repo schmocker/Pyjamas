@@ -36,7 +36,7 @@ class Kraftwerkstyp(Base):
     bezeichnung_subtyp = Column(String(250))
     fk_brennstofftyp = Column(Integer, ForeignKey('brennstofftyp.id', ondelete="CASCADE"))
     wirkungsgrad = Column(Float)
-    opex = Column(Float, nullable=False)
+    spez_opex = Column(Float, nullable=False)
     capex = Column(Float, nullable=False)
     p_typisch = Column(Float)
     spez_info = Column(Text)
