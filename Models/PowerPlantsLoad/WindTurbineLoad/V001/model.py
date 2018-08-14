@@ -82,7 +82,7 @@ class Model(Supermodel):
         Cwi_ref = WindDaten
         h = Nabenhoehe  # z.B. 100m
         z0 = BodenRauhigkeit    # z.B 0.03 für offenes landwirtschaftliches Gelände ohne Zäune und Hecken,
-                                # evtl. mitweitläufig verstreuten Gebäuden und sehr sanfte Hügel
+                                # evtl. mit weitläufig verstreuten Gebäuden und sehr sanften Hügeln
         Cwi_h = Cwi_ref * ((math.log(h / z0)) / (math.log(href / z0)))
         return Cwi_h
 
