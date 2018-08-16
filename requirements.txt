@@ -25,3 +25,4 @@ paho-mqtt
 pandas
 requests
 geopy
+matplotlib
