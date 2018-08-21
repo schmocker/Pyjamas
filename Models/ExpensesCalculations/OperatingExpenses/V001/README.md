@@ -24,3 +24,4 @@ Output dictionary is sorted according to the incoming id's in PowerPlantData.
 
 ### Implementation
 
+Operational expenses/costs = Capex * (spez) Opex / Load

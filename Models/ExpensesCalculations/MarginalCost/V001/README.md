@@ -23,3 +23,5 @@ power plants in other list
 Output dictionary is sorted according to the incoming id's in PowerPlantData.
 
 ### Implementation
+
+Marginal cost = Operational costs + Combustible (fuel) costs + CO2 costs + Disposal costs 
