@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Float, DateTime, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
@@ -36,10 +36,8 @@ class Kraftwerkstyp(Base):
     bezeichnung_subtyp = Column(String(250))
     fk_brennstofftyp = Column(Integer, ForeignKey('brennstofftyp.id', ondelete="CASCADE"))
     wirkungsgrad = Column(Float)
-    spez_opex = Column(Float, nullable=False)
-    capex = Column(Float, nullable=False)
     p_typisch = Column(Float)
-    spez_info = Column(Text)
+    spez_info = Column(String)
     # declare relations
     brennstofftyp = relationship("Brennstofftyp", foreign_keys=[fk_brennstofftyp],
                                  backref=backref("kraftwerkstypen", cascade="all, delete-orphan", lazy=True))
@@ -68,6 +66,30 @@ class Kraftwerksleistung(Base):
     # declare relations
     kraftwerk = relationship("Kraftwerk", foreign_keys=[fk_kraftwerk],
                              backref=backref("kraftwerksleistungen", cascade="all, delete-orphan", lazy=True))
+
+
+class VarOpex(Base):
+    __tablename__ = 'var_opex'
+    # declare columns
+    id = Column(Integer, primary_key=True)
+    fk_kraftwerkstyp = Column(Integer, ForeignKey('kraftwerkstyp.id', ondelete="CASCADE"))
+    datetime = Column(Integer, nullable=False)
+    preis = Column(Float, nullable=False)
+    # declare relations
+    kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp],
+                                 backref=backref("var_opex", cascade="all, delete-orphan", lazy=True))
+
+
+class Capex(Base):
+    __tablename__ = 'capex'
+    # declare columns
+    id = Column(Integer, primary_key=True)
+    fk_kraftwerkstyp = Column(Integer, ForeignKey('kraftwerkstyp.id', ondelete="CASCADE"))
+    datetime = Column(Integer, nullable=False)
+    preis = Column(Float, nullable=False)
+    # declare relations
+    kraftwerkstyp = relationship("Kraftwerkstyp", foreign_keys=[fk_kraftwerkstyp],
+                                 backref=backref("capex", cascade="all, delete-orphan", lazy=True))
 
 
 class Entsorgungspreis(Base):

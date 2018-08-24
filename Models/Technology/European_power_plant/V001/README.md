@@ -26,7 +26,7 @@ Key | Description | Unit
 "bez_kraftwerkstyp" | power plant type name | [-]
 "bez_subtyp" | power plant subtype name | [-]
 "wirkungsgrad" | power plant efficiency | [-]
-"spez_opex" | OPEX | [1/s]
+"spez_opex" | variable OPEX | [€/J]
 "capex" | CAPEX | [€/W_el]
 "p_typisch" | typical power of power plant type | [W]
 "spez_info" | special info of power plant type| for wind power plants: dict containing hub height: "NH" [m] and ground roughness: "Z0" [m]

@@ -1,6 +1,5 @@
-from Models.Technology.European_power_plant.V001.db import Kraftwerk, Kraftwerkstyp, \
-    Kraftwerksleistung, Brennstofftyp, Brennstoffpreis, Entsorgungspreis, Co2Preis
-
+from Models.Technology.European_power_plant.V001.db import Brennstofftyp, Brennstoffpreis, Kraftwerkstyp, Kraftwerk, \
+    Kraftwerksleistung, VarOpex, Capex, Entsorgungspreis, Co2Preis
 from sqlalchemy import exc
 import random
 import time
@@ -42,8 +41,8 @@ def create_dummy_data(session):
                 bsp = Brennstoffpreis(fk_brennstofftyp=bst.id,
                                       long=random.random()*60 - 20,
                                       lat=random.random()*60 + 20,
-                                      datetime=time.time()+random.randint(0, 60) * 30*24*60*60,
-                                      preis=random.randint(500, 1500))
+                                      datetime=int(time.time())+random.randint(0, 60) * 30*24*60*60,
+                                      preis=random.randint(1, 20)/10**9)
                 session.add(bsp)
                 try:
                     session.commit()
@@ -80,9 +79,7 @@ def create_dummy_data(session):
                             bezeichnung_subtyp=kwt_info[1],
                             fk_brennstofftyp=bst.id,
                             wirkungsgrad=random.randint(5, 10)/10,
-                            opex=random.randint(400, 800),
-                            capex=random.randint(5, 8)/10,
-                            p_typisch=random.randint(100, 1000),
+                            p_typisch=random.randint(5, 1500)*10**9,
                             spez_info="{'NH': 100, 'Z0': 0.1}")
         session.add(kwt)
         try:
@@ -117,9 +114,43 @@ def create_dummy_data(session):
     for kw in kws:
         for _ in range(random.randint(1, 3)):
             kwl = Kraftwerksleistung(fk_kraftwerk=kw.id,
-                                     power_inst=random.randint(500000, 1500000),
-                                     datetime=time.time() + random.randint(0, 20) * 365*24*60*60)
+                                     power_inst=random.randint(1000, 50000)*10**9,
+                                     datetime=int(time.time()) + random.randint(0, 20) * 365*24*60*60)
             session.add(kwl)
+            try:
+                session.commit()
+            except exc.IntegrityError as e:
+                print(e)
+                session.rollback()
+
+    # ################### VarOpex ######################################
+    session.query(VarOpex).delete()
+    session.commit()
+
+    kwts = session.query(Kraftwerkstyp).all()
+    for kwt in kwts:
+        for i in range(2):
+            var_opex = VarOpex(fk_kraftwerkstyp=kwt.id,
+                               datetime=int(time.time()) + i * 20 * 365*24*60*60,  # today and in 20 years
+                               preis=random.randint(1, 50)/1000)
+            session.add(var_opex)
+            try:
+                session.commit()
+            except exc.IntegrityError as e:
+                print(e)
+                session.rollback()
+
+    # ################### Capex ########################################
+    session.query(Capex).delete()
+    session.commit()
+
+    kwts = session.query(Kraftwerkstyp).all()
+    for kwt in kwts:
+        for i in range(2):
+            capex = Capex(fk_kraftwerkstyp=kwt.id,
+                          datetime=int(time.time()) + i * 20 * 365*24*60*60,  # today and in 20 years
+                          preis=random.randint(500, 3000))
+            session.add(capex)
             try:
                 session.commit()
             except exc.IntegrityError as e:
@@ -137,8 +168,8 @@ def create_dummy_data(session):
                 entp = Entsorgungspreis(fk_kraftwerkstyp=kwt.id,
                                         long=random.random() * 60 - 20,
                                         lat=random.random() * 60 + 20,
-                                        datetime=time.time() + random.randint(0, 20) * 365*24*60*60,
-                                        preis=random.randint(100, 200))
+                                        datetime=int(time.time()) + random.randint(0, 20) * 365*24*60*60,
+                                        preis=0)
                 session.add(entp)
                 try:
                     session.commit()
@@ -150,9 +181,9 @@ def create_dummy_data(session):
     session.query(Co2Preis).delete()
     session.commit()
 
-    for i in range(50):
-        co2p = Co2Preis(datetime=time.time() + random.randint(0, 10) * 365*24*60*60,
-                        preis=random.randint(100, 200))
+    for i in range(4):
+        co2p = Co2Preis(datetime=int(time.time()) + i * 10 * 365*24*60*60,
+                        preis=random.randint(20, 80)/1000)
         session.add(co2p)
         try:
             session.commit()

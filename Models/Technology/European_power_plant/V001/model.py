@@ -51,6 +51,7 @@ class Model(Supermodel):
             kw_ : Value valid for a single power plant
             _int : interpolated values       
         """
+        # ---------------------- QUERYS -----------------------------------------------
         # query Kraftwerk
         db_kw = self.db.query(Kraftwerk).all()
         db_kw_id = [i.id for i in db_kw]
@@ -65,8 +66,6 @@ class Model(Supermodel):
         db_kwt_bez_subtyp = [i.kraftwerkstyp.bezeichnung_subtyp for i in db_kw]
         db_kwt_fk_brennstofftyp = [i.kraftwerkstyp.fk_brennstofftyp for i in db_kw]
         db_kwt_wirkungsgrad = [i.kraftwerkstyp.wirkungsgrad for i in db_kw]
-        db_kwt_opex = [i.kraftwerkstyp.spez_opex for i in db_kw]
-        db_kwt_capex = [i.kraftwerkstyp.capex for i in db_kw]
         db_kwt_p_typisch = [i.kraftwerkstyp.p_typisch for i in db_kw]
         db_kwt_spez_info = [ast.literal_eval(i.kraftwerkstyp.spez_info) for i in db_kw]  # change string to dict
 
@@ -82,6 +81,7 @@ class Model(Supermodel):
 
         print("database queries finished successfully, start interpolation")
 
+        # ---------------------- INTERPOLATION ----------------------------------------
         # Brennstoffpreis Interpolation
         bs_preis_int = []
         for kw in db_kw:
@@ -136,6 +136,27 @@ class Model(Supermodel):
             # append new pinst (list) to existing list
             pinst_int = pinst_int + self.interpol_1d(db_pinst_t, db_pinst_p, kw_time)
 
+        # Variable Opex Interpolation
+        varopex_int = []
+        for kw in db_kw:
+            db_varopex = kw.kraftwerkstyp.var_opex
+            db_varopex_t = [i.datetime for i in db_varopex]
+            db_varopex_preis = [i.preis for i in db_varopex]
+
+            # append new opex (list) to existing list
+            varopex_int = varopex_int + self.interpol_1d(db_varopex_t, db_varopex_preis, kw_time)
+
+        # Capex Interpolation
+        capex_int = []
+        for kw in db_kw:
+            db_capex = kw.kraftwerkstyp.capex
+            db_capex_t = [i.datetime for i in db_capex]
+            db_capex_preis = [i.preis for i in db_capex]
+
+            # append new opex (list) to existing list
+            capex_int = capex_int + self.interpol_1d(db_capex_t, db_capex_preis, kw_time)
+
+        # ---------------------- CALCULATION ------------------------------------------
         # calculation CO2-Kosten
         co2_kosten = []
         for idx, kw in enumerate(db_kw):
@@ -155,11 +176,7 @@ class Model(Supermodel):
             wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
             bs_kosten = bs_kosten + [bs_preis_int[idx] / wirkungsgrad]
 
-        # TODO opex abklären, welche Einheit, wie berechnen?
-        # calculation Spez_Opex
-        sec_per_year = 365*24*60*60
-        spez_opex = [db_kwt_opex[i]*pinst_int[i]/sec_per_year for i in range(len(db_kw))]  # [€/W]*[W]/[s]
-
+        # ---------------------- DEFINE OUTPUTS ---------------------------------------
         # units in comments
         kwp = {"id": db_kw_id,  # [-]
                "kw_bezeichnung": db_kw_bez,  # [-]
@@ -171,8 +188,8 @@ class Model(Supermodel):
                "bez_kraftwerkstyp": db_kwt_bez,  # [-]
                "bez_subtyp": db_kwt_bez_subtyp,  # [-]
                "wirkungsgrad": db_kwt_wirkungsgrad,  # [-]
-               "spez_opex": spez_opex,  # [1/s]  # TODO Einheit
-               "capex": db_kwt_capex,  # [€/W_el]
+               "spez_opex": varopex_int,  # [€/J]
+               "capex": capex_int,  # [€/W_el]
                "p_typisch": db_kwt_p_typisch,  # [W]
                "spez_info": db_kwt_spez_info,  # dict with "NH" [m] and "Z0" [m]
                "entsorgungspreis": ents_preis_int,  # [€/J_bs]
@@ -374,13 +391,31 @@ def create_db():
     return session
 
 
-if __name__ == "__main__":
-    # possibility to create dummy data
+# Create empty database
+def create_empty_db():
+    load_dotenv()
+    db_path = environ.get("KW_DB_empty")
 
+    # an engine is the real DB
+    engine = create_engine(db_path)
+
+    # delete all tables
+    Base.metadata.drop_all(engine)
+    # create all tables
+    Base.metadata.create_all(engine)
+
+
+if __name__ == "__main__":
+    # # possibility to create dummy data
     # db = create_db()
     #
     # kws = db.query(Kraftwerk).all()
     # kw = db.query(Kraftwerk).first()
+    # stop = 1
+
+    # # possibility to create empty database
+    # db = create_empty_db()
+    # stop = 1
 
     # define Input, build time array
     dt = 900
