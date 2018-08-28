@@ -1,28 +1,27 @@
-# Marginal cost
-
+# Distance cost
 Determine the distance cost of each power plant
 
 ## Inputs
 The inputs to this model are:
 
 1. SPGLocations - Dictionary containing latitude and longitude coordinates of Signal Price Generator(SPG) locations
-e.g. Baden, Brugg, olten, etc..
-1. PowerPlantsData - Dictionary holding the different required parameters of power plants
-
+e.g. Baden, Brugg, Olten, etc..
+1. PowerPlantsData - Dictionary holding the different required parameters of all power plants
 
 ## Outputs
-The output of this model is:
+*dict* of form {"key": value,...} sorted after power plant id, containing:
 
-1. DistanceCost: Dictionary containing the locations of all Signal Price Generators (SPGs), power plant ids and 
-distance costs for all SPG locations
-
+Key | Description | Unit
+--- | --- | --- |
+"power_plants" | power plant ID | [-]
+"distribution_networks" | locations | ['str']
+"costs" | distance costs | [€/m*J]
 
 ## Properties
-The property of this model is:
-
-1. DistanceFactor 
+DistanceFactor [€/MWh*km]
 
 ## Remarks
 Distance cost calculations are based upon the distance between SPG and power plant locations
 
 ### Implementation
+Distance Cost = Distance Factor * Distance

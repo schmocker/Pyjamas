@@ -53,7 +53,7 @@ class Model(Supermodel):
         """
         # ---------------------- QUERYS -----------------------------------------------
         # query Kraftwerk
-        db_kw = self.db.query(Kraftwerk).all()
+        db_kw = self.db.query(Kraftwerk).order_by(Kraftwerk.id).all()
         db_kw_id = [i.id for i in db_kw]
         db_kw_bez = [i.bezeichnung for i in db_kw]
         db_kw_fk_kwt = [i.fk_kraftwerkstyp for i in db_kw]
@@ -177,7 +177,7 @@ class Model(Supermodel):
             bs_kosten = bs_kosten + [bs_preis_int[idx] / wirkungsgrad]
 
         # ---------------------- DEFINE OUTPUTS ---------------------------------------
-        # units in comments
+        # output sorted by id, units in comments
         kwp = {"id": db_kw_id,  # [-]
                "kw_bezeichnung": db_kw_bez,  # [-]
                "lat": db_kw_lat,  # [deg]
