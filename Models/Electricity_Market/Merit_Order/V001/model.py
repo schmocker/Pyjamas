@@ -18,7 +18,7 @@ class Model(Supermodel):
         self.inputs['power'] = Input(name='Power', unit='W',
                                      info='Power for each power plant and time step')
         self.inputs['marginal_costs'] = Input(name='Marginal costs', unit='€/J',
-                                              info='Marginal costs for each power plant and time step')
+                                              info='Marginal costs for each power plant')
         self.inputs['distance_costs'] = Input(name='Distance costs', unit='€/J',
                                               info='Distance costs for each power plant and distribution network')
 
@@ -27,7 +27,7 @@ class Model(Supermodel):
         self.properties["filter_dn"] = Property(default=0, data_type=int, name='Filter distribution network for view')
 
         self.outputs['market_prices'] = Output(name='Market prices', unit='€/J',
-                                               info='Market prices for each distribution network')
+                                               info='Market prices for each distribution network and time step')
         self.outputs['all_data'] = Output(name='All Data', unit='-',
                                                info='All data sorted by merit order for each distribution network and time step')
 
