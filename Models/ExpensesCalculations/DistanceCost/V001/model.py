@@ -20,7 +20,7 @@ class Model(Supermodel):
         # define properties
         self.properties['dis_factor'] = Property('DistanceFactor', default=0.01, data_type=float, unit='[€/m*J]')
 
-        self.DistanzFaktor = 0.1
+        self.DistanzFaktor = 0
 
 
 

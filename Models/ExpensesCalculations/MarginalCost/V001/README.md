@@ -2,7 +2,7 @@
 Determines the marginal cost of each power plant.
 
 ## Inputs
-The input to this model is a dictionary holding the different parameters of power plants.
+The input to this model is a *dict* holding the different parameters of all power plants.
 
 ## Outputs
 *dict* of form {"key": value,...}\
@@ -12,14 +12,10 @@ sorted after power plant id.
 Key | Description | Unit
 --- | --- | --- |
 "power_plant_id" | power plant ID | [-]
-"MarginalCost" | power plant name | [€/J]
+"MarginalCost" | marginal cost of power plant | [€/J]
 
 ## Properties
 None
 
-## Remarks
-Output dictionary is sorted according to the incoming id's in PowerPlantData.
-
 ### Implementation
-
-Marginal cost = Operational costs + Combustible (fuel) costs + CO2 costs + Disposal costs 
+Marginal cost = Variable Opex + Combustible (fuel) costs + CO2 costs + Disposal costs 
