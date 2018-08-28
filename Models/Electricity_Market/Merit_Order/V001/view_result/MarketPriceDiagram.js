@@ -3,8 +3,8 @@ class MarketPriceDiagram {
         let obj = this;
         this.run = 0;
 
-
-
+        this.cost_units = {'E_J': 1E0,'E_kWh': 1/3.6E6,'E_MWh': 1/3.6E9};
+        this.cost_unit = 'E_MWh';
 
         this.data = null;
 
@@ -51,7 +51,7 @@ class MarketPriceDiagram {
             .attr("transform", "rotate(-90)")
             .attr("y", -30)
             .attr("fill", "#000")
-            .text("Marktpreis [CHF/MWh]");
+            .text("Marktpreis [€/MWh]");
 
         this.legend = this.createLegend(this.g);
     }
@@ -203,12 +203,14 @@ class MarketPriceDiagram {
             let dn_ids = result.p.distribution_networks;
             let p = result.p.prices;
 
+
+
             let d = [];
             for(let i_t = 0; i_t < t.length; i_t++) {
                 d[i_t] = {};
                 d[i_t].date = new Date(t[i_t]*1E3);
                 for(let i_dn = 0; i_dn < dn_ids.length; i_dn++) {
-                    d[i_t][dn_ids[i_dn]] = p[i_dn][i_t];
+                    d[i_t][dn_ids[i_dn]] = p[i_dn][i_t]/this.cost_units[this.cost_unit];
                 }
             }
             d.columns = Object.keys(d[0]);

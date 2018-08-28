@@ -17,17 +17,17 @@ class Model(Supermodel):
                                       info='European power demand for each time step')
         self.inputs['power'] = Input(name='Power', unit='W',
                                      info='Power for each power plant and time step')
-        self.inputs['marginal_costs'] = Input(name='Marginal costs', unit='$/J',
+        self.inputs['marginal_costs'] = Input(name='Marginal costs', unit='€/J',
                                               info='Marginal costs for each power plant and time step')
-        self.inputs['distance_costs'] = Input(name='Distance costs', unit='$/J',
+        self.inputs['distance_costs'] = Input(name='Distance costs', unit='€/J',
                                               info='Distance costs for each power plant and distribution network')
 
         self.properties["filter_ts"] = Property(default=0, data_type=int, name='Filter time step for view', info='Filter info', example='exampl')
         self.properties["filter_dn"] = Property(default=0, data_type=int, name='Filter distribution network for view')
         self.properties["filter_dn"] = Property(default=0, data_type=int, name='Filter distribution network for view')
 
-        self.outputs['market_prices'] = Output(name='Market prices', unit='$',
-                                               info='Market prices for each distribution network and time step')
+        self.outputs['market_prices'] = Output(name='Market prices', unit='€/J',
+                                               info='Market prices for each distribution network')
         self.outputs['all_data'] = Output(name='All Data', unit='-',
                                                info='All data sorted by merit order for each distribution network and time step')
 
@@ -36,7 +36,7 @@ class Model(Supermodel):
     async def func_peri(self, prep_to_peri=None):
         demands = await self.get_input("demand")  # f(time)
         powers = await self.get_input("power")  # f(time, pp)
-        marginal_costs = await self.get_input("marginal_costs")  # f(time, pp)
+        marginal_costs = await self.get_input("marginal_costs")  # f(pp)
         distance_costs = await self.get_input("distance_costs")  # f(pp, distNet)
         times = await self.get_input("fut")
 

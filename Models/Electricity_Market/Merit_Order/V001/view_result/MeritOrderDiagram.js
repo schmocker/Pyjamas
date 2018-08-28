@@ -3,7 +3,10 @@ class MeritOrderDiagram {
         this.run = 0;
 
         this.power_units = {'W': 1E0,'kW': 1E3,'MW': 1E6,'GW': 1E9,'TW': 1E12};
-        this.power_unit = 'TW';
+        this.power_unit = 'MW';
+        //this.cost_units = {'E_J': 1E0,'E_kWh': 1/3.6E6,'E_MWh': 1/3.6E3};
+        this.cost_units = {'E_J': 1E0,'E_kWh': 1/3.6E6,'E_MWh': 1/3.6E9};
+        this.cost_unit = 'E_MWh';
 
         this.data = null;
 
@@ -115,7 +118,7 @@ class MeritOrderDiagram {
 
             this.priceText
                 .transition().duration(updateSpeed)
-                .text(function () { return "Market price: " + data.price.toFixed(2) + " CHF/MWh" })
+                .text(function () { return "Market price: " + data.price.toFixed(2) + " €/MWh" }) //text('Power ['+this.power_unit+']') // TODO Anpassen der units analog power
                 .attr('y', function () { return obj.yScale(data.price)-5 })
                 .attr('x', 5);
 
@@ -166,8 +169,10 @@ class MeritOrderDiagram {
             for(let i = 0; i < pps.p.length; i++) {
                 rect[i] = {};
                 rect[i].id = pps.ids[i];
-                rect[i].mc = pps.m_c[i];
-                rect[i].dc = pps.d_c[i];
+//                rect[i].mc = pps.m_c[i];
+//                rect[i].dc = pps.d_c[i];
+                rect[i].mc = pps.m_c[i]/this.cost_units[this.cost_unit];
+                rect[i].dc = pps.d_c[i]/this.cost_units[this.cost_unit];
                 rect[i].p = pps.p[i]/this.power_units[this.power_unit];
                 if(i===0){
                     rect[i].p_i = 0;
@@ -181,7 +186,8 @@ class MeritOrderDiagram {
             data = {'rect': rect,
                 'dn_id': result.dn_id,
                 'd': result.d/this.power_units[this.power_unit],
-                'price': result.price};
+                'price': result.price/this.cost_units[this.cost_unit]};
+//                'price': result.price};
         }
         this.data = data
     }
