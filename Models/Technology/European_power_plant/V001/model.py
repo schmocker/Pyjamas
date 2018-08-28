@@ -188,7 +188,7 @@ class Model(Supermodel):
                "bez_kraftwerkstyp": db_kwt_bez,  # [-]
                "bez_subtyp": db_kwt_bez_subtyp,  # [-]
                "wirkungsgrad": db_kwt_wirkungsgrad,  # [-]
-               "spez_opex": varopex_int,  # [€/J]
+               "var_opex": varopex_int,  # [€/J]
                "capex": capex_int,  # [€/W_el]
                "p_typisch": db_kwt_p_typisch,  # [W]
                "spez_info": db_kwt_spez_info,  # dict with "NH" [m] and "Z0" [m]

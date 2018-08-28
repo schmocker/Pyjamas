@@ -1,23 +1,21 @@
 # Marginal cost
-
-Determine the marginal cost of each power plant
+Determines the marginal cost of each power plant.
 
 ## Inputs
-The inputs to this model are:
-
-1. OPEX - Dictionary containing power plant ids and operating expenses of all power plants
-1. PowerPlantsData - Dictionary holding the different required parameters of power plants
-
+The input to this model is a dictionary holding the different parameters of power plants.
 
 ## Outputs
-The output of this model is:
+*dict* of form {"key": value,...}\
+Each key/value pair consists of a string (key) and a list containing the corrsponding value for each power plant,
+sorted after power plant id.
 
-1. MarginalCost - Dictionary containing power plant ids in one list and corresponding calculated marginal cost of all
-power plants in other list
-
+Key | Description | Unit
+--- | --- | --- |
+"power_plant_id" | power plant ID | [-]
+"MarginalCost" | power plant name | [€/J]
 
 ## Properties
-
+None
 
 ## Remarks
 Output dictionary is sorted according to the incoming id's in PowerPlantData.

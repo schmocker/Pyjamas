@@ -11,43 +11,49 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['opex'] = Input('OPEX', unit='[€/J]')
         self.inputs['KWDaten'] = Input('PowerPlantsData', unit='[€/J]', info='brennstoff-, co2- und entsorgungskosten')
 
         # define outputs
         self.outputs['Grenzkosten'] = Output('MarginalCost', unit='[€/J]')
 
-
-
     async def func_peri(self, prep_to_peri=None):
         # get inputs
-        OPEX = await self.get_input('opex')
         KWDaten = await self.get_input('KWDaten')
 
-        Grenzkosten = self.marginalcost(OPEX, KWDaten)
+        # Grenzkosten = self.marginalcost(KWDaten)
+        idx = KWDaten['id']
+        opex = KWDaten['var_opex']
+        bs_kosten = KWDaten['brennstoffkosten']
+        co2_kosten = KWDaten['co2_kosten']
+        ents_kosten = KWDaten['entsorgungskosten']
+
+        Grenzkosten = [a+b+c+d for a, b, c, d in zip(opex, bs_kosten, co2_kosten, ents_kosten)]
+
+        Grenzkosten = {'power_plant_id': idx, 'MarginalCost': Grenzkosten}
+
 
         # set output
         self.set_output("Grenzkosten", Grenzkosten)
 
+    # # define additional methods (normal)
+    # def marginalcost(self, KWDaten):
+    #
+    #     idx = KWDaten['id']
+    #     opex = KWDaten['var_opex']
+    #     bs_kosten = KWDaten['brennstoffkosten']
+    #     co2_kosten = KWDaten['co2_kosten']
+    #     ents_kosten = KWDaten['entsorgungskosten']
+    #
+    #     Grenzkosten = [a+b+c+d for a, b, c, d in zip(opex, bs_kosten, co2_kosten, ents_kosten)]
+    #
+    #     Grenzkosten = {'power_plant_id': idx, 'MarginalCost': Grenzkosten}
+    #
+    #     return Grenzkosten
 
-    # define additional methods (normal)
-    def marginalcost(self, OPEX, KWDaten):
-        # Determine the marginal cost[$/J] of each power plant
+
+        # Determine the marginal cost[€/J] of each power plant
         ################################################################################################################
         # Input Arguments:
-        # OPEX: Dictionary containing power plant ids and operating expenses of all power plants
-        # -----------------
-        #   id     opex   Note: Input dictionary is sorted according to KWDaten
-        # -----------------
-        #   1    array(96)
-        #   3    array(96)
-        #   5    array(96)
-        #   2    array(96)
-        #   4    array(96)
-        #   6    array(96)
-        #   8    array(96)
-        #   10   array(96)
-        #   11   array(96)
         #
         # KWDaten: Dictionary holding the different parameters of power plants
         # ----------------------------------------------------------------------------------------------
@@ -81,23 +87,21 @@ class Model(Supermodel):
         #  10   array(96)
         #  11   array(96)
         ################################################################################################################
-        KWDatenID = KWDaten['id']
 
-        def make_cost_for_one_plant(kw_id):
-            index_of_kwid_in_OPEX = OPEX['power_plant_id'].index(kw_id)
-            OPEX_for_kwid = OPEX['opex'][index_of_kwid_in_OPEX]
-            OPEXP = np.array(OPEX_for_kwid)
-            index_of_kwid_in_KWDaten = KWDaten['id'].index(kw_id)
-            brennstoffkosten_for_kwid = KWDaten['brennstoffkosten'][index_of_kwid_in_KWDaten]
-            co2kosten_for_kwid = KWDaten['co2_kosten'][index_of_kwid_in_KWDaten]
-            entsorgungskosten_for_kwid = KWDaten['entsorgungskosten'][index_of_kwid_in_KWDaten]
-            #kev_for_kwid = KWDaten['kev'][index_of_kwid_in_KWDaten]
-            #KEV = np.array(kev_for_kwid)
 
-            Grenzkosten = OPEXP + brennstoffkosten_for_kwid + co2kosten_for_kwid + entsorgungskosten_for_kwid
-            return Grenzkosten.tolist()
-
-        GrenzkostenForAllPlants = [make_cost_for_one_plant(id) for id in KWDatenID]
-
-        Grenzkosten = {'power_plant_id': KWDatenID, 'MarginalCost': GrenzkostenForAllPlants}
-        return Grenzkosten
+        # def make_cost_for_one_plant(kw_id):
+        #     index_of_kwid_in_OPEX = OPEX['power_plant_id'].index(kw_id)
+        #     OPEX_for_kwid = OPEX['opex'][index_of_kwid_in_OPEX]
+        #     OPEXP = np.array(OPEX_for_kwid)
+        #     index_of_kwid_in_KWDaten = KWDaten['id'].index(kw_id)
+        #     brennstoffkosten_for_kwid = KWDaten['brennstoffkosten'][index_of_kwid_in_KWDaten]
+        #     co2kosten_for_kwid = KWDaten['co2_kosten'][index_of_kwid_in_KWDaten]
+        #     entsorgungskosten_for_kwid = KWDaten['entsorgungskosten'][index_of_kwid_in_KWDaten]
+        #
+        #     Grenzkosten = OPEXP + brennstoffkosten_for_kwid + co2kosten_for_kwid + entsorgungskosten_for_kwid
+        #     return Grenzkosten.tolist()
+        #
+        # GrenzkostenForAllPlants = [make_cost_for_one_plant(id) for id in KWDatenID]
+        #
+        # Grenzkosten = {'power_plant_id': KWDatenID, 'MarginalCost': GrenzkostenForAllPlants}
+        # return Grenzkosten
