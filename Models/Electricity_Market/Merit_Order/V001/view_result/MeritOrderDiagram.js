@@ -3,7 +3,7 @@ class MeritOrderDiagram {
         this.run = 0;
 
         this.power_units = {'W': 1E0,'kW': 1E3,'MW': 1E6,'GW': 1E9,'TW': 1E12};
-        this.power_unit = 'MW';
+        this.power_unit = 'GW';
         //this.cost_units = {'E_J': 1E0,'E_kWh': 1/3.6E6,'E_MWh': 1/3.6E3};
         this.cost_units = {'E_J': 1E0,'E_kWh': 1/3.6E6,'E_MWh': 1/3.6E9};
         this.cost_unit = 'E_MWh';
