@@ -45,8 +45,10 @@ OPEX = pd.read_excel(source_file, sheet_name='OPEX')  # Variabler Opex
 
 
 # ------------------------- fill database ---------------------------------------
+# pandas reads integers as Int64, which leads to problems with mysql/sqlalchemy
+# therefore integers are converted to Int (id=int(...)
 
-# ################### Brennstofftyp #############################
+# Brennstofftyp
 session.query(Brennstofftyp).delete()
 session.commit()
 
@@ -62,7 +64,7 @@ except exc.IntegrityError as e:
     print(e)
     session.rollback()
 
-# ################### Brennstoffpreis #############################
+# Brennstoffpreis
 session.query(Brennstoffpreis).delete()
 session.commit()
 
@@ -81,7 +83,7 @@ except exc.IntegrityError as e:
     print(e)
     session.rollback()
 
-# ################### Kraftwerkstyp #############################
+# Kraftwerkstyp
 session.query(Kraftwerkstyp).delete()
 session.commit()
 
@@ -101,7 +103,7 @@ except exc.IntegrityError as e:
     print(e)
     session.rollback()
 
-# ################### Kraftwerk #############################
+# Kraftwerk
 session.query(Kraftwerk).delete()
 session.commit()
 
@@ -119,7 +121,7 @@ except exc.IntegrityError as e:
     print(e)
     session.rollback()
 
-# ################### Kraftwerksleistung #############################
+# Kraftwerksleistung
 session.query(Kraftwerksleistung).delete()
 session.commit()
 
@@ -136,7 +138,7 @@ except exc.IntegrityError as e:
     print(e)
     session.rollback()
 
-# ################### VarOpex ######################################
+# VarOpex
 session.query(VarOpex).delete()
 session.commit()
 
@@ -153,7 +155,7 @@ except exc.IntegrityError as e:
     print(e)
     session.rollback()
 
-# ################### Capex ########################################
+# Capex
 session.query(Capex).delete()
 session.commit()
 
@@ -170,7 +172,7 @@ except exc.IntegrityError as e:
     print(e)
     session.rollback()
 
-# ################### Entsorgungspreis #############################
+# Entsorgungspreis
 session.query(Entsorgungspreis).delete()
 session.commit()
 
@@ -188,7 +190,7 @@ except exc.IntegrityError as e:
     print(e)
     session.rollback()
 
-# ################### Co2Preis #############################
+# Co2Preis
 session.query(Co2Preis).delete()
 session.commit()
 
