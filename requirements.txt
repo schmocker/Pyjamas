@@ -7,22 +7,21 @@ bcrypt
 Flask
 flask_security
 flask_sqlalchemy
-pymysql
-
-markdown2
-pygments
-sqlalchemy
-python-dotenv
 
 # required for models
-datetime
-pytz
-numpy
-sqlalchemy
 bson
-scipy
+datetime
+geopy
+markdown2
+matplotlib
+numpy
 paho-mqtt
 pandas
+pygments
+pymysql
+python-dotenv
+pytz
 requests
-geopy
-matplotlib
+scipy
+sqlalchemy
+xlrd
