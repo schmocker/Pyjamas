@@ -68,10 +68,10 @@ session.commit()
 
 for i, _ in BSP.iterrows():
     bsp = Brennstoffpreis(id=int(BSP['id'][i]),
-                          fk_brennstofftyp=BSP['fk_brennstofftyp'][i],
+                          fk_brennstofftyp=int(BSP['fk_brennstofftyp'][i]),
                           long=BSP['long'][i],
                           lat=BSP['lat'][i],
-                          datetime=BSP['unix timestamp'][i],
+                          datetime=int(BSP['unix timestamp'][i]),
                           preis=BSP['preis'][i]
                           )
     session.add(bsp)
@@ -89,7 +89,7 @@ for i, _ in KWT.iterrows():
     kwt = Kraftwerkstyp(id=int(KWT['id'][i]),
                         bezeichnung=KWT['bezeichnung'][i],
                         bezeichnung_subtyp=KWT['bezeichnung_subtyp'][i],
-                        fk_brennstofftyp=KWT['fk_brennstofftyp'][i],
+                        fk_brennstofftyp=int(KWT['fk_brennstofftyp'][i]),
                         wirkungsgrad=KWT['wirkungsgrad'][i],
                         p_typisch=KWT['p_typisch'][i],
                         spez_info=KWT['spez_info'][i]
@@ -108,7 +108,7 @@ session.commit()
 for i, _ in KW.iterrows():
     kw = Kraftwerk(id=int(KW['id'][i]),
                    bezeichnung=KW['bezeichnung'][i],
-                   fk_kraftwerkstyp=KW['fk_kraftwerkstyp'][i],
+                   fk_kraftwerkstyp=int(KW['fk_kraftwerkstyp'][i]),
                    long=KW['long'][i],
                    lat=KW['lat'][i]
                    )
@@ -125,9 +125,9 @@ session.commit()
 
 for i, _ in KWL.iterrows():
     kwl = Kraftwerksleistung(id=int(KWL['id'][i]),
-                             fk_kraftwerk=KWL['fk_kraftwerk'][i],
+                             fk_kraftwerk=int(KWL['fk_kraftwerk'][i]),
                              power_inst=KWL['power_inst'][i],
-                             datetime=KWL['unix timestamp'][i]
+                             datetime=int(KWL['unix timestamp'][i])
                              )
     session.add(kwl)
 try:
@@ -142,8 +142,8 @@ session.commit()
 
 for i, _ in OPEX.iterrows():
     var_opex = VarOpex(id=int(OPEX['id'][i]),
-                       fk_kraftwerkstyp=OPEX['fk_kraftwerkstyp'][i],
-                       datetime=OPEX['unix timestamp'][i],
+                       fk_kraftwerkstyp=int(OPEX['fk_kraftwerkstyp'][i]),
+                       datetime=int(OPEX['unix timestamp'][i]),
                        preis=OPEX['preis'][i]
                        )
     session.add(var_opex)
@@ -159,8 +159,8 @@ session.commit()
 
 for i, _ in CAPEX.iterrows():
     capex = Capex(id=int(CAPEX['id'][i]),
-                  fk_kraftwerkstyp=CAPEX['fk_kraftwerkstyp'][i],
-                  datetime=CAPEX['unix timestamp'][i],
+                  fk_kraftwerkstyp=int(CAPEX['fk_kraftwerkstyp'][i]),
+                  datetime=int(CAPEX['unix timestamp'][i]),
                   preis=CAPEX['preis'][i]
                   )
     session.add(capex)
@@ -176,10 +176,10 @@ session.commit()
 
 for i, _ in ENTS.iterrows():
     entp = Entsorgungspreis(id=int(ENTS['id'][i]),
-                            fk_kraftwerkstyp=ENTS['fk_kraftwerkstyp'][i],
+                            fk_kraftwerkstyp=int(ENTS['fk_kraftwerkstyp'][i]),
                             long=ENTS['long'][i],
                             lat=ENTS['lat'][i],
-                            datetime=ENTS['unix timestamp'][i],
+                            datetime=int(ENTS['unix timestamp'][i]),
                             preis=ENTS['preis'][i],)
     session.add(entp)
 try:
@@ -194,7 +194,7 @@ session.commit()
 
 for i, _ in CO2.iterrows():
     co2p = Co2Preis(id=int(CO2['id'][i]),
-                    datetime=CO2['unix timestamp'][i],
+                    datetime=int(CO2['unix timestamp'][i]),
                     preis=CO2['preis'][i]
                     )
     session.add(co2p)
