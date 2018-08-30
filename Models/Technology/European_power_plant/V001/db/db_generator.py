@@ -50,43 +50,43 @@ OPEX = pd.read_excel(source_file, sheet_name='OPEX')  # Variabler Opex
 session.query(Brennstofftyp).delete()
 session.commit()
 
-for i in BST['id']:
-    bst = Brennstofftyp(id=BST['id'][i],
+for i, _ in BST.iterrows():
+    bst = Brennstofftyp(id=int(BST['id'][i]),
                         bezeichnung=BST['bezeichnung'][i],
-                        co2emissFakt=BST['co2faktor'][i]
+                        co2emissFakt=BST['co2EmissFaktor'][i]
                         )
     session.add(bst)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
 
 # ################### Brennstoffpreis #############################
 session.query(Brennstoffpreis).delete()
 session.commit()
 
-for i in BSP['id']:
-    bsp = Brennstoffpreis(id=BSP['id'][i],
+for i, _ in BSP.iterrows():
+    bsp = Brennstoffpreis(id=int(BSP['id'][i]),
                           fk_brennstofftyp=BSP['fk_brennstofftyp'][i],
                           long=BSP['long'][i],
                           lat=BSP['lat'][i],
-                          datetime=BSP['datetime'][i],
+                          datetime=BSP['unix timestamp'][i],
                           preis=BSP['preis'][i]
                           )
     session.add(bsp)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
 
 # ################### Kraftwerkstyp #############################
 session.query(Kraftwerkstyp).delete()
 session.commit()
 
-for i in KWT['id']:
-    kwt = Kraftwerkstyp(id=KWT['id'][i],
+for i, _ in KWT.iterrows():
+    kwt = Kraftwerkstyp(id=int(KWT['id'][i]),
                         bezeichnung=KWT['bezeichnung'][i],
                         bezeichnung_subtyp=KWT['bezeichnung_subtyp'][i],
                         fk_brennstofftyp=KWT['fk_brennstofftyp'][i],
@@ -95,111 +95,111 @@ for i in KWT['id']:
                         spez_info=KWT['spez_info'][i]
                         )
     session.add(kwt)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
 
 # ################### Kraftwerk #############################
 session.query(Kraftwerk).delete()
 session.commit()
 
-for i in KW['id']:
-    kw = Kraftwerk(id=KW['id'][i],
+for i, _ in KW.iterrows():
+    kw = Kraftwerk(id=int(KW['id'][i]),
                    bezeichnung=KW['bezeichnung'][i],
                    fk_kraftwerkstyp=KW['fk_kraftwerkstyp'][i],
                    long=KW['long'][i],
                    lat=KW['lat'][i]
                    )
     session.add(kw)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
 
 # ################### Kraftwerksleistung #############################
 session.query(Kraftwerksleistung).delete()
 session.commit()
 
-for i in KWL['id']:
-    kwl = Kraftwerksleistung(id=KWL['id'][i],
-                             fk_kraftwerk=KWL['fk_kraftwerkstyp'][i],
-                             power_inst=KWL['p_inst'][i],
-                             datetime=KWL['datetime'][i]
+for i, _ in KWL.iterrows():
+    kwl = Kraftwerksleistung(id=int(KWL['id'][i]),
+                             fk_kraftwerk=KWL['fk_kraftwerk'][i],
+                             power_inst=KWL['power_inst'][i],
+                             datetime=KWL['unix timestamp'][i]
                              )
     session.add(kwl)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
 
 # ################### VarOpex ######################################
 session.query(VarOpex).delete()
 session.commit()
 
-for i in OPEX['id']:
-    var_opex = VarOpex(id=OPEX['id'][i],
+for i, _ in OPEX.iterrows():
+    var_opex = VarOpex(id=int(OPEX['id'][i]),
                        fk_kraftwerkstyp=OPEX['fk_kraftwerkstyp'][i],
-                       datetime=OPEX['datetime'][i],
+                       datetime=OPEX['unix timestamp'][i],
                        preis=OPEX['preis'][i]
                        )
     session.add(var_opex)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
 
 # ################### Capex ########################################
 session.query(Capex).delete()
 session.commit()
 
-for i in CAPEX['id']:
-    capex = Capex(id=CAPEX['id'][i],
+for i, _ in CAPEX.iterrows():
+    capex = Capex(id=int(CAPEX['id'][i]),
                   fk_kraftwerkstyp=CAPEX['fk_kraftwerkstyp'][i],
-                  datetime=CAPEX['datetime'][i],
+                  datetime=CAPEX['unix timestamp'][i],
                   preis=CAPEX['preis'][i]
                   )
     session.add(capex)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
 
 # ################### Entsorgungspreis #############################
 session.query(Entsorgungspreis).delete()
 session.commit()
 
-for i in ENTS['id']:
-    entp = Entsorgungspreis(id=ENTS['id'][i],
+for i, _ in ENTS.iterrows():
+    entp = Entsorgungspreis(id=int(ENTS['id'][i]),
                             fk_kraftwerkstyp=ENTS['fk_kraftwerkstyp'][i],
                             long=ENTS['long'][i],
                             lat=ENTS['lat'][i],
-                            datetime=ENTS['datetime'][i],
+                            datetime=ENTS['unix timestamp'][i],
                             preis=ENTS['preis'][i],)
     session.add(entp)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
 
 # ################### Co2Preis #############################
 session.query(Co2Preis).delete()
 session.commit()
 
-for i in CO2['id']:
-    co2p = Co2Preis(id=CO2['id'][i],
-                    datetime=CO2['datetime'][i],
+for i, _ in CO2.iterrows():
+    co2p = Co2Preis(id=int(CO2['id'][i]),
+                    datetime=CO2['unix timestamp'][i],
                     preis=CO2['preis'][i]
                     )
     session.add(co2p)
-    try:
-        session.commit()
-    except exc.IntegrityError as e:
-        print(e)
-        session.rollback()
+try:
+    session.commit()
+except exc.IntegrityError as e:
+    print(e)
+    session.rollback()
