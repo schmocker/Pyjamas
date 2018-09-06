@@ -29,7 +29,7 @@ Key | Description | Unit
 "spez_opex" | variable OPEX | [€/J]
 "capex" | CAPEX | [€/W_el]
 "p_typisch" | typical power of power plant type | [W]
-"spez_info" | special info of power plant type| for wind power plants: dict containing hub height: "NH" [m] and ground roughness: "Z0" [m]
+"spez_info" | special info of power plant type| for wind turbines: dict containing hub height: "NH" [m] and ground roughness: "Z0" [m]
 "entsorgungspreis" | disposal price | [€/J_bs]
 "fk_brennstofftyp" | Foreign Key fuel type | [-]
 "brennstofftyp_id" | fuel type ID | [-]
