@@ -20,6 +20,7 @@ The property is:
 1. Network cost for medium voltage customers per MWh times traded energy amount within a year
 
 Rabiosa Churwalden: Netzkosten Mittelspannung 2017: Tag 4.40 Rp./kWh, Nacht 3.50 Rp./kWh => Mittel (Annahme) = 4 Rp./kWh
+=> annual network cost = 148E9 € for demand of 3700 TWh (Entso-e TYNDP2018_MAF)
 
 ## Remarks
 
