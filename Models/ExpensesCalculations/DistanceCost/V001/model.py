@@ -22,7 +22,7 @@ class Model(Supermodel):
         # define properties
         self.properties['dis_factor'] = Property('DistanceFactor', default=1, data_type=float, unit='[€/km*MWh]')
 
-        self.DistanzFaktor = 0
+        self.DistanzFaktor = None
 
     async def func_amend(self, keys=[]):
         if 'dis_factor' in keys:
