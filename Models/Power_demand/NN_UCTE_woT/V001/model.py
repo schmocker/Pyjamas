@@ -106,7 +106,7 @@ class Model(Supermodel):
         demand_GW = np.multiply(demand_GW,(1+self.get_property('offset')/100))
 
         # convert GW to W
-        demand = np.multiply(demand_GW, 10e9)
+        demand = np.multiply(demand_GW, 1e9)
 
         return demand.tolist()[0]
 
