@@ -45,11 +45,12 @@ class Model(Supermodel):
 
         Tmodule = 25  # Standard Test Condition temperature
         Pnominal = 1000  # 1kW base power
+        Rnominal = 1000     # Radiation at standard test conditions [W/m^2]
 
         # Output reduction[W] = (Actuell module temperature[°C] - 25°C) * (-0.0034 /°C) * Module's nominal power[W])
         OutputReduction = (Tmodule - 25) * 0.0034 * Pnominal
-        # PVs Output[W] = (Module's nominal power[W] - Output reduction[W])*(Solar irradiations [W/m2] /1000 W/m2)
-        DcPout = (Pnominal - OutputReduction) * (RadiationOnTiltedSurface / 1000)
+        # PVs Output[W] = (Module's nominal power[W] - Output reduction[W])*(Solar irradiations [W/m2] /Radiation standard W/m2)
+        DcPout = (Pnominal - OutputReduction) * (RadiationOnTiltedSurface / Rnominal)
 
         Auslastung = DcPout / Pnominal  # Auslastung = ProducedPower/Pnominal
         return Auslastung
