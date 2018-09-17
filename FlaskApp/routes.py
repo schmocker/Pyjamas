@@ -30,7 +30,7 @@ def agents():
 
         if fnc == 'remove_agent':
             agent_id = request.form.get('agent_id', None, int)
-            Agent.remove(agent_id)
+            Agent.remove_agent(agent_id)
             return redirect(url_for('.agents'))
 
         elif fnc == 'add_agent':
