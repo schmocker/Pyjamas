@@ -5,7 +5,7 @@ from core import Controller
 
 
 # instantiate Controller from pyjamas core
-controller = Controller(logging_path='logs', DEBUG=True)
+controller = Controller(logging_path='logs', DEBUG=app.config['FLASK_DEBUG'])
 print("CONTROLLER CREATED")
 
 # instantiate SQLAlchemy for db usage

@@ -11,7 +11,7 @@ load_dotenv()
 
 FLASK_HOST = environ.get("FLASK_HOST", default='0.0.0.0')
 FLASK_PORT = environ.get("FLASK_PORT", default=5000)
-FLASK_DEBUG = environ.get("FLASK_DEBUG", default=True)
+FLASK_DEBUG = environ.get("FLASK_DEBUG", default=False)
 FLASK_DEBUG = True if FLASK_DEBUG in [True, 1, 'True'] else False
 
 FLASK_USER_EMAIL = environ.get("FLASK_USER_EMAIL", default='user@pyjamas.com')
