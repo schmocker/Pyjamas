@@ -40,6 +40,7 @@ Key | Description | Unit
 "co2_kosten" | CO2 costs | [€/J_el]
 "entsorgungskosten" | disposal costs | [€/J_el]
 "brennstoffkosten" | fuel costs | [€/J_el]
+"grenzkosten" | marginal costs | [€/J_el]
 
 ## Properties
 *None*
