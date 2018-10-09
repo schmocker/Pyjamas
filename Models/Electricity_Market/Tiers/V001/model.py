@@ -22,9 +22,11 @@ class Model(Supermodel):
         self.inputs['distnet_costs'] = Input(name='Distribution network cost', unit='{-, €/J}', info="distribution network cost")
         self.inputs['service_cost'] = Input(name='Service cost', unit='€/J', info="service cost")
         self.inputs['taxes'] = Input(name='Taxes', unit='€/J', info="taxes")
+        self.inputs['futures'] = Input(name='Futures', unit='s', info="Futures")
 
         # define outputs
         self.outputs['el_rate'] = Output(name='Electricity rate', unit='???', info='electricity rate')
+        self.outputs['times'] = Output(name='Times', unit='s', info='Times')
 
         # define properties
         ET_def = {"location": ['Baden'],
@@ -114,6 +116,8 @@ class Model(Supermodel):
 
         # set output
         self.set_output("el_rate", output)
+
+        self.set_output("times", await self.get_input('futures'))
 
     def det_border_tiers(self, it):
 
