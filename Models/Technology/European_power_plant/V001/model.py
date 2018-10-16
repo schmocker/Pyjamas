@@ -158,7 +158,7 @@ class Model(Supermodel):
 
         # ---------------------- CALCULATION ------------------------------------------
         # calculation CO2-Kosten
-        co2_kosten = [a*b+c for a, b, c in zip(co2_preis_int, db_bst_co2emissfakt, db_kwt_wirkungsgrad)]
+        co2_kosten = [a*b/c for a, b, c in zip(co2_preis_int, db_bst_co2emissfakt, db_kwt_wirkungsgrad)]
 
         # calculation Entsorgungskosten
         ents_kosten = [a/b for a, b in zip(ents_preis_int, db_kwt_wirkungsgrad)]
@@ -170,32 +170,29 @@ class Model(Supermodel):
         grenz_kosten = [a+b+c+d for a, b, c, d in zip(varopex_int, bs_kosten, co2_kosten, ents_kosten)]
 
         # ------- OLD VERSION OF CALCULATION ------------------------------------------
-        # # calculation CO2-Kosten
-        # co2_kosten = []
+        # calculation CO2-Kosten
+        # co2_kosten_2 = []
         # for idx, kw in enumerate(db_kw):
         #     co2_emissfakt = kw.kraftwerkstyp.brennstofftyp.co2emissFakt
         #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-        #     co2_kosten = co2_kosten + [co2_preis_int[idx] * co2_emissfakt / wirkungsgrad]
+        #     co2_kosten_2 = co2_kosten_2 + [co2_preis_int[idx] * co2_emissfakt / wirkungsgrad]
         #
         # # calculation Entsorgungskosten
-        # ents_kosten = []
+        # ents_kosten_2 = []
         # for idx, kw in enumerate(db_kw):
         #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-        #     ents_kosten = ents_kosten + [ents_preis_int[idx] / wirkungsgrad]
+        #     ents_kosten_2 = ents_kosten_2 + [ents_preis_int[idx] / wirkungsgrad]
         #
         # # calculation Brennstoffkosten
-        # bs_kosten = []
+        # bs_kosten_2 = []
         # for idx, kw in enumerate(db_kw):
         #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-        #     bs_kosten = bs_kosten + [bs_preis_int[idx] / wirkungsgrad]
+        #     bs_kosten_2 = bs_kosten_2 + [bs_preis_int[idx] / wirkungsgrad]
         #
         # # calculation Grenzkosten (Marginal Cost)
-        # grenz_kosten = []
+        # grenz_kosten_2 = []
         # for idx, kw in enumerate(db_kw):
-        #     opex
-        #     bs_kosten
-        #     co2_kosten
-        #     ents_kosten
+        #     grenz_kosten_2 = grenz_kosten_2 + [varopex_int[idx] + bs_kosten_2[idx] + co2_kosten_2[idx] + ents_kosten_2[idx]]
 
         # ---------------------- DEFINE OUTPUTS ---------------------------------------
         # output sorted by id, units in comments
@@ -413,22 +410,8 @@ def create_db():
     return session
 
 
-# Create empty database
-def create_empty_db():
-    load_dotenv()
-    db_path = environ.get("KW_DB_empty")
-
-    # an engine is the real DB
-    engine = create_engine(db_path)
-
-    # delete all tables
-    Base.metadata.drop_all(engine)
-    # create all tables
-    Base.metadata.create_all(engine)
-
-
 if __name__ == "__main__":
-    # # possibility to create dummy data
+    # possibility to create dummy data
     # db = create_db()
     #
     # kws = db.query(Kraftwerk).all()
