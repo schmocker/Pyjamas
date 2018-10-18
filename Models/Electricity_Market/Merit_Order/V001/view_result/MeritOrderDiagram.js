@@ -52,7 +52,7 @@ class MeritOrderDiagram {
 
             // Scale the range of the data
             this.xScale.domain([0, d3.max(data.rect, function(d) { return d.p_j; })*1.05]);
-            this.yScale.domain([0, (data.rect[data.rect.length-1].mc + data.rect[data.rect.length-1].dc)*1.05]);
+            this.yScale.domain([0, d3.max(data.rect, function(d) { return d.tc;  })*1.05]);
             let svg = this.svg;
 
             let powerplant = svg.selectAll('.powerplant').data(data.rect);
@@ -69,6 +69,7 @@ class MeritOrderDiagram {
             new_powerplant.on("mouseover", function(d) {
                 let div = obj.div;
                 let html = "Power plant: " + d.id;
+                html += "<br/>Info: " + d.info;
                 html += "<br/>Power: " + d.p.toFixed(2);
                 html += "<br/>Marginal costs: " + d.mc.toFixed(2);
                 html += "<br/>Distance costs: " + d.dc.toFixed(2);
@@ -105,13 +106,13 @@ class MeritOrderDiagram {
 
             this.demandLine
                 .transition().duration(updateSpeed)
-                .attr("x1", function () { return obj.xScale(data.d)})
-                .attr("x2", function () { return obj.xScale(data.d)})
+                .attr("x1", function () { return obj.xScale(data.demand)})
+                .attr("x2", function () { return obj.xScale(data.demand)})
                 .attr("y1", function () { return obj.yScale(0)})
                 .attr("y2", function () { return obj.yScale(data.price)});
             this.priceLine
                 .transition().duration(updateSpeed)
-                .attr("x1", function () { return obj.xScale(data.d)})
+                .attr("x1", function () { return obj.xScale(data.demand)})
                 .attr("x2", function () { return obj.xScale(0)})
                 .attr("y1", function () { return obj.yScale(data.price)})
                 .attr("y2", function () { return obj.yScale(data.price)});
@@ -155,25 +156,31 @@ class MeritOrderDiagram {
 
 
     async updateData(){
-        let data = await get('get_mu_results', {'mu_id': mu_id, 'mu_run': this.run, 'filter': {
-                'pp': ['all_data', 'power_plants', i_dn, i_ts],
-                'dn_id': ['all_data', 'distribution_networks', i_dn],
-                'd': ['all_data', 'demand', i_ts],
-                'price': ['all_data', 'market_price', i_dn, i_ts]}});
+        let filter = {
+            'pp_ids': ['sorted_pp_id', 'pp_ids', i_dn],
+            'pp': ['power_plants2'],
+            'price': ['market_prices', 'prices', i_dn, i_ts],
+            'demand': ['demands2']};
+        let data = await get('get_mu_results', {'mu_id': mu_id, 'mu_run': this.run, 'filter': filter});
         if (data){
             this.run = data.run;
             let result = data.result;
             let pps = result.pp;
+            let pp_ids = result.pp_ids;
 
             let rect = [];
-            for(let i = 0; i < pps.p.length; i++) {
+            for(let i = 0; i < pp_ids.length; i++) {
+                let pp_id = pp_ids[i];
+                let i_pps = pps.id.findIndex(function(i){return i==pp_id;});
                 rect[i] = {};
-                rect[i].id = pps.ids[i];
+                rect[i].id = pps.id[i_pps];
 //                rect[i].mc = pps.m_c[i];
 //                rect[i].dc = pps.d_c[i];
-                rect[i].mc = pps.m_c[i]/this.cost_units[this.cost_unit];
-                rect[i].dc = pps.d_c[i]/this.cost_units[this.cost_unit];
-                rect[i].p = pps.p[i]/this.power_units[this.power_unit];
+                rect[i].info = pps.kw_bezeichnung[i_pps];
+                rect[i].mc = pps.grenzkosten[i_pps]             /this.cost_units[this.cost_unit];
+                rect[i].dc = pps.distance_costs[i_pps][i_dn]    /this.cost_units[this.cost_unit];
+                rect[i].tc = pps.total_costs[i_pps][i_dn]       /this.cost_units[this.cost_unit];
+                rect[i].p = pps.load[i_pps][i_ts]               /this.power_units[this.power_unit];
                 if(i===0){
                     rect[i].p_i = 0;
                 } else {
@@ -184,12 +191,9 @@ class MeritOrderDiagram {
             rect.colums = Object.keys(rect[0]);
 
             data = {'rect': rect,
-                'dn_id': result.dn_id,
-                'd': result.d/this.power_units[this.power_unit],
+                'demand': result.demand[i_ts]/this.power_units[this.power_unit],
                 'price': result.price/this.cost_units[this.cost_unit]};
-//                'price': result.price};
         }
         this.data = data
     }
-
 }

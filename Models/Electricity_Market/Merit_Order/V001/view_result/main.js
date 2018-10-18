@@ -32,9 +32,9 @@ window.onload = async function() {
 
 async function updateAll(updateSpeed) {
     await mo_diag.updateData();
-    await mp_diag.updateData();
-
     mo_diag.updateView(updateSpeed);
+
+    await mp_diag.updateData();
     mp_diag.updateView(updateSpeed);
 }
 
