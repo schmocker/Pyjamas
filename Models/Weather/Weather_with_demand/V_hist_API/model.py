@@ -19,7 +19,6 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['mode'] = Input(name='modus', unit='-', info="modus (is live of not")
         self.inputs['KW'] = Input(name='KW info', unit='-', info="KW information (u.a. id, lat, lon)")
         self.inputs['date'] = Input(name='Futures', unit='s', info="Time vector of futures in utc timestamp [s]")
         self.inputs['Demand_loc'] = Input(name='Demand locations', unit='id, lat, long', info="Demand locations (one location per country)")
@@ -53,7 +52,6 @@ class Model(Supermodel):
     async def func_peri(self, prep_to_peri=None):
 
         # inputs
-        islive = await self.get_input('mode')
         KW_data_orig = await self.get_input('KW')
         KW_data = {k: KW_data_orig[k] for k in ('id', 'bez_kraftwerkstyp', 'lat', 'long')}
         futures = await self.get_input('date')
