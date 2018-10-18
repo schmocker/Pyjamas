@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
+import pandas as pd
 
 class Model(Supermodel):
 
@@ -17,8 +18,8 @@ class Model(Supermodel):
                                       info='European power demand for each time step')
         self.inputs['power'] = Input(name='Power', unit='W',
                                      info='Power for each power plant and time step')
-        self.inputs['marginal_costs'] = Input(name='Marginal costs', unit='€/J',
-                                              info='Marginal costs for each power plant')
+        self.inputs['power_plants'] = Input(name='Power Plants', unit='-',
+                                              info='Power Plants')
         self.inputs['distance_costs'] = Input(name='Distance costs', unit='€/J',
                                               info='Distance costs for each power plant and distribution network')
 
@@ -36,9 +37,20 @@ class Model(Supermodel):
     async def func_peri(self, prep_to_peri=None):
         demands = await self.get_input("demand")  # f(time)
         powers = await self.get_input("power")  # f(time, pp)
-        marginal_costs = await self.get_input("marginal_costs")  # f(pp)
+        power_plants = await self.get_input("power_plants")  # f(pp)
         distance_costs = await self.get_input("distance_costs")  # f(pp, distNet)
         times = await self.get_input("fut")
+
+        marginal_costs = {'MarginalCost': power_plants['grenzkosten'], 'power_plant_id': power_plants['id']}
+
+        # add load to power plant
+        power_plants['load'] = []
+        for id in power_plants['id']:
+            index = [index for index, item in enumerate(powers['power_plant_id']) if item == id][0]
+            load = powers['scaled_power'][index]
+            power_plants['load'].append(load)
+
+        NPA = pd.DataFrame.from_dict(power_plants)
 
         data = {'distribution_networks': distance_costs['distribution_networks'],
                 'times': times,
