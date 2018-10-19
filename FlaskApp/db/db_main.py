@@ -22,14 +22,22 @@ from .connection import Connection
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore)
 
-# create db on first startup
+
 @app.before_first_request
+def first_reuqest():
+    print('first start')
+    create_user()
+    create_all()
+    print('first start done')
+
+
+# create db on first startup
 def create_all():
     db.create_all()
     Model.update_all()
 
+
 # delete and recreate the default user
-@app.before_first_request
 def create_user():
     default_user = User.query.filter_by(email=app.config.get('FLASK_USER_EMAIL')).first()
     if default_user:

@@ -8,11 +8,11 @@ class MarketPriceDiagram {
 
         this.data = null;
 
-        this.filter = {'t': ['all_data', 'times'], 'p': ['market_prices']};
+        this.filter = {'t': ['fut2'], 'p': ['market_prices']};
 
         this.div = parent.append("div").attr("class", "tooltip");
 
-        this.margin = {top: 50, right: 50, bottom: 100, left: 50};
+        this.margin = {top: 50, right: 80, bottom: 100, left: 80};
         this.width = window.innerWidth - this.margin.left - this.margin.right;
         this.height = parent.node().getBoundingClientRect().height - this.margin.top - this.margin.bottom;
 
@@ -75,7 +75,7 @@ class MarketPriceDiagram {
             this.xScale.domain(d3.extent(data, function(d) { return d.date; }));
             this.yScale.domain([
                 0, //d3.min(dist_nets, function(c) { return d3.min(c.values, function(d) { return d.y; }); }),
-                50//d3.max(dist_nets, function(c) { return d3.max(c.values, function(d) { return d.y; }); })
+                d3.max(dist_nets, function(c) { return d3.max(c.values, function(d) { return d.y; }); })*1.05
             ]);
             this.zScale.domain(dist_nets.map(function(c) { return c.id; }));
 
@@ -161,7 +161,7 @@ class MarketPriceDiagram {
         // update
         legend = this.legend.selectAll('.legend_item');
         legend.attr("transform", function (d, i) {
-            return "translate(" + 100*i + "," + 330 + ")"
+            return "translate(" + 140*i + "," + 530 + ")"
         });
         legend.select('rect').style('fill', function(d) { return obj.zScale(d); });
         legend.select('text').text(function (d) { return d });

@@ -15,7 +15,6 @@ class Menu {
             .classed('dn_select', true)
             .on('change',async function () {
                 let selectValue = d3.select(this).property('value');
-                selectValue = parseInt(selectValue);
                 i_dn = obj.dns.indexOf(selectValue);
                 mo_diag.run = 0;
                 await updateAll(500);
@@ -25,7 +24,7 @@ class Menu {
 
 
 
-        this.filter = {'t': ['all_data', 'times'], 'dn': ['all_data', 'distribution_networks']};
+        this.filter = {'t': ['fut2'], 'dn': ['sorted_pp_id', 'distribution_networks']};
 
         let radius = 9;
         let margin_hor = radius;  // this.time_svg.node().getBoundingClientRect().width/20;

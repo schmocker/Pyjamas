@@ -41,7 +41,7 @@ def agents():
         elif fnc == 'rename_agent':
             id = request.form.get('agent_id', None, int)
             name = request.form.get('agent_name', None, str)
-            Agent.rename(id, name)
+            Agent.rename_agent(id, name)
             return redirect(url_for('.agents'))
 
         elif fnc == 'copy_agent':
