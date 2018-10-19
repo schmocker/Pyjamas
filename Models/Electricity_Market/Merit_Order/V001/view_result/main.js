@@ -31,6 +31,7 @@ window.onload = async function() {
 };
 
 async function updateAll(updateSpeed) {
+    console.log("update");
     await mo_diag.updateData();
     await mp_diag.updateData();
 

@@ -75,7 +75,7 @@ class MarketPriceDiagram {
             this.xScale.domain(d3.extent(data, function(d) { return d.date; }));
             this.yScale.domain([
                 0, //d3.min(dist_nets, function(c) { return d3.min(c.values, function(d) { return d.y; }); }),
-                d3.max(dist_nets, function(c) { return d3.max(c.values, function(d) { return d.y; }); })
+                50//d3.max(dist_nets, function(c) { return d3.max(c.values, function(d) { return d.y; }); })
             ]);
             this.zScale.domain(dist_nets.map(function(c) { return c.id; }));
 
