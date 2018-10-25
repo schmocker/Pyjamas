@@ -9,7 +9,7 @@ class Diagram_tP {
         this.y_index = 0;
 
         // Margin
-        this.margin = {top: 50, right: 50, bottom: 100, left: 50};
+        this.margin = {top: 50, right: 150, bottom: 100, left: 100};
         this.width = window.innerWidth - this.margin.left - this.margin.right;
         this.height = parent.node().getBoundingClientRect().height - this.margin.top - this.margin.bottom;
 
@@ -97,11 +97,12 @@ class Diagram_tP {
                             date: d,
                             value: i_values[id_d][id_c]
                         };
-                    })
+                    }),
                 }
             });
 
             this.data.data_L = data_L;
+            this.data.data_borders =  obj.data.el_rate.borders[i_stao]
 
         }
     }
@@ -117,36 +118,6 @@ class Diagram_tP {
 
 
         if (data){
-            /*
-            let ids = data.el_rate.Stao_ID;
-
-            let dict_er = ids.map(function(id, index) {
-                return {
-                    id: id,
-                    borders: data.el_rate.borders[index].borders,
-                    values: data.times.map(function(d, jndex) {
-                        return {
-                            time: data.times[jndex],
-                            y: data.el_rate.values[index][jndex]
-                        }
-                    })
-                }
-            })
-
-            // scale
-            let y_min = d3.min(dict_er,
-                function(a) { return d3.min(a.values,
-                    function(b) {
-                        return d3.min(b.y);
-                    })
-                });
-            let y_max = d3.max(dict_er,
-                function(c) { return d3.max(c.values,
-                    function(d) {
-                        return d3.max(d.y);
-                    })
-                });
-            */
 
             let data_Ls = this.data.data_L;
 
@@ -164,6 +135,9 @@ class Diagram_tP {
                             return d.value;
                         });
             });
+            let y_factor = 1.05;
+            y_min = y_min*y_factor;
+            y_max = y_max*y_factor;
 
             this.xScale.domain(d3.extent(data.times));
             this.yScale.domain([y_min, y_max]);
@@ -188,11 +162,19 @@ class Diagram_tP {
                 .attr("d", function(d) {return obj.line(d.values); })
                 .style("stroke", function(d) {return obj.zScale(d.id); });
 
+            let l_borders = this.data.data_borders.borders;
+            let b_length = l_borders.length;
+            let text_borders = [];
+            let ib;
+            for (ib = 0; ib < (b_length-1); ib++) {
+                text_borders[ib] = l_borders[ib].toString() + " -- " + l_borders[ib+1].toString();
+            }
             data_L.select("text")
                 .datum(function(d) {return {id: d.id, value: d.values[d.values.length - 1]}; })
                 .transition().duration(updateSpeed)
                 .attr("transform", function(d) { return "translate(" + obj.xScale(d.value.date) + "," + obj.yScale(d.value.value) + ")"; })
-                .text(function(d) { return d.id; });
+                //.text(function(d) { return d.id; });
+                .text(function(d,id) {return text_borders[id]})
 
             // update axis
             this.xAxis
@@ -208,8 +190,6 @@ class Diagram_tP {
                 .call(d3.axisLeft(this.yScale));
 
             this.updateLegend(updateSpeed);
-            this.updateLegend(updateSpeed);
-
 
         }
     }
@@ -224,15 +204,25 @@ class Diagram_tP {
     }
     async updateLegend(updateSpeed){
         let obj = this;
-//        let items = this.data.columns.filter(function(item) { return item !== 'date' });
-        let items = Object.keys(this.data.data_L);
-        let legend = this.legend.selectAll('.legend_item').data(items);
+        // let items = this.data.columns.filter(function(item) { return item !== 'date' });
+        // let items = Object.keys(this.data.data_L);
+        // let legend = this.legend.selectAll('.legend_item').data(items);
+
+        let l_borders = this.data.data_borders.borders;
+        let b_length = l_borders.length;
+        let text_borders = [];
+        let ib;
+        for (ib = 0; ib < (b_length-1); ib++) {
+            text_borders[ib] = l_borders[ib].toString() + " -- " + l_borders[ib+1].toString();
+        }
+        let legend = this.legend.selectAll('.legend_item').data(text_borders);
 
         // exit
         legend.exit().remove();
 
         // enter
         let new_legend = legend.enter().append('g').attr('class', 'legend_item');
+
 
         let size = 10;
         new_legend.append('rect').attr('x', 0).attr('y', -size/2).attr('width', size).attr('height', size);
@@ -241,7 +231,7 @@ class Diagram_tP {
         // update
         legend = this.legend.selectAll('.legend_item');
         legend.attr("transform", function (d, i) {
-            return "translate(" + 100*i + "," + 950 + ")"
+            return "translate(" + 100*i + "," + 940 + ")"
         });
         legend.select('rect').style('fill', function(d) { return obj.zScale(d); });
         legend.select('text').text(function (d) { return d });
