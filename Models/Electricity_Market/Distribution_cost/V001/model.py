@@ -17,9 +17,9 @@ class Model(Supermodel):
         self.outputs['dist_cost'] = Output(name='Distribution cost', unit='€/J', info='distribution cost')
 
         # define properties
-        cost_constant_def = [100]
+        cost_constant_def = 36000
         cost_constant_def = json.dumps(cost_constant_def)
-        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='€/J', info='constant distribution costs', example='[100]')
+        self.properties['cost_const'] = Property(default=cost_constant_def, data_type=str, name='constant dist cost', unit='€/km*MWh', info='constant distribution costs', example='36000')
 
         # persistent variables
         self.cost_constant = None
@@ -30,7 +30,9 @@ class Model(Supermodel):
     async def func_amend(self, keys=[]):
 
         cost_str = self.get_property('cost_const')
-        self.cost_constant = json.loads(cost_str)
+        cost = json.loads(cost_str)
+        # [€/km*MWh] to [€/m*J] (SI Units)
+        self.cost_constant = cost/3.6e12
 
     async def func_peri(self, prep_to_peri=None):
 
