@@ -24,8 +24,6 @@ body{
   stroke-width: 2px;
 }
 
-
-
 circle:hover{
     fill: blue;
 }

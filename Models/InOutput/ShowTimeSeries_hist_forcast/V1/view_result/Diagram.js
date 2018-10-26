@@ -17,7 +17,7 @@ class Diagram {
             .attr("width", this.width + this.margin.left + this.margin.right)
             .attr("height", this.height + this.margin.top + this.margin.bottom);
 
-        this.axis = new Axis(this.svg, 100, 100, this.width, this.height, this.formatTime);
+        this.axis = new Axis(this.svg, 100, 100, this.width, this.height);
         this.axis.xLabel = "Date";
 
         this.line = new Line(this.axis);
@@ -123,19 +123,19 @@ class Axis {
             .text("yLabel");
     }
 
-    set xLimits(xLimits){
-        this.xScale.domain(xLimits);
-        this.updateXAxis();
+    set xLabel(xLabel){
+        this._xLabel.text(xLabel);
     }
     set yLabel(yLabel){
         this._yLabel.text(yLabel);
     }
+    set xLimits(xLimits){
+        this.xScale.domain(xLimits);
+        this.updateXAxis();
+    }
     set yLimits(yLimits){
         this.yScale.domain(yLimits);
         this.updateYAxis();
-    }
-    set xLabel(xLabel){
-        this._xLabel.text(xLabel);
     }
     set zLimits(zLimits){
         this.zScale.domain(zLimits);
