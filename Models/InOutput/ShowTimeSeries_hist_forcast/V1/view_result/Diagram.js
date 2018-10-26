@@ -7,7 +7,7 @@ class Diagram {
         this.data = [];
 
         // Margin
-        this.margin = {top: 100, right: 100, bottom: 130, left: 100};
+        this.margin = {top: 100, right: 100, bottom: 150, left: 100};
         this.width = window.innerWidth - this.margin.left - this.margin.right;
         this.height = parent.node().getBoundingClientRect().height - this.margin.top - this.margin.bottom;
 
@@ -22,7 +22,8 @@ class Diagram {
 
         this.line = new Line(this.axis);
 
-        this.legend = new Legend(this.axis, 0, this.height+100);
+
+        this.legend = new Legend(this.axis, 0, this.height+140);
 
     }
 
@@ -57,21 +58,25 @@ class Diagram {
     }
 
     async updateView(updateSpeed){
-        if (this.data){
-            this.axis.yLabel =  this.data.yLabel;
+        try{
+            if (this.data){
+                this.axis.yLabel =  this.data.yLabel;
 
-            let x_min = d3.min(this.data, function(c) { return d3.min(c.values, function(d) { return d.date; }); });
-            let x_max = d3.max(this.data, function(c) { return d3.max(c.values, function(d) { return d.date; }); });
-            this.axis.xLimits = [x_min, x_max];
+                let x_min = d3.min(this.data, function(c) { return d3.min(c.values, function(d) { return d.date; }); });
+                let x_max = d3.max(this.data, function(c) { return d3.max(c.values, function(d) { return d.date; }); });
+                this.axis.xLimits = [x_min, x_max];
 
-            let y_min = d3.min(this.data, function(c) { return d3.min(c.values, function(d) { return d.y; }); })*1.05;
-            let y_max = d3.max(this.data, function(c) { return d3.max(c.values, function(d) { return d.y; }); })*1.05;
-            this.axis.yLimits = [d3.min([0,y_min]), d3.max([0,y_max])];
+                let y_min = d3.min(this.data, function(c) { return d3.min(c.values, function(d) { return d.y; }); })*1.05;
+                let y_max = d3.max(this.data, function(c) { return d3.max(c.values, function(d) { return d.y; }); })*1.05;
+                this.axis.yLimits = [d3.min([0,y_min]), d3.max([0,y_max])];
 
-            this.axis.zLimits = this.data.map(function(c) { return c.id; });
+                this.axis.zLimits = this.data.map(function(c) { return c.id; });
 
-            this.line.data = this.data;
-            this.legend.data = this.data.map(function(d){return d.id});
+                this.line.data = this.data;
+                this.legend.data = this.data.map(function(d){return d.id});
+            }
+        } catch (e) {
+            throw e;
         }
     }
 }
@@ -99,7 +104,7 @@ class Axis {
 
         this._xLabel = this.xAxis.append("text")
             .attr('class', 'xLabel')
-            .attr("y", 80)
+            .attr("y", 110)
             .attr("x", width/2)
             .style("fill", "#000")
             .text("xLabel");
@@ -110,7 +115,7 @@ class Axis {
         this._yLabel = this.yAxis.append("text")
             .attr('class', 'yLabel')
             .attr("transform", "rotate(-90)")
-            .attr("y", -50)
+            .attr("y", -70)
             //.attr("x", -200)
             .attr("x",0- (height / 2))
             //.attr("y",0-this.margin.left / 2)
@@ -179,6 +184,7 @@ class Line {
         this.items = this.parent.selectAll('.line').data(data);
         this._exit();
         this._enter();
+        this.items = this.parent.selectAll('.line');
         this._update();
     }
 
@@ -284,6 +290,7 @@ class Legend {
         this.g = axis.g.append("g").attr('class', 'legend');
         this.items = null;
 
+        //let wx = this.xVal.node().clientWidth;
         this.x = x;
         this.dx = 100;
         this.y = y;
@@ -297,10 +304,16 @@ class Legend {
     }
 
     set data(data){
-        this.items = this.g.selectAll('.item').data(data);
-        this._exit();
-        this._enter();
-        this._update();
+        try{
+            //throw "gaht nöd";
+            this.items = this.g.selectAll('.item').data(data);
+            this._exit();
+            this._enter();
+            this.items = this.g.selectAll('.item');
+            this._update();
+        } catch (e) {
+            throw "could not update legend data: "+e;
+        }
     }
 
     _exit(){
@@ -319,8 +332,14 @@ class Legend {
 
     _update(){
         let obj = this;
+
         this.items.select('rect').style('fill', function(d) { return obj.zScale(d); });
         this.items.select('text').text(function (d) { return d });
+
+        let allWidths = Array.from(d3.select(".legend").selectAll(".item")._groups[0]).map(function(g){return g.getBBox().width});
+        let maxwidth_clients = d3.max(allWidths);
+        let space = 20;
+        obj.dx = maxwidth_clients + space;
         this.items.attr("transform", function (d, i) {
             return "translate(" + obj.x + obj.dx*i + "," + obj.y + ")"
         });
