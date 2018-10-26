@@ -14,17 +14,18 @@ class Menu {
             .text(function (d) { return d })
             .classed("cn", true)
             .on('click', function(d) {
-                diag.setDistNet(d);
+                diag_tP.setDistNet(d);
                 log(d);
             });
     }
 
     async updateData(){
+        let query_name = 'get_mu_results';
+
         let filter = {'orte': ['el_rate', 'Stao_ID']};
 
         let data_dict = {'mu_id': mu_id, 'mu_run': this.run, 'filter': filter};
-        let data = await get(data_dict);
-        data = JSON.parse(data);
+        let data = await get(query_name, data_dict);
 
         if (data){
             this.run = data.run;
