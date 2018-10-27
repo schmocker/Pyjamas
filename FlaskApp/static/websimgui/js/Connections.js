@@ -1,5 +1,6 @@
-class Connections {
-    constructor() {
+export class Connections {
+    constructor(parent) {
+        this.parent = parent;
         let obj = this;
         this.menu = [{
             title: "Remove",
@@ -7,7 +8,7 @@ class Connections {
         }];
     }
     async build(){
-        let connections = main.selectAll(".connection").data(d3.entries(agent_data.connection));
+        let connections = this.parent.main.selectAll(".connection").data(d3.entries(this.parent.data.connection));
 
         //exit
         connections.exit().remove();
@@ -22,14 +23,14 @@ class Connections {
             .classed("line",true)
             .on("mouseover", function(d){d3.select(this).classed("line_hover",true);})
             .on("mouseout", function(d){d3.select(this).classed("line_hover",false);})
-            .on("contextmenu", contextMenu.onContextMenu(this.menu));
+            .on("contextmenu", this.parent.contextMenu.onContextMenu(this.menu));
 
         await this.update();
     }
 
     async update(){
         let obj = this;
-        let connections = main.selectAll(".connection");
+        let connections = this.parent.main.selectAll(".connection");
         connections.select(".line")
             .attr("x1", function (d) {return obj.get_point(d,'from','x') })
             .attr("y1", function (d) {return obj.get_point(d,'from','y') })
@@ -45,7 +46,7 @@ class Connections {
     }
 
     async add(arrow1, arrow2){
-        await post("add_connection",
+        await this.parent.post("add_connection",
             {
                 'fk_mu_from': arrow1.data()[0].model,
                 'port_id_from': arrow1.attr("id"),
@@ -55,6 +56,6 @@ class Connections {
     }
 
     async remove(id){
-        await post("remove_connection",{'connection': id},true);
+        await this.parent.post("remove_connection",{'connection': id},true);
     }
 }

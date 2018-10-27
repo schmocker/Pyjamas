@@ -1,8 +1,9 @@
-class View {
+export class View {
     constructor(parent) {
         let obj = this;
         this.parent = parent;
-        this.view = this.parent.append('div')
+        this.wsg = this.parent.wsg;
+        this.view = this.wsg.append('div')
             .attr('id', 'view');
         this.title = this.view.append('div')
             .attr('id', 'view_title');
@@ -48,7 +49,7 @@ class View {
                 let shadow = d3.select("#wsg_drawing").append("rect").attr("id", "shadow")
                     .style("width", "100%").style("height", "100%")
                     .style("fill", "white").style("opacity", 0.5);
-                await post("update", {}, true);
+                await obj.parent.post("update", {}, true);
                 await obj.update_view();
                 shadow.remove();
             });
@@ -96,7 +97,7 @@ class View {
             .attr("width", icon_size)
             .attr("height", icon_size)
             .on("click", async function () {
-                if (obj.mu){ await models.remove(obj.mu); }
+                if (obj.mu){ await obj.parent.models.remove(obj.mu); }
             });
 
 
@@ -109,8 +110,8 @@ class View {
             .attr("width", icon_size)
             .attr("height", icon_size)
             .on("click", async function() {
-                await post("start", {},false);
-                agent_data.status = "running";
+                await obj.parent.post("start", {},false);
+                obj.parent.data.status = "running";
                 obj.status();
             });
 
@@ -122,8 +123,8 @@ class View {
             .attr("width", icon_size)
             .attr("height", icon_size)
             .on("click", async function() {
-                await post("pause", {},false);
-                agent_data.status = "paused";
+                await obj.parent.post("pause", {},false);
+                obj.parent.data.status = "paused";
                 obj.status();
             });
 
@@ -135,8 +136,8 @@ class View {
             .attr("width", icon_size)
             .attr("height", icon_size)
             .on("click", async function() {
-                await post("stop", {},false);
-                agent_data.status = "stopped";
+                await obj.parent.post("stop", {},false);
+                obj.parent.data.status = "stopped";
                 obj.status();
             });
 
@@ -148,8 +149,8 @@ class View {
             .attr("width", icon_size)
             .attr("height", icon_size)
             .on("click", async function() {
-                await post("kill", {},false);
-                agent_data.status = "stopped";
+                await obj.parent.post("kill", {},false);
+                obj.parent.data.status = "stopped";
                 obj.status();
             });
 
@@ -165,7 +166,7 @@ class View {
     }
 
     status(){
-        switch(agent_data.status) {
+        switch(this.parent.data.status) {
             case 'running':
                 this.play.style("display","none");
                 this.pause.style("display","block");
@@ -216,8 +217,8 @@ class View {
         for (let i in items){
             let item = items[i];
             if (menu_sel.attr("id") === item && mu){
-                log(item);
-                log(menu_sel.attr("id") === item);
+                console.log(item);
+                console.log(menu_sel.attr("id") === item);
 
                 let has = (item === "properties") ? "has_property_view" :  "has_result_view";
 
@@ -261,7 +262,7 @@ class View {
         // update view
         switch(menu_sel.attr('id')) {
             case 'add':
-                models.deactivate_all();
+                this.parent.models.deactivate_all();
                 await this.update_add_model();
                 break;
             case 'docu':
@@ -282,7 +283,7 @@ class View {
 
     async set_mu(mu) {
         this.mu = mu;
-        this.m = mu ? agent_data.models[mu.fk_model] : null;
+        this.m = mu ? this.parent.data.models[mu.fk_model] : null;
         await this.update_view(null, true);
     }
 
@@ -292,7 +293,7 @@ class View {
         this.content.html("");
         if (!this.mu) { return }
         let obj = this;
-        let data = await get('get_model_readme', {'mu_id': obj.mu.id});
+        let data = await this.parent.get('get_model_readme', {'mu_id': obj.mu.id});
         this.content.html(data.html);
     }
 
@@ -346,7 +347,7 @@ class View {
 
         async function update(obj){
             try{
-                let result = await get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
+                let result = await obj.parent.get('get_mu_results', {'mu_id': obj.mu.id, 'mu_run': obj.run});
 
                 if (result){
                     obj.content.selectAll('.value')
@@ -364,7 +365,7 @@ class View {
                             return `<pre style="margin: 3px">${JSON.stringify(value,null,5)}</pre>`;
                         });
                 }
-            } catch (e) { log('Error updateing results: '+e.message) }
+            } catch (e) { console.log('Error updateing results: '+e.message) }
         }
 
         async function set_updater(obj) {
@@ -456,7 +457,7 @@ class View {
                 .on('keyup', async function (d) { if (d3.event.keyCode === 13) { await post_property(obj.mu.id, d.key, this.value) }})
                 .on('blur', async function (d) { await post_property(obj.mu.id, d.key, this.value) });
             async function post_property(id, key, val) {
-                await post('set_mu_property', {'mu_id': id, 'property': key, 'value': val});
+                await obj.parent.post('set_mu_property', {'mu_id': id, 'property': key, 'value': val});
             }
         }
         function fill_tr_InOutputs(tr){
@@ -491,12 +492,12 @@ class View {
                 })
                 .on('blur', async function (d) { await post_model_name(d.mu_id, this.value) });
             async function post_model_name(id, val) {
-                await post('set_mu_name', {'mu_id': id, 'name': val}, true);
+                await obj.parent.post('set_mu_name', {'mu_id': id, 'name': val}, true);
             }
 
             tds.selectAll('.name_pos')
                 .on('change', async function (d) {
-                    await post('set_mu_name_pos',
+                    await obj.parent.post('set_mu_name_pos',
                         {'mu_id': d.mu_id, 'axis': d.id, 'position': this.value},
                         true);
                 });
@@ -507,7 +508,7 @@ class View {
                         d3.select(this).style('background-color', 'red');
                     } else {
                         d3.select(this).style('background-color', 'white');
-                        await post('set_mu_dock_orientation',
+                        await obj.parent.post('set_mu_dock_orientation',
                             {'mu_id': obj.mu.id, 'dock': d.dock, 'orientation': this.value},
                             true);
                     }
@@ -535,8 +536,8 @@ class View {
 
     async update_add_model() {
         let all_models = {};
-        for (let id in agent_data.models){
-            let model = agent_data.models[id];
+        for (let id in this.parent.data.models){
+            let model = this.parent.data.models[id];
 
             let t = model.topic;
             let n = model.name;
@@ -623,11 +624,11 @@ class View {
                 if (name === "") {name_inp.style("background-color","red"); return; }
                 name_inp.style("background-color","white");
                 let v = v_sel.property("selectedOptions")[0].__data__;
-                await models.add(name, v.value);
+                await obj.parent.models.add(name, v.value);
 
-                let ids = Object.keys(agent_data.model_used);
+                let ids = Object.keys(obj.parent.data.model_used);
                 for(let i=0; i<ids.length;i++) ids[i] = parseInt(ids[i]);
-                models.activate(Math.max(...ids));
+                obj.parent.models.activate(Math.max(...ids));
             });
         // trigger first change
         t_sel.dispatch('change');

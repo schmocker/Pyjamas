@@ -1,5 +1,7 @@
-class Models {
-    constructor() {
+export class Models {
+    constructor(parent) {
+        this.parent = parent;
+
         let obj = this;
 
 
@@ -29,14 +31,14 @@ class Models {
     async build() {
         let obj = this;
 
-        let all_models = main.selectAll(".model"); //!!!!!!!
+        let all_models = this.parent.main.selectAll(".model"); //!!!!!!!
         all_models.remove();
 
         ////////////////////////////////
         //////////// models ////////////
         ////////////////////////////////
         //join
-        let models = main.selectAll(".model").data(d3.values(agent_data.model_used));
+        let models = this.parent.main.selectAll(".model").data(d3.values(this.parent.data.model_used));
 
 
         //exit: delete unused models
@@ -60,14 +62,14 @@ class Models {
             .call(await obj.onModelResize());
 
         // update models
-        models = main.selectAll(".model");
+        models = this.parent.main.selectAll(".model");
 
         ///////////////////////////////
         //////////// docks ////////////
         ///////////////////////////////
         //join
         let docks = models.selectAll(".dock").data(function (mu) {
-            let m = agent_data.models[mu.fk_model];
+            let m = obj.parent.data.models[mu.fk_model];
             let docks = {};
             docks.inputs = m.inputs;
             docks.outputs = m.outputs;
@@ -114,7 +116,7 @@ class Models {
         ////////////////////////////////////
         //////////// update all ////////////
         ////////////////////////////////////
-        models = main.selectAll(".model");
+        models = this.parent.main.selectAll(".model");
         models.each(await async function (d,i){
             let model = d3.select(this);
             let d_model = d;
@@ -132,7 +134,7 @@ class Models {
         // fast update only positions
         let obj = this;
 
-        let models = main.selectAll(".model");
+        let models = this.parent.main.selectAll(".model");
         models.select(".box")
             .attr("x", function(d){ return d.x })
             .attr("y", function(d){ return d.y })
@@ -269,12 +271,12 @@ class Models {
     }
 
     async get_model_by_id(mu_id){
-        return main.select("#mu_"+mu_id)
+        return this.parent.main.select("#mu_"+mu_id)
     }
 
 
     async add(name, fk_model){
-        await post("add_mu",
+        await this.parent.post("add_mu",
             {
                 'name': name,
                 'fk_model': fk_model
@@ -286,18 +288,18 @@ class Models {
         await this.deactivate_all();
         g.select(".box").classed("active", true);
 
-        view.set_mu(g.data()[0]);
+        this.parent.view.set_mu(g.data()[0]);
     }
     async deactivate_all(){
-        main.selectAll(".box").classed("active", false);
+        this.parent.main.selectAll(".box").classed("active", false);
     }
 
     async remove(mu){
-        await post("remove_mu",
+        await this.parent.post("remove_mu",
             {
                 'mu_id': mu.id
             }, true);
-        view.set_mu(null);
+        this.parent.view.set_mu(null);
     }
 
     modelToFront(model){
@@ -316,10 +318,10 @@ class Models {
             .on("drag", await async function (d) {
                 d.x += d3.event.dx;
                 d.y += d3.event.dy;
-                await update_all();
+                await obj.parent.update_all();
             })
             .on("end", await async function (d) {
-                await post("set_mu_pos",
+                await obj.parent.post("set_mu_pos",
                     {
                         'mu_id': d.id,
                         'x': d.x,
@@ -330,7 +332,7 @@ class Models {
     }
 
     async onPortDrag(){
-
+        let obj = this;
         return d3.drag()
             .on("start", await async function (d) {
                 let model = this.parentNode.parentNode.parentNode;
@@ -344,12 +346,12 @@ class Models {
                 let d_model = this.parentElement.parentElement.parentElement.__data__;
                 d_model.x += d3.event.dx;
                 d_model.y += d3.event.dy;
-                await update_all();
+                await obj.parent.update_all();
             })
             .on("end", await async function (d) {
                 let model = this.parentNode.parentNode.parentNode;
                 let d_model = model.__data__;
-                await post("set_mu_pos",
+                await obj.parent.post("set_mu_pos",
                     {
                         'mu_id': d_model.id,
                         'x': d_model.x,
@@ -360,15 +362,16 @@ class Models {
     }
 
     async onModelResize() {
+        let obj = this;
         return d3.drag()
             .on("start", async function (d) {})
             .on("drag", async function (d) {
                 d.width = Math.max(d.width+d3.event.dx,30);
                 d.height = Math.max(d.height+d3.event.dy,30);
-                await update_all();
+                await obj.parent.update_all();
             })
             .on("end", async function (d) {
-                await post("set_mu_size",
+                await obj.parent.post("set_mu_size",
                     {
                         'mu_id': d.id,
                         'width': d.width,
@@ -378,6 +381,7 @@ class Models {
     }
 
     async onConnecting(){
+        let obj = this;
         return d3.drag()
             .on("start", async function (d) {await connecting_start(this, d)})
             .on("drag", async function (d) {await connecting_drag(this, d)})
@@ -440,7 +444,7 @@ class Models {
             d3.select(".connecting_line").remove();
 
             if (!d3.select(".connecting_to").empty()) {
-                await connections.add(d3.select(".connecting_from"), d3.select(".connecting_to"));
+                await obj.parent.connections.add(d3.select(".connecting_from"), d3.select(".connecting_to"));
             }
 
             d3.selectAll('.connecting_to').classed("connecting_to", false);
