@@ -32,198 +32,258 @@ class Model(Supermodel):
 
         # define persistent variables
         self.db = None
+        self.kwp = None
 
     async def func_birth(self):
         # start database connection
         self.db = start_db()
 
     async def func_peri(self, prep_to_peri=None):
-        # get inputs
-        t_in = await self.get_input('t')
-        # use only first time value for interpolation (as list)
-        kw_time = [t_in[0]]
+        if self.kwp is None:
 
-        print("start database queries")
+            # get inputs
+            t_in = await self.get_input('t')
+            # use only first time value for interpolation (as list)
+            kw_time = [t_in[0]]
 
-        """
-        Naming conventions for queried and interpolated data:
-            db_ : Queried directly from database or taken from another db_ value.
-            kw_ : Value valid for a single power plant
-            _int : interpolated values       
-        """
-        # ---------------------- QUERYS -----------------------------------------------
-        # query Kraftwerk
-        db_kw = self.db.query(Kraftwerk).order_by(Kraftwerk.id).all()
-        db_kw_id = [i.id for i in db_kw]
-        db_kw_bez = [i.bezeichnung for i in db_kw]
-        db_kw_fk_kwt = [i.fk_kraftwerkstyp for i in db_kw]
-        db_kw_long = [i.long for i in db_kw]
-        db_kw_lat = [i.lat for i in db_kw]
+            time0 = time.time()
+            print(f"start database queries")
 
-        # query Kraftwerkstyp
-        db_kwt_id = [i.kraftwerkstyp.id for i in db_kw]
-        db_kwt_bez = [i.kraftwerkstyp.bezeichnung for i in db_kw]
-        db_kwt_bez_subtyp = [i.kraftwerkstyp.bezeichnung_subtyp for i in db_kw]
-        db_kwt_fk_brennstofftyp = [i.kraftwerkstyp.fk_brennstofftyp for i in db_kw]
-        db_kwt_wirkungsgrad = [i.kraftwerkstyp.wirkungsgrad for i in db_kw]
-        db_kwt_p_typisch = [i.kraftwerkstyp.p_typisch for i in db_kw]
-        db_kwt_spez_info = [ast.literal_eval(i.kraftwerkstyp.spez_info) for i in db_kw]  # change string to dict
+            """
+            Naming conventions for queried and interpolated data:
+                db_ : Queried directly from database or taken from another db_ value.
+                kw_ : Value valid for a single power plant
+                _int : interpolated values       
+            """
+            # ---------------------- QUERYS -----------------------------------------------
+            # query Kraftwerk
+            db_kw = self.db.query(Kraftwerk).order_by(Kraftwerk.id).all()
+            db_kw_id = [i.id for i in db_kw]
+            db_kw_bez = [i.bezeichnung for i in db_kw]
+            db_kw_fk_kwt = [i.fk_kraftwerkstyp for i in db_kw]
+            db_kw_long = [i.long for i in db_kw]
+            db_kw_lat = [i.lat for i in db_kw]
 
-        # query Brennstofftyp
-        db_bst_id = [i.kraftwerkstyp.brennstofftyp.id for i in db_kw]
-        db_bst_bez = [i.kraftwerkstyp.brennstofftyp.bezeichnung for i in db_kw]
-        db_bst_co2emissfakt = [i.kraftwerkstyp.brennstofftyp.co2emissFakt for i in db_kw]
+            # query Kraftwerkstyp
+            db_kwt_id = [i.kraftwerkstyp.id for i in db_kw]
+            db_kwt_bez = [i.kraftwerkstyp.bezeichnung for i in db_kw]
+            db_kwt_bez_subtyp = [i.kraftwerkstyp.bezeichnung_subtyp for i in db_kw]
+            db_kwt_fk_brennstofftyp = [i.kraftwerkstyp.fk_brennstofftyp for i in db_kw]
+            db_kwt_wirkungsgrad = [i.kraftwerkstyp.wirkungsgrad for i in db_kw]
+            db_kwt_p_typisch = [i.kraftwerkstyp.p_typisch for i in db_kw]
+            db_kwt_spez_info = [ast.literal_eval(i.kraftwerkstyp.spez_info) for i in db_kw]  # change string to dict
 
-        # query Co2Preis
-        db_co2 = self.db.query(Co2Preis).all()
-        db_co2_t = [i.datetime for i in db_co2]
-        db_co2_preis = [i.preis for i in db_co2]
+            # query Brennstofftyp
+            db_bst_id = [i.kraftwerkstyp.brennstofftyp.id for i in db_kw]
+            db_bst_bez = [i.kraftwerkstyp.brennstofftyp.bezeichnung for i in db_kw]
+            db_bst_co2emissfakt = [i.kraftwerkstyp.brennstofftyp.co2emissFakt for i in db_kw]
 
-        print("database queries finished successfully, start interpolation")
+            # query Co2Preis
+            db_co2 = self.db.query(Co2Preis).all()
+            db_co2_t = [i.datetime for i in db_co2]
+            db_co2_preis = [i.preis for i in db_co2]
 
-        # ---------------------- INTERPOLATION ----------------------------------------
-        # Brennstoffpreis Interpolation
-        bs_preis_int = []
-        for kw in db_kw:
-            if kw.kraftwerkstyp.brennstofftyp.bezeichnung == "None":
-                kw_bs_preis = [float(0)]  # Brennstoffpreis to zero if type equals "None"
-            else:
-                db_bsp = kw.kraftwerkstyp.brennstofftyp.brennstoffpreise
-                db_bsp_t = [i.datetime for i in db_bsp]
-                db_bsp_lat = [i.lat for i in db_bsp]
-                db_bsp_long = [i.long for i in db_bsp]
-                db_bsp_preis = [i.preis for i in db_bsp]
+            time1 = time.time()
+            d_time = time1 - time0
+            print(f"-> database queries finished successfully in {d_time}s")
+            print("start interpolation")
 
-                kw_bs_preis = self.interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis,
+            # ---------------------- INTERPOLATION ----------------------------------------
+            # Brennstoffpreis Interpolation
+            bs_preis_int = []
+            for kw in db_kw:
+                if kw.kraftwerkstyp.brennstofftyp.bezeichnung == "None":
+                    kw_bs_preis = [float(0)]  # Brennstoffpreis to zero if type equals "None"
+                else:
+                    db_bsp = kw.kraftwerkstyp.brennstofftyp.brennstoffpreise
+                    db_bsp_t = [i.datetime for i in db_bsp]
+                    db_bsp_lat = [i.lat for i in db_bsp]
+                    db_bsp_long = [i.long for i in db_bsp]
+                    db_bsp_preis = [i.preis for i in db_bsp]
+
+                    kw_bs_preis = self.interpol_3d(db_bsp_t, db_bsp_lat, db_bsp_long, db_bsp_preis,
+                                                   kw.lat, kw.long, kw_time)
+
+                # append new kw_bs_preis (list) to existing list
+                bs_preis_int = bs_preis_int + kw_bs_preis
+
+            ''' Tobias: faster example
+            def fn_bs_preis_int(kw):
+                if kw.kraftwerkstyp.brennstofftyp.bezeichnung == "None":
+                    return float(0)  # Brennstoffpreis to zero if type equals "None"
+                else:
+                    db_bsp = kw.kraftwerkstyp.brennstofftyp.brennstoffpreise
+                    return self.interpol_3d([i.datetime for i in db_bsp],
+                                            [i.lat for i in db_bsp],
+                                            [i.long for i in db_bsp],
+                                            [i.preis for i in db_bsp],
+                                            kw.lat, kw.long, kw_time)[0]
+    
+            bs_preis_int = [fn_bs_preis_int(kw) for kw in db_kw]
+            '''
+
+            # CO2-Preis Interpolation
+            ''' Tobias: faster example
+            co2_preis_int = []
+            for _ in db_kw:
+                # append new co2_preis (list) to existing list
+                co2_preis_int = co2_preis_int + self.interpol_1d(db_co2_t, db_co2_preis, kw_time)
+            '''
+            co2_preis_int = [self.interpol_1d(db_co2_t, db_co2_preis, kw_time)[0] for _ in db_kw]
+
+
+            # Entsorgungspreis Interpolation
+            ents_preis_int = []
+            for kw in db_kw:
+                db_ents = kw.kraftwerkstyp.entsorgungspreise
+
+                # check if values are present (some powerplant types don't have a value, e.g. wind, solar,...)
+                if len(db_ents) == 0:
+                    kw_ents = [float(0)]  # set to zero if no values present
+                else:
+                    db_ents_t = [i.datetime for i in db_ents]
+                    db_ents_lat = [i.lat for i in db_ents]
+                    db_ents_long = [i.long for i in db_ents]
+                    db_ents_preis = [i.preis for i in db_ents]
+
+                    kw_ents = self.interpol_3d(db_ents_t, db_ents_lat, db_ents_long, db_ents_preis,
                                                kw.lat, kw.long, kw_time)
 
-            # append new kw_bs_preis (list) to existing list
-            bs_preis_int = bs_preis_int + kw_bs_preis
+                # append new ents_preis_kw (list) to existing list
+                ents_preis_int = ents_preis_int + kw_ents
 
-        # CO2-Preis Interpolation
-        co2_preis_int = []
-        for _ in db_kw:
-            # append new co2_preis (list) to existing list
-            co2_preis_int = co2_preis_int + self.interpol_1d(db_co2_t, db_co2_preis, kw_time)
+            ''' Tobias: faster example
+            def fn_ents_preis_int(kw):
+                db_ents = kw.kraftwerkstyp.entsorgungspreise
+                if len(db_ents) == 0:
+                    return float(0)  # Brennstoffpreis to zero if type equals "None"
+                else:
+                    return self.interpol_3d([i.datetime for i in db_ents],
+                                            [i.lat for i in db_ents],
+                                            [i.long for i in db_ents],
+                                            [i.preis for i in db_ents],
+                                            kw.lat, kw.long, kw_time)[0]
+    
+            ents_preis_int = [fn_ents_preis_int(kw) for kw in db_kw]
+            '''
 
-        # Entsorgungspreis Interpolation
-        ents_preis_int = []
-        for kw in db_kw:
-            db_ents = kw.kraftwerkstyp.entsorgungspreise
+            # Installed power Interpolation
+            pinst_int = []
+            for kw in db_kw:
+                db_pinst = kw.kraftwerksleistungen
+                db_pinst_t = [i.datetime for i in db_pinst]
+                db_pinst_p = [i.power_inst for i in db_pinst]
 
-            # check if values are present (some powerplant types don't have a value, e.g. wind, solar,...)
-            if len(db_ents) == 0:
-                kw_ents = [float(0)]  # set to zero if no values present
-            else:
-                db_ents_t = [i.datetime for i in db_ents]
-                db_ents_lat = [i.lat for i in db_ents]
-                db_ents_long = [i.long for i in db_ents]
-                db_ents_preis = [i.preis for i in db_ents]
+                # append new pinst (list) to existing list
+                pinst_int = pinst_int + self.interpol_1d(db_pinst_t, db_pinst_p, kw_time)
 
-                kw_ents = self.interpol_3d(db_ents_t, db_ents_lat, db_ents_long, db_ents_preis,
-                                           kw.lat, kw.long, kw_time)
+            # Variable Opex Interpolation
+            varopex_int = []
+            for kw in db_kw:
+                db_varopex = kw.kraftwerkstyp.var_opex
+                db_varopex_t = [i.datetime for i in db_varopex]
+                db_varopex_preis = [i.preis for i in db_varopex]
 
-            # append new ents_preis_kw (list) to existing list
-            ents_preis_int = ents_preis_int + kw_ents
+                # append new opex (list) to existing list
+                varopex_int = varopex_int + self.interpol_1d(db_varopex_t, db_varopex_preis, kw_time)
 
-        # Installed power Interpolation
-        pinst_int = []
-        for kw in db_kw:
-            db_pinst = kw.kraftwerksleistungen
-            db_pinst_t = [i.datetime for i in db_pinst]
-            db_pinst_p = [i.power_inst for i in db_pinst]
+            # Capex Interpolation
+            capex_int = []
+            for kw in db_kw:
+                db_capex = kw.kraftwerkstyp.capex
+                db_capex_t = [i.datetime for i in db_capex]
+                db_capex_preis = [i.preis for i in db_capex]
 
-            # append new pinst (list) to existing list
-            pinst_int = pinst_int + self.interpol_1d(db_pinst_t, db_pinst_p, kw_time)
+                # append new opex (list) to existing list
+                capex_int = capex_int + self.interpol_1d(db_capex_t, db_capex_preis, kw_time)
 
-        # Variable Opex Interpolation
-        varopex_int = []
-        for kw in db_kw:
-            db_varopex = kw.kraftwerkstyp.var_opex
-            db_varopex_t = [i.datetime for i in db_varopex]
-            db_varopex_preis = [i.preis for i in db_varopex]
+            time2 = time.time()
+            d_time = time2 - time1
+            print(f"-> interpolation finished successfully in {d_time}s")
+            print("start calculation")
 
-            # append new opex (list) to existing list
-            varopex_int = varopex_int + self.interpol_1d(db_varopex_t, db_varopex_preis, kw_time)
+            # ---------------------- CALCULATION ------------------------------------------
+            # calculation CO2-Kosten
+            co2_kosten = [a*b/c for a, b, c in zip(co2_preis_int, db_bst_co2emissfakt, db_kwt_wirkungsgrad)]
 
-        # Capex Interpolation
-        capex_int = []
-        for kw in db_kw:
-            db_capex = kw.kraftwerkstyp.capex
-            db_capex_t = [i.datetime for i in db_capex]
-            db_capex_preis = [i.preis for i in db_capex]
+            # calculation Entsorgungskosten
+            ents_kosten = [a/b for a, b in zip(ents_preis_int, db_kwt_wirkungsgrad)]
 
-            # append new opex (list) to existing list
-            capex_int = capex_int + self.interpol_1d(db_capex_t, db_capex_preis, kw_time)
+            # calculation Brennstoffkosten
+            bs_kosten = [a/b for a, b in zip(bs_preis_int, db_kwt_wirkungsgrad)]
 
-        # ---------------------- CALCULATION ------------------------------------------
-        # calculation CO2-Kosten
-        co2_kosten = [a*b/c for a, b, c in zip(co2_preis_int, db_bst_co2emissfakt, db_kwt_wirkungsgrad)]
+            # calculation Grenzkosten (Marginal Cost)
+            grenz_kosten = [a+b+c+d for a, b, c, d in zip(varopex_int, bs_kosten, co2_kosten, ents_kosten)]
 
-        # calculation Entsorgungskosten
-        ents_kosten = [a/b for a, b in zip(ents_preis_int, db_kwt_wirkungsgrad)]
+            # ------- OLD VERSION OF CALCULATION ------------------------------------------
+            # calculation CO2-Kosten
+            # co2_kosten_2 = []
+            # for idx, kw in enumerate(db_kw):
+            #     co2_emissfakt = kw.kraftwerkstyp.brennstofftyp.co2emissFakt
+            #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
+            #     co2_kosten_2 = co2_kosten_2 + [co2_preis_int[idx] * co2_emissfakt / wirkungsgrad]
+            #
+            # # calculation Entsorgungskosten
+            # ents_kosten_2 = []
+            # for idx, kw in enumerate(db_kw):
+            #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
+            #     ents_kosten_2 = ents_kosten_2 + [ents_preis_int[idx] / wirkungsgrad]
+            #
+            # # calculation Brennstoffkosten
+            # bs_kosten_2 = []
+            # for idx, kw in enumerate(db_kw):
+            #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
+            #     bs_kosten_2 = bs_kosten_2 + [bs_preis_int[idx] / wirkungsgrad]
+            #
+            # # calculation Grenzkosten (Marginal Cost)
+            # grenz_kosten_2 = []
+            # for idx, kw in enumerate(db_kw):
+            #     grenz_kosten_2 = grenz_kosten_2 + [varopex_int[idx] + bs_kosten_2[idx] + co2_kosten_2[idx] + ents_kosten_2[idx]]
 
-        # calculation Brennstoffkosten
-        bs_kosten = [a/b for a, b in zip(bs_preis_int, db_kwt_wirkungsgrad)]
+            time3 = time.time()
+            d_time = time3 - time2
+            print(f"-> calculation finished successfully in {d_time}s")
+            print("start defining output")
 
-        # calculation Grenzkosten (Marginal Cost)
-        grenz_kosten = [a+b+c+d for a, b, c, d in zip(varopex_int, bs_kosten, co2_kosten, ents_kosten)]
+            # ---------------------- DEFINE OUTPUTS ---------------------------------------
+            # output sorted by id, units in comments
+            kwp = {"id": db_kw_id,  # [-]
+                   "kw_bezeichnung": db_kw_bez,  # [-]
+                   "lat": db_kw_lat,  # [deg]
+                   "long": db_kw_long,  # [deg]
+                   "p_inst": pinst_int,  # [W]
+                   "fk_kraftwerkstyp": db_kw_fk_kwt,  # [-]
+                   "kwt_id": db_kwt_id,  # [-]
+                   "bez_kraftwerkstyp": db_kwt_bez,  # [-]
+                   "bez_subtyp": db_kwt_bez_subtyp,  # [-]
+                   "wirkungsgrad": db_kwt_wirkungsgrad,  # [-]
+                   "var_opex": varopex_int,  # [€/J]
+                   "capex": capex_int,  # [€/W_el]
+                   "p_typisch": db_kwt_p_typisch,  # [W]
+                   "spez_info": db_kwt_spez_info,  # dict with "NH" [m] and "Z0" [m]
+                   "entsorgungspreis": ents_preis_int,  # [€/J_bs]
+                   "fk_brennstofftyp": db_kwt_fk_brennstofftyp,  # [-]
+                   "brennstofftyp_id": db_bst_id,  # [-]
+                   "bez_brennstofftyp": db_bst_bez,  # [-]
+                   "co2emissfakt": db_bst_co2emissfakt,  # [kg_CO2/J_bs]
+                   "bs_preis": bs_preis_int,  # [€/J_bs]
+                   "co2_preis": co2_preis_int,  # [€/kg_CO2]
+                   "co2_kosten": co2_kosten,  # [€/J_el]
+                   "entsorgungskosten": ents_kosten,  # [€/J_el]
+                   "brennstoffkosten": bs_kosten,  # [€/J_el]
+                   "grenzkosten": grenz_kosten,  # [€/J_el]
+                   }
 
-        # ------- OLD VERSION OF CALCULATION ------------------------------------------
-        # calculation CO2-Kosten
-        # co2_kosten_2 = []
-        # for idx, kw in enumerate(db_kw):
-        #     co2_emissfakt = kw.kraftwerkstyp.brennstofftyp.co2emissFakt
-        #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-        #     co2_kosten_2 = co2_kosten_2 + [co2_preis_int[idx] * co2_emissfakt / wirkungsgrad]
-        #
-        # # calculation Entsorgungskosten
-        # ents_kosten_2 = []
-        # for idx, kw in enumerate(db_kw):
-        #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-        #     ents_kosten_2 = ents_kosten_2 + [ents_preis_int[idx] / wirkungsgrad]
-        #
-        # # calculation Brennstoffkosten
-        # bs_kosten_2 = []
-        # for idx, kw in enumerate(db_kw):
-        #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-        #     bs_kosten_2 = bs_kosten_2 + [bs_preis_int[idx] / wirkungsgrad]
-        #
-        # # calculation Grenzkosten (Marginal Cost)
-        # grenz_kosten_2 = []
-        # for idx, kw in enumerate(db_kw):
-        #     grenz_kosten_2 = grenz_kosten_2 + [varopex_int[idx] + bs_kosten_2[idx] + co2_kosten_2[idx] + ents_kosten_2[idx]]
+            time4 = time.time()
+            d_time = time4 - time3
+            print(f"-> defining output finished successfully in {d_time}s")
+            d_time = time4 - time0
+            print(f"-> -> -> eu power plant finished successfully in {d_time}s")
+            print("")
 
-        # ---------------------- DEFINE OUTPUTS ---------------------------------------
-        # output sorted by id, units in comments
-        kwp = {"id": db_kw_id,  # [-]
-               "kw_bezeichnung": db_kw_bez,  # [-]
-               "lat": db_kw_lat,  # [deg]
-               "long": db_kw_long,  # [deg]
-               "p_inst": pinst_int,  # [W]
-               "fk_kraftwerkstyp": db_kw_fk_kwt,  # [-]
-               "kwt_id": db_kwt_id,  # [-]
-               "bez_kraftwerkstyp": db_kwt_bez,  # [-]
-               "bez_subtyp": db_kwt_bez_subtyp,  # [-]
-               "wirkungsgrad": db_kwt_wirkungsgrad,  # [-]
-               "var_opex": varopex_int,  # [€/J]
-               "capex": capex_int,  # [€/W_el]
-               "p_typisch": db_kwt_p_typisch,  # [W]
-               "spez_info": db_kwt_spez_info,  # dict with "NH" [m] and "Z0" [m]
-               "entsorgungspreis": ents_preis_int,  # [€/J_bs]
-               "fk_brennstofftyp": db_kwt_fk_brennstofftyp,  # [-]
-               "brennstofftyp_id": db_bst_id,  # [-]
-               "bez_brennstofftyp": db_bst_bez,  # [-]
-               "co2emissfakt": db_bst_co2emissfakt,  # [kg_CO2/J_bs]
-               "bs_preis": bs_preis_int,  # [€/J_bs]
-               "co2_preis": co2_preis_int,  # [€/kg_CO2]
-               "co2_kosten": co2_kosten,  # [€/J_el]
-               "entsorgungskosten": ents_kosten,  # [€/J_el]
-               "brennstoffkosten": bs_kosten,  # [€/J_el]
-               "grenzkosten": grenz_kosten,  # [€/J_el]
-               }
+            self.kwp = kwp
 
-        self.set_output("kw_park", kwp)
+        self.set_output("kw_park", self.kwp)
 
     # 3D Interpolation
     def interpol_3d(self, db_time, db_lat, db_long, db_values, kw_lat, kw_long, kw_time):
