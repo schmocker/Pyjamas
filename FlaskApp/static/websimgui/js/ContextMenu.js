@@ -1,4 +1,5 @@
-export class ContextMenu {
+// export
+class ContextMenu {
     constructor(parent) {
         this.parent = parent;
         this.parent.append('div')

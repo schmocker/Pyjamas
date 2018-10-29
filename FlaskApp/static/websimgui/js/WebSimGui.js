@@ -1,9 +1,11 @@
-import {Models} from "./Models.js";
-import {Connections} from "./Connections.js";
-import {View} from "./View.js";
-import {ContextMenu} from "./ContextMenu.js";
+// import {Models} from "./Models";
+// import {Connections} from "./Connections";
+// import {View} from "./View";
+// import {ContextMenu} from "./ContextMenu";
 
-export class WebSimGui{
+// export
+
+class WebSimGui{
     constructor(div_id){
         let url = new URL(document.URL);
         this.agent_id = url.searchParams.get("agent");
@@ -15,12 +17,16 @@ export class WebSimGui{
         this.svg = this.wsg.append("svg")
             .attr("id", "wsg_drawing");
 
+
+
+        this.main = d3.select("#wsg_drawing").append("g").classed("main",true);
+
+        let obj = this;
         this.svg.call(d3.zoom().scaleExtent([0.1, 8]).on("zoom", function(){
-            this.wsg.attr("transform", d3.event.transform);
+            obj.main.attr("transform", d3.event.transform);
         }));
         this.svg.on("dblclick.zoom", null);
 
-        this.main = d3.select("#wsg_drawing").append("g").classed("main",true);
 
         this.models = null;
         this.connections = null;

@@ -1,4 +1,4 @@
-import { WebSimGui } from "./js/WebSimGui.js";
+// import { WebSimGui } from "./js/WebSimGui";
 
 let wsg;
 

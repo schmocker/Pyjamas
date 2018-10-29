@@ -1,4 +1,5 @@
-export class Connections {
+// export
+class Connections {
     constructor(parent) {
         this.parent = parent;
         let obj = this;

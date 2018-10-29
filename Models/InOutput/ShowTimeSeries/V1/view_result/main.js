@@ -17,10 +17,12 @@ let valueline,x, y, div, formatTime;
 
 let margin, width, height;
 
+let data;
+
 async function create_view(){
 
 
-    margin = {top: 20, right: 20, bottom: 150, left: 50};
+    margin = {top: 20, right: 20, bottom: 150, left: 100};
     width = window.innerWidth - margin.left - margin.right;
     height = window.innerHeight - margin.top - margin.bottom;
 
@@ -45,7 +47,7 @@ async function create_view(){
         .style("opacity", 0);
 
 
-    let data = await get_data();
+    data = await get_data();
 
 
 
@@ -78,7 +80,10 @@ async function update_view(){
 
         // Scale the range of the data
     x.domain(d3.extent(data, function(d) { return d.date; }));
-    y.domain(d3.extent(data, function(d) { return d.close; }));
+    y.domain([
+        d3.min(data, function(d) { return d3.min([d.close, 0]); })*1.05,
+        d3.max(data, function(d) { return d3.max([d.close, 0]); })*1.05
+    ]);
 
     valueline = d3.line()
         .x(function(d) { return x(d.date); })

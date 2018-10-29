@@ -1,4 +1,5 @@
-export class View {
+// export
+class View {
     constructor(parent) {
         let obj = this;
         this.parent = parent;
