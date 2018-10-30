@@ -25,6 +25,9 @@ class Diagram {
 
     async setDistNet(id) {
         this.Stao_ID = id;
+        this.run = 0;
+        await this.updateData();
+        await this.updateView();
     }
 
     async updateData() {
@@ -40,7 +43,7 @@ class Diagram {
         let i_stao = -1;
         if (data) {
             i_stao = data.result.el_rate.Stao_ID.findIndex(function (i) {
-                return i == obj.Stao_ID;
+                return i === obj.Stao_ID;
             });
         }
 
@@ -125,6 +128,7 @@ class Axis {
 
         this.xScale = d3.scaleTime().range([0, width]);
         this.yScale = d3.scaleLinear().range([height, 0]);
+
         this.zScale = d3.scaleOrdinal(d3.schemeCategory10);
 
         this.g = parent.append("g")
@@ -167,12 +171,22 @@ class Axis {
         this.xScale.domain(xLimits);
         this.updateXAxis();
     }
+    get xLimits(){
+        return this.xScale.domain();
+    }
     set yLimits(yLimits){
         this.yScale.domain(yLimits);
         this.updateYAxis();
     }
     set zLimits(zLimits){
-        this.zScale.domain(zLimits);
+        try {
+            let n = zLimits.length;
+            let colors = Array.apply(0, Array(n)).map(function(d,i) { return d3.interpolateRdYlGn(i/(n-1)) });
+            this.zScale = d3.scaleOrdinal(colors);
+            this.zScale.domain(zLimits);
+        } catch (e) {
+            console.warn(e);
+        }
     }
 
     updateXAxis(){
@@ -196,17 +210,14 @@ class Axis {
 class Line {
     constructor(axis){
         this.parent = axis.g;
+        this.axis = axis;
 
         let obj = this;
 
         this.line = d3.line()
             .defined(function(d) { return d.y!==undefined; })
-            .x(function(d) { return obj.xScale(d.date); })
-            .y(function(d) { return obj.yScale(d.y); });
-
-        this.xScale = axis.xScale;
-        this.yScale = axis.yScale;
-        this.zScale = axis.zScale;
+            .x(function(d) { return obj.axis.xScale(d.date); })
+            .y(function(d) { return obj.axis.yScale(d.y); });
 
         this.tooltip = new ToolTip(axis);
 
@@ -237,11 +248,14 @@ class Line {
         this.items.select("path")
             .transition().duration(this.updateSpeed)
             .attr("d", function(d) {return obj.line(d.values); })
-            .style("stroke", function(d) {return obj.zScale(d.id); });
+            .style("stroke", function(d) {return obj.axis.zScale(d.id); });
+
+        this.items.select('circle').remove();
 
         // Circles
         let circles = this.items.select(".circles").selectAll("circle")
             .data(function (d) {return d.values.filter(function(item){return item.y !== undefined}); });
+
 
         circles.exit().remove();
 
@@ -250,13 +264,15 @@ class Line {
             .on("mouseover", function(d) { obj.tooltip.show(d.date, d.y); })
             .on("mouseout", function() { obj.tooltip.hide(); });
 
+        circles = this.items.select(".circles").selectAll("circle");
+
         circles
-            .style("stroke", function() {return obj.zScale(this.parentNode.__data__.id); })
-            .style("fill", function() {return obj.zScale(this.parentNode.__data__.id); });
+            .style("stroke", function() {return obj.axis.zScale(this.parentNode.__data__.id); })
+            .style("fill", function() {return obj.axis.zScale(this.parentNode.__data__.id); });
         circles
             .transition().duration(this.updateSpeed)
-            .attr("cx", function(d) { return obj.xScale(d.date); })
-            .attr("cy", function(d) { return obj.yScale(d.y); });
+            .attr("cx", function(d) { return obj.axis.xScale(d.date); })
+            .attr("cy", function(d) { return obj.axis.yScale(d.y); });
         circles
             .transition().delay(this.updateSpeed)
             .style("opacity", 1);
@@ -329,7 +345,6 @@ class Legend {
         this.dx = 100;
         this.y = y;
         this.size = 10;
-        this.zScale = axis.zScale;
         this.updateSpeed = 0;
 
     }
@@ -369,7 +384,7 @@ class Legend {
         let obj = this;
 
         this.items.select('rect').style('fill', function (d) {
-            return obj.zScale(d);
+            return obj.axis.zScale(d);
         });
         this.items.select('text').text(function (d) {
             return d

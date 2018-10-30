@@ -1,8 +1,17 @@
 class Menu {
     constructor(parent) {
         this.run = 0;
-        this.data = [];
+        this.data = null;
         this.parent = parent;
+
+        this.start();
+    }
+
+    async start(){
+        await this.updateData();
+        if(this.data){
+            await diag.setDistNet(this.data[0]);
+        }
     }
 
     updateMenu(updateSpeed){

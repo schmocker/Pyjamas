@@ -2,20 +2,20 @@ let run = 0;
 let menu;
 let diag;
 let update_speed = 0.2;
-let update_interval_time = 1;
+let update_interval_time = 3;
 let update_interval;
 
 
 window.onload = async function() {
+    // Diagram
+    let d3d = d3.select("#d3_drawing");
+    //d3d.style("color", "blue");
+    diag = new Diagram(d3d);
 
     // menu
     menu = new Menu(d3.select("#menu"));
 
-    // Diagram
-    let d3d = d3.select("#d3_drawing");
-    //d3d.style("color", "blue");
 
-    diag = new Diagram(d3d);
 
     await updateAll(0);
 

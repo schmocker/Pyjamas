@@ -89,6 +89,7 @@ class Axis {
 
         this.xScale = d3.scaleTime().range([0, width]);
         this.yScale = d3.scaleLinear().range([height, 0]);
+
         this.zScale = d3.scaleOrdinal(d3.schemeCategory10);
 
         this.g = parent.append("g")
