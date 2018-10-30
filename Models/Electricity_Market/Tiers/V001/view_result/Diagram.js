@@ -85,6 +85,7 @@ class Diagram {
     }
 
     async updateView(updateSpeed) {
+        console.log(new Date());
         if (this.data) {
             this.axis.yLabel = this.data.yLabel;
 
@@ -250,7 +251,7 @@ class Line {
             .attr("d", function(d) {return obj.line(d.values); })
             .style("stroke", function(d) {return obj.axis.zScale(d.id); });
 
-        this.items.select('circle').remove();
+        //this.items.select('circle').remove();
 
         // Circles
         let circles = this.items.select(".circles").selectAll("circle")

@@ -2,7 +2,7 @@ let run = 0;
 let menu;
 let diag;
 let update_speed = 0.2;
-let update_interval_time = 3;
+let update_interval_time = 1;
 let update_interval;
 
 
