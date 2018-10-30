@@ -109,7 +109,7 @@ class WebSimGui{
                     return data;
                 }
             } else {
-                console.warn.log('no data received with GET request: '+query_name);
+                console.warn('no data received with GET request: '+query_name);
             }
         } catch(e) {
             alert(e.message);
