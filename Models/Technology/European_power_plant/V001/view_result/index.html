@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mercator projection</title>
+
+
+    <link rel="stylesheet" type="text/css" href="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=style.css">
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/topojson.v1.min.js"></script>
+    <script>
+        let mu_id = {{MU_id}};
+        let data_url = "model_view_static?MU_id={{MU_id}}&view={{view}}&fn=countries.json";
+    </script>
+    <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=main.js"></script>
+    <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=pp_map.js"></script>
+    <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=country.js"></script>
+</head>
+<body id="view">
+    <div id="map"></div>
+</body>
+</html>
