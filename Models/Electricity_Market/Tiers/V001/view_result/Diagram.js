@@ -85,7 +85,7 @@ class Diagram {
     }
 
     async updateView(updateSpeed) {
-        console.log(new Date());
+        //console.log(new Date());
         if (this.data) {
             this.axis.yLabel = this.data.yLabel;
 
