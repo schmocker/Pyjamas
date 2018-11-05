@@ -1,7 +1,7 @@
 let run = 0;
 let d_map;
 let update_speed = 0.2;
-let update_interval_time = 1;
+let update_interval_time = 10;
 let update_interval;
 
 window.onload = async function(){

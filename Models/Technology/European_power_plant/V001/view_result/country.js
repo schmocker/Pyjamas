@@ -7,10 +7,10 @@ class Country {
 
         this.UCTE_ISO3 =  ["BEL","BIH","BGR","DNK","DEU","FRA","GRC","ITA","HRV","LUX","FYR","MNE","NLD","AUT","POL","PRT","ROU","CHE","SCG","SVK","SVN","ESP","CZE","HUN","MKD","SRB","XKX"];
 
-        this.zoom = new Zoom(this.parent);
-        this.tooltip = new ToolTip(this.parent);
 
-        this.g = this.parent.append('g')
+        this.tooltip = new ToolTip(parent.svg);
+
+        this.g = this.parent.g.append('g')
             .attr('id', 'countries');
 
     }
@@ -22,13 +22,14 @@ class Country {
         this.items = this.g.selectAll('.country');
         this._update();
     }
+
     _exit() {
         this.items.exit().remove();
     }
 
     _enter() {
         let obj = this;
-        //let new_items = this.items.enter().append("g").attr("class", "country");
+
         let new_items = this.items.enter();
         new_items.append("path")
             .attr("d", this.geo_path)
@@ -63,21 +64,6 @@ class Country {
     }
 }
 
-class Zoom {
-    constructor(parent) {
-        this.parent = parent;
-
-        let svg = this.parent;
-        svg.call(d3.zoom().scaleExtent([0.1, 8])
-            .on("zoom", function(){
-                let t = d3.event.transform;
-                d3.select(this).select("#countries").attr("transform", t);
-            })
-        )
-
-
-    }
-}
 
 class ToolTip {
     constructor(parent) {
