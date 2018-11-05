@@ -55,7 +55,7 @@ class Diagram {
                 Stao_ID: data.result.el_rate.Stao_ID[i_stao],
                 borders: data.result.el_rate.borders[i_stao],
                 values: data.result.el_rate.values[i_stao]
-            }
+            };
 
             // Level labels (legend)
             let l_borders = data_stao.borders.borders.length;
@@ -78,7 +78,7 @@ class Diagram {
                         }
                     })
                 }
-            })
+            });
             this.data.label = labels;
             this.data.yLabel = data.result.y_label;
         }
