@@ -6,12 +6,19 @@ from flask import Markup
 import markdown2
 from .app import app
 import sys
+import os
 
 @app.route('/')
 def home():
     txt = open('README.md', 'r', encoding="utf8").read()
     mkdwn = markdown2.markdown(txt, extras=['extra', 'fenced-code-blocks'])
     return render_template("home.html", content=Markup(mkdwn), loggedin=current_user.is_authenticated)
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static', 'images'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 # @login_required
