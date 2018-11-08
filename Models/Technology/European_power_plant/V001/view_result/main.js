@@ -10,6 +10,10 @@ window.onload = async function(){
     let d3map = d3.select("#map");
     d_map = new PP_Map(d3map);
 
+    // Menu
+    let d3menu = d3.select("#menu");
+    menu = new Menu(d3menu);
+
     await updateAll(0);
 
     await set_updater();
@@ -18,6 +22,9 @@ window.onload = async function(){
 };
 
 async function updateAll(updateSpeed){
+    await menu.updateData();
+    menu.updateMenu(updateSpeed);
+
     await d_map.updateData();
     d_map.updateView(updateSpeed);
 }

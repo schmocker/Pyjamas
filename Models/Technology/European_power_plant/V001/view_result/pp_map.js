@@ -37,6 +37,13 @@ class PP_Map {
 
     }
 
+    async setPPtype(id) {
+        this.PPtype_ID = id;
+        this.run = 0;
+        await this.updateData();
+        await this.updateView();
+    }
+
     async updateData() {
         let obj = this;
 
@@ -51,21 +58,36 @@ class PP_Map {
         let data_dict_pp = {'mu_id': mu_id, 'mu_run': this.run, 'filter': filter};
         let data_pp = await get(data_dict_pp);
         data_pp = JSON.parse(data_pp);
+
+        // select powerplant type
+        let i_pptype = -1;
         if (data_pp) {
+            i_pptype = data_pp.result.kw_park.bez_kraftwerkstyp.findIndex(function (i) {
+                return i === obj.PPtype_ID;
+            });
+        }
+        if (data_pp && i_pptype >= 0) {
             let data_temp = data_pp.result.kw_park;
 
             // restructure
             let data_key = Object.keys(data_temp);
             let data_id = data_temp["id"];
             let data_temp_2 = [];
-            this.data_pp = data_id.map(function (c, id_c) {
+            let data_pp_all = data_id.map(function (c, id_c) {
                 return {
                     id: data_temp["id"][id_c],
                     kw_bezeichnung: data_temp["kw_bezeichnung"][id_c],
                     lat: data_temp["lat"][id_c],
-                    long: data_temp["long"][id_c]
+                    long: data_temp["long"][id_c],
+                    bez_kraftwerkstyp: data_temp["bez_kraftwerkstyp"][id_c]
                 }
-            })
+            });
+
+            // select powerplant type specific data
+            let data_filter = data_pp_all.filter(function (d) {return d.bez_kraftwerkstyp === obj.PPtype_ID});
+
+            //
+            this.data_pp = data_filter;
         }
     }
 
