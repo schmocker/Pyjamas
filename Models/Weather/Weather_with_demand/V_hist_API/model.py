@@ -10,6 +10,7 @@ import pandas as pd
 import requests
 import os
 import itertools
+import math
 
 # define the model class and inherit from class "Supermodel"
 class Model(Supermodel):
@@ -27,6 +28,8 @@ class Model(Supermodel):
         self.outputs['KW_weather'] = Output(name='Weather data of KWs', unit='dict{id, windspeed, radiation, windmesshoehe}', info='weather data of KWs')
         self.outputs['Demand_weather'] = Output(name='Weather data for demand', unit='dict{id, lat, long, temperature}', info='weather data for demand calculation')
         self.outputs['Futures_weather'] = Output(name='Weather data', unit='s, °C, m/s, W/m^2', info='weather data for 25 points (time, temperature, wind speed, radiation)')
+        self.outputs['Map_weather'] = Output(name='Weather data for map', unit='s, °C, m/s, W/m^2',
+                                                 info='weather data interpolated on grid (time, temperature, wind speed, radiation)')
 
         # define properties
         self.properties['T_offset'] = Property(default=0., data_type=float, name='temperature offset', unit='%', info="offset of temperature in %", example='100: doubles the value')
@@ -81,18 +84,23 @@ class Model(Supermodel):
         # interpolate weather data in times and locations for the different KW's
         KW_weather_data = self.KW_weather_data(KW_data, weather_data, futures)
 
-        # KW weather
+        # Demand weather
         # interpolate weather data in times and locations for the different KW's
         demand_weather = self.demand_weather(demand_loc, weather_data, futures)
 
-        # futures weather
-        # editing weather data for further use (e.g. power demand model)
+        # Futures weather
+        # editing weather data for further use
         futures_weather_data = self.future_weather_data(weather_data)
+
+        # Map weather
+        # interpolate weather data on grid
+        map_weather_data = self.map_weather_data(weather_data, futures)
 
         # set output
         self.set_output("KW_weather", KW_weather_data)
         self.set_output("Demand_weather", demand_weather)
         self.set_output("Futures_weather", futures_weather_data)
+        self.set_output("Map_weather", map_weather_data)
 
     @staticmethod
     def historic_data_read():
@@ -688,6 +696,88 @@ class Model(Supermodel):
         #future_weather_data = weather_data.tolist()
         future_weather_data = dict_weather
         return future_weather_data
+
+
+    def map_weather_data(self, weather_data, futures):
+
+        # create data frame from weather data base (array)
+        weather_df = pd.DataFrame(data=weather_data, columns=['lat', 'lon', 'time', 'temperature', 'windspeed', 'radiation'])
+
+        # minimum and maximum coordinates
+        domain_lat = [math.floor(min(weather_df['lat'])), math.ceil(max(weather_df['lat']))]
+        domain_lon = [math.floor(min(weather_df['lon'])), math.ceil(max(weather_df['lon']))]
+
+        # create grid coordinates
+        delta_lat = 1
+        delta_lon = 1
+        vec_lat = np.array([x * delta_lat for x in range(domain_lat[0], domain_lat[1]+1)])
+        vec_lon = np.array([x * delta_lon for x in range(domain_lon[0], domain_lon[1]+1)])
+        coord_lat = np.repeat(vec_lat, vec_lon.size)
+        coord_lon = np.tile(vec_lon, vec_lat.size)
+        map_id = np.array([x for x in range(1, coord_lat.__len__()+1)])
+        coord = np.array([map_id, coord_lat, coord_lon])
+        map_data = pd.DataFrame(coord.T, columns=['id', 'lat', 'lon'])
+
+
+        # 2D interpolation over locations (latitude/longitude)
+        time_vec = weather_df['time'].unique()
+        map_weather_2D = pd.DataFrame()
+        map_weather_2D_ft_df = map_data.copy()
+        map_weather_2D_ft_df['temperature'] = [None] * map_weather_2D_ft_df['lat'].__len__()
+        map_weather_2D_ft_df['windspeed'] = [None] * map_weather_2D_ft_df['lat'].__len__()
+        map_weather_2D_ft_df['radiation'] = [None] * map_weather_2D_ft_df['lat'].__len__()
+        map_weather_2D_ft_df['time'] = [None] * map_weather_2D_ft_df['lat'].__len__()
+        for tt in time_vec:
+
+            weather_tt = weather_df.loc[weather_df['time'] == tt]
+
+            T_weather_2D_ft = self.interpol_2d(list(weather_tt['lat']), list(weather_tt['lon']), list(weather_tt['temperature']),
+                                                list(map_data['lat']), list(map_data['lon']))
+            U_weather_2D_ft = self.interpol_2d(list(weather_tt['lat']), list(weather_tt['lon']), list(weather_tt['windspeed']),
+                                                list(map_data['lat']), list(map_data['lon']))
+            R_weather_2D_ft = self.interpol_2d(list(weather_tt['lat']), list(weather_tt['lon']), list(weather_tt['radiation']),
+                                                list(map_data['lat']), list(map_data['lon']))
+
+            map_weather_2D_ft_df['temperature'] = T_weather_2D_ft.tolist()
+            map_weather_2D_ft_df['windspeed'] = U_weather_2D_ft.tolist()
+            map_weather_2D_ft_df['radiation'] = R_weather_2D_ft.tolist()
+            map_weather_2D_ft_df['time'] = [tt] * map_weather_2D_ft_df['lat'].__len__()
+
+            map_weather_2D = map_weather_2D.append(map_weather_2D_ft_df)
+
+        # 1D interpolation over time (fixed locations)
+        id_vec = map_weather_2D['id'].unique()
+        map_weather_1D_fid_df = pd.DataFrame()
+        map_weather_1D = pd.DataFrame()
+        for nid in id_vec:
+            map_weather_nid = map_weather_2D.loc[map_weather_2D['id'] == nid]
+            T_weather_1D_fid = self.interpol_1d(list(map_weather_nid['time']), map_weather_nid['temperature'], list(futures))
+            U_weather_1D_fid = self.interpol_1d(list(map_weather_nid['time']), map_weather_nid['windspeed'], list(futures))
+            R_weather_1D_fid = self.interpol_1d(list(map_weather_nid['time']), map_weather_nid['radiation'], list(futures))
+
+            map_weather_1D_fid_df['id'] = [nid] * futures.__len__()
+            map_weather_1D_fid_df['time'] = list(futures)
+            map_weather_1D_fid_df['temperature'] = list(T_weather_1D_fid)
+            map_weather_1D_fid_df['windspeed'] = list(U_weather_1D_fid)
+            map_weather_1D_fid_df['radiation'] = list(R_weather_1D_fid)
+
+            map_weather_1D = map_weather_1D.append(map_weather_1D_fid_df)
+
+        # formatting to dict
+        map_weather_data = {"futures": futures}
+        #map_weather_data["coord"] = map_data.to_dict()
+        map_weather_data["coord"] = {"lat": vec_lat.tolist(), "lon": vec_lon.tolist()}
+        id_futures = [x for x in range(0, futures.__len__())]
+        for mid in id_futures:
+            map_i = map_weather_1D.loc[map_weather_1D['time'] == futures[mid]]
+            map_weather_data[id_futures[mid]] = {
+                "temperature": map_i["temperature"].tolist(),
+                "windspeed": map_i["windspeed"].tolist(),
+                "radiation": map_i["radiation"].tolist(),
+            }
+
+        return map_weather_data
+
 
 if __name__ == "__main__":
 
