@@ -3,7 +3,7 @@ let d_map;
 let menu;
 let timemenu;
 let update_speed = 0.2;
-let update_interval_time = 1;
+let update_interval_time = 5;
 let update_interval;
 
 window.onload = async function(){

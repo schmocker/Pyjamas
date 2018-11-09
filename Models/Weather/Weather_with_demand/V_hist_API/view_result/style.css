@@ -51,16 +51,21 @@ svg {
 }
 
 .country{
-    stroke: rgba(255,255,255,0.2);
+    stroke: rgba(0,0,0,1);
+    fill: rgba(255,255,255,1);
+/*    stroke: rgba(255,255,255,0.2);
     fill: rgba(255,255,255,0.2);
+    */
 }
 
 .UCTE{
-    fill: rgba(255,255,255,0.4);
+    fill: rgba(255,255,255,1);
+/*    fill: rgba(255,255,255,0.4);*/
 }
 
 .UCTE:hover {
-    fill: rgba(255,255,255,0.6);
+    fill: rgba(255,255,255,1);
+/*    fill: rgba(255,255,255,0.6);*/
     cursor:pointer;
 }
 
@@ -76,4 +81,11 @@ svg {
 }
 .tooltip_pp>rect{
     fill: cornflowerblue;
+}
+
+.information{
+    font-size: 14px;
+}
+.information>rect{
+    fill: white;
 }

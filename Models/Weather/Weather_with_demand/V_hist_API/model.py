@@ -704,14 +704,14 @@ class Model(Supermodel):
         weather_df = pd.DataFrame(data=weather_data, columns=['lat', 'lon', 'time', 'temperature', 'windspeed', 'radiation'])
 
         # minimum and maximum coordinates
-        domain_lat = [math.floor(min(weather_df['lat'])), math.ceil(max(weather_df['lat']))]
-        domain_lon = [math.floor(min(weather_df['lon'])), math.ceil(max(weather_df['lon']))]
+        domain_lat = [math.floor(min(weather_df['lat']))-1, math.ceil(max(weather_df['lat']))+5]
+        domain_lon = [math.floor(min(weather_df['lon'])), math.ceil(max(weather_df['lon']))+5]
 
         # create grid coordinates
-        delta_lat = 1
-        delta_lon = 1
-        vec_lat = np.array([x * delta_lat for x in range(domain_lat[0], domain_lat[1]+1)])
-        vec_lon = np.array([x * delta_lon for x in range(domain_lon[0], domain_lon[1]+1)])
+        delta_lat = (domain_lat[1]-domain_lat[0])/20
+        delta_lon = (domain_lon[1]-domain_lon[0])/20
+        vec_lat = np.arange(domain_lat[0], domain_lat[1], delta_lat)
+        vec_lon = np.arange(domain_lon[0], domain_lon[1], delta_lon)
         coord_lat = np.repeat(vec_lat, vec_lon.size)
         coord_lon = np.tile(vec_lon, vec_lat.size)
         map_id = np.array([x for x in range(1, coord_lat.__len__()+1)])

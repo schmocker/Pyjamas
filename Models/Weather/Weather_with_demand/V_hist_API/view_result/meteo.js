@@ -8,6 +8,8 @@ class Meteo {
         this.meteo_g = this.parent.g.append('g')
             .attr('id', 'meteos')
 
+        this.information = new Information(this.parent.g);
+
     }
 
     set data(data) {
@@ -31,10 +33,17 @@ class Meteo {
     _enter() {
         let obj = this;
 
+        this.items.enter().append("path").classed("meteo", true);
+    }
+
+    _update() {
+        let obj = this;
+
+
         // projection
-        let coord_topleft = obj.projection([d3.min(this.meteo_data.lon), d3.max(this.meteo_data.lat)])
-        let coord_topright = obj.projection([d3.max(this.meteo_data.lon), d3.max(this.meteo_data.lat)])
-        let coord_bottomleft = obj.projection([d3.min(this.meteo_data.lon), d3.min(this.meteo_data.lat)])
+        let coord_topleft = obj.projection([d3.min(this.meteo_data.lon), d3.max(this.meteo_data.lat)]);
+        let coord_topright = obj.projection([d3.max(this.meteo_data.lon), d3.max(this.meteo_data.lat)]);
+        let coord_bottomleft = obj.projection([d3.min(this.meteo_data.lon), d3.min(this.meteo_data.lat)]);
         let coord_width = coord_topright[0] - coord_topleft[0];
         let coord_height = coord_bottomleft[1] - coord_topleft[1];
 
@@ -48,34 +57,66 @@ class Meteo {
             });
         }
 
+        let color = d3.scaleSequential(this.meteo_data.scale["col_scheme"]);
+        let scale_a = this.meteo_data.scale["col_scale_prop"][0];
+        let scale_b = this.meteo_data.scale["col_scale_prop"][1];
 
-        // colors etc
-        let min_value = d3.min(this.meteo_data.values);
-        let max_value = d3.max(this.meteo_data.values);
-        let delta_value = max_value - min_value;
-
-
-        let color = d3.scaleSequential(d3.interpolateRdBu);
-
-        // contour
-        //let i0 = d3.interpolateHsvLong(d3.hsv(120, 1, 0.65), d3.hsv(60, 1, 0.90));
-        //let i1 = d3.interpolateHsvLong(d3.hsv(60, 1, 0.90), d3.hsv(0, 0, 0.95));
-        //let interpolateTerrain = function(t) { return t < 0.5 ? i0(t * 2) : i1((t - 0.5) * 2); };
-        //let color = d3.scaleSequential(interpolateTerrain).domain([0, 100]);
-
-        let new_items = this.items.enter();
-        new_items.append("path")
-//            .attr("d", d3.geoPath(d3.geoIdentity().fitExtent([coord_topleft, [coord_width, coord_height]], new_items)))
-//            .attr("d", d3.geoPath(d3.geoIdentity().scale(coord_width / obj.meteo_data.width)))
+        this.items
             .attr("d", d3.geoPath().projection(scale(scale_x, scale_y)))
-            .attr("fill", function(d) { return color(-d.value*0.017+0.5); }) // 50: 0.01, 30: 0.016667
+            .attr("fill", function(d) { return color(d.value*scale_a+scale_b); })
             .attr("transform", "translate(" + coord_topleft[0].toString() + "," + coord_topleft[1].toString() + ")")
             .style("opacity", 0.1);
+
+        this.information.show(this.meteo_data.info.info_time, this.meteo_data.info.info_meteo)
     }
 
-    _update() {
+}
+
+
+
+class Information {
+    constructor(parent) {
+        this.parent = parent;
         let obj = this;
+        this.run = 0;
 
+        this.g = this.parent.append("g")
+            .attr("class", "information");
+
+        this.rect = this.g.append("rect");
+        this.info_time = this.g.append("text")
+            .attr("id", "info_time");
+        this.info_meteo = this.g.append("text")
+            .attr("id", "info_meteo");
+
+        this.padding = 10;
     }
 
+    show(info_time, info_meteo) {
+        this.g.moveToFront();
+
+        let size = parseInt(this.g.style("font-size"));
+        this.info_time.text(info_time)
+            .attr("y", size);
+        this.info_meteo.text(info_meteo)
+            .attr("y", 2.5 * size);
+
+        let height = 2.5 * size;
+
+        let wx = this.info_time.node().clientWidth;
+        let wy = this.info_meteo.node().clientWidth;
+        let width = Math.max(wx, wy);
+
+        this.rect
+            .attr("x", -this.padding)
+            .attr("y", -this.padding)
+            .attr("width", width + 2 * this.padding)
+            .attr("height", height + 2 * this.padding);
+
+        this.g
+            .attr("transform", "translate(" + (100) + "," + (100) + ")")
+            .transition().duration(this.updateSpeed)
+            .style("opacity", .9);
+
+    }
 }

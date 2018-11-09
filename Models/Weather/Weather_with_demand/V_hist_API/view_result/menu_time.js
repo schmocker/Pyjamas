@@ -29,7 +29,7 @@ class MenuTime {
     }
 
     async updateData(){
-        let filter = {}; //{'Map_weather': ['futures']};
+        let filter = {'futures': ['Map_weather','futures']};
 
         let data_dict = {'mu_id': mu_id, 'mu_run': this.run, 'filter': filter};
         let data = await get(data_dict);
@@ -37,7 +37,7 @@ class MenuTime {
 
         if (data){
             this.run = data.run;
-            let futures = data.result.Map_weather.futures;
+            let futures = data.result.futures;
             futures = futures.map(function (c) {return new Date(c*1E3)});
             futures = futures.map(function (d) {return d.timeformat()});
             this.time_types = futures;
