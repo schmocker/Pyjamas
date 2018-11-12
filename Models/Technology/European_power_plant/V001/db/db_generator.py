@@ -1,5 +1,3 @@
-
-
 from Models.Technology.European_power_plant.V001.db import Base, Brennstofftyp, Brennstoffpreis, Kraftwerkstyp, \
     Kraftwerk, Kraftwerksleistung, VarOpex, Capex, Entsorgungspreis, Co2Preis
 
