@@ -17,8 +17,8 @@ class Model(Supermodel):
                                           info='Taxes')
 
         # define properties
-        self.properties['tax'] = Property(default=0.1, data_type=float, name='taxes', unit='€/J',
-                                          info="taxes", example='0.1')
+        self.properties['tax'] = Property(default=3600, data_type=float, name='taxes', unit='€/km*MWh',
+                                          info="taxes", example='3600')
 
         # define persistent variables
         self.taxes = None
@@ -30,7 +30,8 @@ class Model(Supermodel):
     async def func_amend(self, keys=[]):
         if 'tax' in keys:
             tax = self.get_property('tax')
-
+            # [€/km*MWh] to [€/m*J] (SI Units)
+            tax = tax/3.6e12
             self.taxes = tax
 
     async def func_peri(self, prep_to_peri=None):

@@ -1,3 +1,4 @@
+// export
 class ContextMenu {
     constructor(parent) {
         this.parent = parent;

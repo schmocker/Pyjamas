@@ -18,15 +18,17 @@ class Model(Supermodel):
         super(Model, self).__init__(id, name)
 
         # define inputs
-        self.inputs['stock_ex_price'] = Input(name='Stock exchange price', unit='', info="stock exchange price")
+        self.inputs['stock_ex_price'] = Input(name='Stock exchange price', unit='€/J', info="stock exchange price")
         self.inputs['distnet_costs'] = Input(name='Distribution network cost', unit='{-, €/J}', info="distribution network cost")
         self.inputs['service_cost'] = Input(name='Service cost', unit='€/J', info="service cost")
         self.inputs['taxes'] = Input(name='Taxes', unit='€/J', info="taxes")
         self.inputs['futures'] = Input(name='Futures', unit='s', info="Futures")
 
         # define outputs
-        self.outputs['el_rate'] = Output(name='Electricity rate', unit='???', info='electricity rate')
+        self.outputs['el_rate'] = Output(name='Electricity rate', unit='€/J', info='electricity rate')
         self.outputs['times'] = Output(name='Times', unit='s', info='Times')
+        self.outputs['y_scaling'] = Output(name='Scaling of y axis', unit='', info='Scaling of y axis')
+        self.outputs['y_label'] = Output(name='y label', unit='', info='Label of y axis')
 
         # define properties
         ET_def = {"location": ['Baden'],
@@ -39,11 +41,16 @@ class Model(Supermodel):
         NT_def = json.dumps(NT_def)
         self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers', example=ET_def)
         self.properties['weight_NT'] = Property(default=NT_def, data_type=str, name='net tiers', unit='-', info='borders and weights of net tiers', example=NT_def)
+        self.properties["scaling"] = Property(default=1, data_type=float, name='Scaling factor', unit='-',
+                                              info='Scaling factor for y axis', example='3.6e9')
+        self.properties["y_labeling"] = Property(default='Price', data_type=str, name='y label', unit='-',
+                                                 info='Label for y axis', example='Price [€/MWh]')
 
         # define persistent variables
         self.weight_ET = None
         self.weight_NT = None
-
+        self.y_scaling = None
+        self.y_labeling = None
 
     async def func_birth(self):
         pass
@@ -57,6 +64,12 @@ class Model(Supermodel):
         if 'weight_NT' in keys:
             weight_NT_i = self.get_property('weight_NT')
             self.weight_NT = json.loads(weight_NT_i)
+
+        if 'scaling' in keys:
+            self.y_scaling = self.get_property("scaling")
+
+        if 'y_labeling' in keys:
+            self.y_labeling = self.get_property("y_labeling")
 
     async def func_peri(self, prep_to_peri=None):
 
@@ -116,8 +129,9 @@ class Model(Supermodel):
 
         # set output
         self.set_output("el_rate", output)
-
         self.set_output("times", await self.get_input('futures'))
+        self.set_output("y_scaling", self.y_scaling)
+        self.set_output("y_label", self.y_labeling)
 
     def det_border_tiers(self, it):
 

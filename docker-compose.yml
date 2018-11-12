@@ -35,8 +35,8 @@ services:
   db:
     #RPi: image: jsurf/rpi-mariadb:latest
     image: mariadb:latest
-    ports:
-      - 3306:3306
+    ports: # only for using from outside / not necessary for pyjamas
+      - 3306:3306 # delete for security reason
     environment:
       MYSQL_DATABASE: pyjamas
       MYSQL_ROOT_PASSWORD: XTmDQ3TbQf$z3dm
@@ -45,8 +45,6 @@ services:
       MYSQL_PASSWORD: PYJAMAS_FHNW
     volumes:
       - db:/var/lib/mysql
-    ports: # only for using from outside / not necessary for pyjamas
-      - "3306:3306" # delete for security reason
 
   phpmyadmin:
     #RPi: image: sk278/phpmyadmin-armhf (not working)
