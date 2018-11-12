@@ -1,3 +1,5 @@
+
+
 from Models.Technology.European_power_plant.V001.db import Base, Brennstofftyp, Brennstoffpreis, Kraftwerkstyp, \
     Kraftwerk, Kraftwerksleistung, VarOpex, Capex, Entsorgungspreis, Co2Preis
 
@@ -14,7 +16,7 @@ from os import environ
 import pandas as pd
 
 # ------------------------- define data source ----------------------------------
-source_file = 'Data.xlsx'
+source_file = 'database_source.xlsx'
 
 # ------------------------- create database  ------------------------------------
 load_dotenv()
@@ -33,15 +35,15 @@ session = sessionmaker(bind=engine)()
 
 
 # ------------------------- read excel ------------------------------------------
-BSP = pd.read_excel(source_file, sheet_name='BSP')  # Brennstoffpreise
-BST = pd.read_excel(source_file, sheet_name='BST')  # Brennstofftypen
-CAPEX = pd.read_excel(source_file, sheet_name='CAPEX')  # CAPEX
-CO2 = pd.read_excel(source_file, sheet_name='CO2')  # Co2-Preise
-ENTS = pd.read_excel(source_file, sheet_name='ENTS')  # Entsorgungspreise
-KW = pd.read_excel(source_file, sheet_name='KW')  # Kraftwerke
-KWL = pd.read_excel(source_file, sheet_name='KWL')  # Kraftwerksleistungen
-KWT = pd.read_excel(source_file, sheet_name='KWT')  # Kraftwerkstypen
-OPEX = pd.read_excel(source_file, sheet_name='OPEX')  # Variabler Opex
+BSP = pd.read_excel(source_file, sheet_name='DB_BSP')  # Brennstoffpreise
+BST = pd.read_excel(source_file, sheet_name='DB_BST')  # Brennstofftypen
+#CAPEX = pd.read_excel(source_file, sheet_name='DB_CAPEX')  # CAPEX
+CO2 = pd.read_excel(source_file, sheet_name='DB_CO2')  # Co2-Preise
+ENTS = pd.read_excel(source_file, sheet_name='DB_ENTS')  # Entsorgungspreise
+KW = pd.read_excel(source_file, sheet_name='DB_KW_KWL')  # Kraftwerke
+#KWL = pd.read_excel(source_file, sheet_name='DB_KW_KWL')  # Kraftwerksleistungen
+KWT = pd.read_excel(source_file, sheet_name='DB_KWT')  # Kraftwerkstypen
+#OPEX = pd.read_excel(source_file, sheet_name='OPEX')  # Variabler Opex
 
 
 # ------------------------- fill database ---------------------------------------
@@ -55,7 +57,7 @@ session.commit()
 for i, _ in BST.iterrows():
     bst = Brennstofftyp(id=int(BST['id'][i]),
                         bezeichnung=BST['bezeichnung'][i],
-                        co2emissFakt=BST['co2EmissFaktor'][i]
+                        co2emissFakt=BST['co2emissFakt [kgCO2/J]'][i]
                         )
     session.add(bst)
 try:
@@ -74,7 +76,7 @@ for i, _ in BSP.iterrows():
                           long=BSP['long'][i],
                           lat=BSP['lat'][i],
                           datetime=int(BSP['unix timestamp'][i]),
-                          preis=BSP['preis'][i]
+                          preis=BSP['preis [EUR/J]'][i]
                           )
     session.add(bsp)
 try:
@@ -93,7 +95,7 @@ for i, _ in KWT.iterrows():
                         bezeichnung_subtyp=KWT['bezeichnung_subtyp'][i],
                         fk_brennstofftyp=int(KWT['fk_brennstofftyp'][i]),
                         wirkungsgrad=KWT['wirkungsgrad'][i],
-                        p_typisch=KWT['p_typisch'][i],
+                        p_typisch=KWT['p_typisch [W]'][i],
                         spez_info=KWT['spez_info'][i]
                         )
     session.add(kwt)
@@ -125,11 +127,18 @@ except exc.IntegrityError as e:
 session.query(Kraftwerksleistung).delete()
 session.commit()
 
-for i, _ in KWL.iterrows():
-    kwl = Kraftwerksleistung(id=int(KWL['id'][i]),
-                             fk_kraftwerk=int(KWL['fk_kraftwerk'][i]),
-                             power_inst=KWL['power_inst'][i],
-                             datetime=int(KWL['unix timestamp'][i])
+KW_fk_kw = list(pd.concat([KW['fk_kraftwerk_1'], KW['fk_kraftwerk_2'],
+                           KW['fk_kraftwerk_3'], KW['fk_kraftwerk_4']]))
+KW_p_inst = list(pd.concat([KW['power_inst_1 [W]'], KW['power_inst_2 [W]'],
+                            KW['power_inst_3 [W]'], KW['power_inst_4 [W]']]))
+KW_datetime = list(pd.concat([KW['unix timestamp_1'], KW['unix timestamp_2'],
+                              KW['unix timestamp_3'], KW['unix timestamp_4']]))
+
+for i, _ in enumerate(KW_fk_kw):
+    kwl = Kraftwerksleistung(id=i+1,
+                             fk_kraftwerk=KW_fk_kw[i],
+                             power_inst=KW_p_inst[i],
+                             datetime=KW_datetime[i]
                              )
     session.add(kwl)
 try:
@@ -142,11 +151,15 @@ except exc.IntegrityError as e:
 session.query(VarOpex).delete()
 session.commit()
 
-for i, _ in OPEX.iterrows():
-    var_opex = VarOpex(id=int(OPEX['id'][i]),
-                       fk_kraftwerkstyp=int(OPEX['fk_kraftwerkstyp'][i]),
-                       datetime=int(OPEX['unix timestamp'][i]),
-                       preis=OPEX['preis'][i]
+KWT_fk_KWT = list(pd.concat([KWT['fk_kraftwerkstyp'], KWT['fk_kraftwerkstyp']]))
+OPEX_datetime = list(pd.concat([KWT['unix timestamp var opex 1'], KWT['unix timestamp var opex 2']]))
+OPEX_varopex = list(pd.concat([KWT['var opex 1 [EUR/J]'], KWT['var opex 2 [EUR/J]']]))
+
+for i, _ in enumerate(KWT_fk_KWT):
+    var_opex = VarOpex(id=i+1,
+                       fk_kraftwerkstyp=KWT_fk_KWT[i],
+                       datetime=OPEX_datetime[i],
+                       preis=OPEX_varopex[i]
                        )
     session.add(var_opex)
 try:
@@ -159,11 +172,14 @@ except exc.IntegrityError as e:
 session.query(Capex).delete()
 session.commit()
 
-for i, _ in CAPEX.iterrows():
-    capex = Capex(id=int(CAPEX['id'][i]),
-                  fk_kraftwerkstyp=int(CAPEX['fk_kraftwerkstyp'][i]),
-                  datetime=int(CAPEX['unix timestamp'][i]),
-                  preis=CAPEX['preis'][i]
+CAPEX_datetime = list(pd.concat([KWT['unix timestamp 1'], KWT['unix timestamp 2']]))
+CAPEX_capex = list(pd.concat([KWT['capex 1 [EUR/W]'], KWT['capex 2 [EUR/W]']]))
+
+for i, _ in enumerate(KWT_fk_KWT):
+    capex = Capex(id=i+1,
+                  fk_kraftwerkstyp=KWT_fk_KWT[i],
+                  datetime=CAPEX_datetime[i],
+                  preis=CAPEX_capex[i]
                   )
     session.add(capex)
 try:
@@ -182,7 +198,7 @@ for i, _ in ENTS.iterrows():
                             long=ENTS['long'][i],
                             lat=ENTS['lat'][i],
                             datetime=int(ENTS['unix timestamp'][i]),
-                            preis=ENTS['preis'][i],)
+                            preis=ENTS['preis [EUR/J]'][i],)
     session.add(entp)
 try:
     session.commit()
@@ -197,7 +213,7 @@ session.commit()
 for i, _ in CO2.iterrows():
     co2p = Co2Preis(id=int(CO2['id'][i]),
                     datetime=int(CO2['unix timestamp'][i]),
-                    preis=CO2['preis'][i]
+                    preis=CO2['preis [EUR/kg]'][i]
                     )
     session.add(co2p)
 try:
