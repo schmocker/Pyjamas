@@ -478,10 +478,6 @@ if __name__ == "__main__":
     # kw = db.query(Kraftwerk).first()
     # stop = 1
 
-    # # possibility to create empty database
-    # db = create_empty_db()
-    # stop = 1
-
     # define Input, build time array
     dt = 900
     t0 = time.time()
