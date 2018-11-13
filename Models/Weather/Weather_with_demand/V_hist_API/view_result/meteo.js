@@ -6,7 +6,9 @@ class Meteo {
         this.run = 0;
 
         this.meteo_g = this.parent.g.append('g')
-            .attr('id', 'meteos')
+            .attr('id', 'meteos');
+
+        this.legend = new Legend(this.parent.g, this.parent.width*0.91, 20, this);
 
         this.information = new Information(this.parent.g);
 
@@ -17,6 +19,7 @@ class Meteo {
         this.items = this.meteo_g.selectAll('.meteo').data(
             d3.contours()
                 .size([this.meteo_data.width, this.meteo_data.height])
+                .thresholds(this.meteo_data.scale.threshold)
                 //.thresholds(d3.range(0,100,5))
                 (this.meteo_data.values)
         );
@@ -39,6 +42,7 @@ class Meteo {
     _update() {
         let obj = this;
 
+        this.meteo_g.moveToBack();
 
         // projection
         let coord_topleft = obj.projection([d3.min(this.meteo_data.lon), d3.max(this.meteo_data.lat)]);
@@ -65,9 +69,20 @@ class Meteo {
             .attr("d", d3.geoPath().projection(scale(scale_x, scale_y)))
             .attr("fill", function(d) { return color(d.value*scale_a+scale_b); })
             .attr("transform", "translate(" + coord_topleft[0].toString() + "," + coord_topleft[1].toString() + ")")
-            .style("opacity", 0.1);
+            .style("opacity", 0.3);
 
+        // Time and meteo information
         this.information.show(this.meteo_data.info.info_time, this.meteo_data.info.info_meteo)
+
+        // Legend
+
+        let data_levels = this.parent.g.selectAll(".meteo").selectAll("path")._parents
+            .map(function (c) {return {
+                levels: c.__data__.value,
+                colors: c.attributes.fill.value}});
+        //let data_colors = ["#8B0000", "#FFFFFF", "#0000CD"];
+        this.legend.data = data_levels;
+
     }
 
 }
@@ -118,5 +133,79 @@ class Information {
             .transition().duration(this.updateSpeed)
             .style("opacity", .9);
 
+    }
+}
+
+class Legend {
+    constructor(parent, x, y, this_parent) {
+        this.parent = parent;
+        this.this_parent = this_parent;
+        let obj = this;
+        this.run = 0;
+
+        this.g = this.parent.append("g")
+            .attr("class", "legend");
+
+        /*
+        this.rect = this.g.append("rect");
+        this.info_time = this.g.append("text")
+            .attr("id", "info_time");
+        this.info_meteo = this.g.append("text")
+            .attr("id", "info_meteo");
+
+        this.padding = 10;
+        */
+
+        this.x = x;
+        this.y = y;
+        this.size = 20;
+        this.updateSpeed = 0;
+
+    }
+
+    set data(data) {
+        this.data_legend = data;
+
+        this.items = this.g.selectAll('.item').data(this.data_legend);
+        this._exit();
+        this._enter();
+        this.items = this.g.selectAll('.item');
+        this._update();
+    }
+
+    _exit(){
+        this.items.exit().remove();
+    }
+
+    _enter(){
+         let new_items = this.items.enter().append('g').attr('class', 'item');
+         new_items.append('rect')
+             .attr('x', 0).attr('width', this.size)
+             .attr('y', -this.size/2).attr('height', this.size);
+         new_items.append('text')
+             .style('alignment-baseline','central')
+             .style('text-align', 'right')
+             .attr('x', this.size+10);
+    }
+
+    _update(){
+        let obj = this;
+
+        this.items.select('rect')
+            .style('fill', function(d) { return d.colors })
+            .style("opacity", .9);
+        this.items.select('text')
+            .text(function (d) { return d.levels.toString() + obj.this_parent.meteo_data.info.unit })
+            .style("color", "black");
+
+        /*
+        let allWidths = Array.from(d3.select(".legend").selectAll(".item")._groups[0]).map(function(g){return g.getBBox().width});
+        let maxwidth_clients = d3.max(allWidths);
+        let space = 20;
+        obj.dx = maxwidth_clients + space;
+        */
+        this.items.attr("transform", function (d, i) {
+            return "translate(" + obj.x + "," + (obj.y + obj.size*i) + ")"
+        });
     }
 }

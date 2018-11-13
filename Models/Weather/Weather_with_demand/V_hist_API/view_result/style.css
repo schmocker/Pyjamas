@@ -27,7 +27,7 @@ html {
 }
 
 svg {
-    background-color: rgb(0,0,50);
+    background-color: rgb(255,255,255);
 }
 
 #map {
@@ -40,7 +40,7 @@ svg {
 }
 
 .item{
-    stroke: white;
+    stroke: black; /*white;*/
     stroke-width: 1px;
     fill: rgba(255,255,255,0.05);
 }
@@ -52,19 +52,19 @@ svg {
 
 .country{
     stroke: rgba(0,0,0,1);
-    fill: rgba(255,255,255,1);
+    fill: rgba(255,255,255,0);
 /*    stroke: rgba(255,255,255,0.2);
     fill: rgba(255,255,255,0.2);
     */
 }
 
 .UCTE{
-    fill: rgba(255,255,255,1);
+    fill: rgba(255,255,255,0);
 /*    fill: rgba(255,255,255,0.4);*/
 }
 
 .UCTE:hover {
-    fill: rgba(255,255,255,1);
+    fill: rgba(150,150,150,0.2);
 /*    fill: rgba(255,255,255,0.6);*/
     cursor:pointer;
 }
@@ -88,4 +88,14 @@ svg {
 }
 .information>rect{
     fill: white;
+}
+
+.legend{
+    font-size: 14px;
+}
+.legend>item{
+    fill: black;
+}
+.legend>text{
+    color: black;
 }
