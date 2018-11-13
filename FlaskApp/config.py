@@ -19,7 +19,7 @@ FLASK_USER_PASSWORD = environ.get("FLASK_USER_PASSWORD", default='pyjamas_pwd')
 
 DB_HOST = environ.get("DB_HOST", default='localhost')
 DB_PORT = environ.get("DB_PORT", default=3306)
-DB_DATABASE = environ.get("DB_DATABASE", default='pyjamas')
+DB_DATABASE = environ.get("DB_DATABASE", default='pyjamas.db')
 DB_USER = environ.get("DB_USER", default='pyjamas_db_user')
 DB_PASSWORD = environ.get("DB_PASSWORD", default='PYJAMAS_DB_PWD')
 DB_DRIVER = environ.get("DB_DRIVER", default='mysql+pymysql')
