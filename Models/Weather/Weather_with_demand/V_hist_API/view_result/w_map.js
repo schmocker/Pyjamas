@@ -60,28 +60,44 @@ class W_map {
         let i_meteotype = -1;
         let i_meteotype_s;
         let col_scale_range;
+        let col_scale_prop;
         let col_scheme;
+        let threshold;
+        let unit;
 
         switch (obj.MeteoType_ID) {
+
             case "Temperature":
                 i_meteotype = 1;
                 i_meteotype_s = "temperature";
-                col_scale_range = [50, -50];  // inverse RedBlu // [-50, 50];
+                col_scale_range = [-40, 40];  // inverse RedBlu // [-50, 50];
+                col_scale_prop = [-1/(col_scale_range[1]-col_scale_range[0]),
+                col_scale_range[1]/(col_scale_range[1]-col_scale_range[0])];
+                threshold = 15;
+                //threshold = d3.range(col_scale_range[0], col_scale_range[1]+1,
+                //    (col_scale_range[1]-col_scale_range[0])/40);
                 col_scheme = d3.interpolateRdBu;
+                unit = " °C";
                 break;
             case "Wind speed":
                 i_meteotype = 2;
                 i_meteotype_s = "windspeed";
-                col_scale_range = [0, 200];
+                col_scale_range = [0, 20];
+                col_scale_prop = [1/(col_scale_range[1]-col_scale_range[0]),
+                -col_scale_range[0]/(col_scale_range[1]-col_scale_range[0])];
+                threshold = 10;
                 col_scheme = d3.interpolateBlues;
-
+                unit = " m/s";
                 break;
             case "Radiation":
                 i_meteotype = 3;
                 i_meteotype_s = "radiation";
                 col_scale_range = [0, 2000];
+                col_scale_prop = [1/(col_scale_range[1]-col_scale_range[0]),
+                -col_scale_range[0]/(col_scale_range[1]-col_scale_range[0])];
+                threshold = 10;
                 col_scheme = d3.interpolateReds;
-
+                unit = " W/m^2 K";
                 break;
             default:
                 break;
@@ -115,8 +131,6 @@ class W_map {
             let data_temp = data_meteo["data"];
             let vec_lat = data_meteo["coord"]["lat"];
             let vec_lon = data_meteo["coord"]["lon"];
-            let col_scale_prop = [1/(col_scale_range[1]-col_scale_range[0]),
-                -col_scale_range[0]/(col_scale_range[1]-col_scale_range[0])];
             let info_time = new Date(data_meteo.futures[i_timetype]*1E3);
             info_time = info_time.timeformat();
 
@@ -126,9 +140,12 @@ class W_map {
                 "width": vec_lon.length,
                 "height": vec_lat.length,
                 "values": data_temp,
-                "scale": {"col_scale_prop": col_scale_prop, "col_scheme": col_scheme},
+                "scale": {"col_scale_prop": col_scale_prop,
+                    "threshold": threshold,
+                    "col_scheme": col_scheme},
                 "info": {"info_time": info_time,
-                    "info_meteo": obj.MeteoType_ID}
+                    "info_meteo": obj.MeteoType_ID,
+                    "unit": unit}
             };
 
             //

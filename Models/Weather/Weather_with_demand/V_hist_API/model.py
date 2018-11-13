@@ -535,9 +535,12 @@ class Model(Supermodel):
 
         # add point information to weather_data
         weather_df = pd.DataFrame(data=weather_data, columns=['lat', 'lon', 'time', 'temperature', 'windspeed', 'radiation'])
-        time_vec = weather_df['time'].unique()
-        point_vec = list(range(1,26))
-        point_info = np.repeat(np.array(point_vec), time_vec.size, axis=0)
+        point_vec = list(range(1, 26))
+        #time_vec = weather_df['time'].unique()
+        #point_info = np.repeat(np.array(point_vec), time_vec.size, axis=0)
+        time_size = int(weather_df["time"].size/point_vec.__len__())
+        time_vec = weather_df["time"][0:time_size]
+        point_info = np.repeat(np.array(point_vec), time_size, axis=0)
         weather_df['point'] = point_info
 
         # interpolate weather data (point) to countries
@@ -711,6 +714,7 @@ class Model(Supermodel):
         delta_lat = (domain_lat[1]-domain_lat[0])/20
         delta_lon = (domain_lon[1]-domain_lon[0])/20
         vec_lat = np.arange(domain_lat[0], domain_lat[1], delta_lat)
+        vec_lat = vec_lat[::-1]
         vec_lon = np.arange(domain_lon[0], domain_lon[1], delta_lon)
         coord_lat = np.repeat(vec_lat, vec_lon.size)
         coord_lon = np.tile(vec_lon, vec_lat.size)
@@ -763,6 +767,11 @@ class Model(Supermodel):
 
             map_weather_1D = map_weather_1D.append(map_weather_1D_fid_df)
 
+        # test
+        # testlb_i = np.concatenate((np.repeat(100, 5), np.repeat(0, 15)), axis=None)
+        # test1b_ii = np.repeat(0, 20)
+        # testlb = np.concatenate((np.tile(testlb_i, 5), np.tile(test1b_ii, 15)), axis=None)
+
         # formatting to dict
         map_weather_data = {"futures": futures}
         #map_weather_data["coord"] = map_data.to_dict()
@@ -771,7 +780,7 @@ class Model(Supermodel):
         for mid in id_futures:
             map_i = map_weather_1D.loc[map_weather_1D['time'] == futures[mid]]
             map_weather_data[id_futures[mid]] = {
-                "temperature": map_i["temperature"].tolist(),
+                "temperature": map_i["temperature"].tolist(), # testlb.tolist(), #
                 "windspeed": map_i["windspeed"].tolist(),
                 "radiation": map_i["radiation"].tolist(),
             }

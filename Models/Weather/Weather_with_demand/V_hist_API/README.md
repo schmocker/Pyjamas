@@ -23,17 +23,34 @@ The outputs of this model are:
 
 dict of
 * KW id
-* windspeed
-* radiation
-* windmesshoehe
+* Windspeed
+* Radiation
+* Windmesshoehe
+
+### Demand weather for demand calculation
+
+dict of
+* Location id
+* Latitude
+* Longitude
+* Temperature
 
 ### Future weather
 
 dict of
-* point ids
-* latitude
-* longitude
-* weather (time, temperature, wind speed, radiation)
+* Point ids
+* Latitude
+* Longitude
+* Weather (time, temperature, wind speed, radiation)
+
+### Map weather for demand calculation
+
+dict of
+* Futures
+* Coordinates of map grid points
+* Temperature
+* Wind speed
+* Radiation
 
 
 ## Properties
