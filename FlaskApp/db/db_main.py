@@ -26,8 +26,8 @@ security = Security(app, user_datastore)
 @app.before_first_request
 def first_reuqest():
     print('first start')
-    create_user()
     create_all()
+    create_user()
     print('first start done')
 
 
