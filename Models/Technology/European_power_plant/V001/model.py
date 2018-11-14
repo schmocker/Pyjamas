@@ -1,11 +1,11 @@
 # imports from core
 from core import Supermodel
-from core.util import Input, Output, Property
+from core.util import Input, Output
 
 # imports for database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from Models.Technology.European_power_plant.V001.db import Base, Kraftwerk, Co2Preis, create_dummy_data
+from Models.Technology.European_power_plant.V001.db.db_declarative import Base, Kraftwerk, Co2Preis
 # all other tables are used indirectly starting at Kraftwerk
 
 # general imports
@@ -131,7 +131,6 @@ class Model(Supermodel):
             '''
             co2_preis_int = [self.interpol_1d(db_co2_t, db_co2_preis, kw_time)[0] for _ in db_kw]
 
-
             # Entsorgungspreis Interpolation
             ents_preis_int = []
             for kw in db_kw:
@@ -214,31 +213,6 @@ class Model(Supermodel):
 
             # calculation Grenzkosten (Marginal Cost)
             grenz_kosten = [a+b+c+d for a, b, c, d in zip(varopex_int, bs_kosten, co2_kosten, ents_kosten)]
-
-            # ------- OLD VERSION OF CALCULATION ------------------------------------------
-            # calculation CO2-Kosten
-            # co2_kosten_2 = []
-            # for idx, kw in enumerate(db_kw):
-            #     co2_emissfakt = kw.kraftwerkstyp.brennstofftyp.co2emissFakt
-            #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-            #     co2_kosten_2 = co2_kosten_2 + [co2_preis_int[idx] * co2_emissfakt / wirkungsgrad]
-            #
-            # # calculation Entsorgungskosten
-            # ents_kosten_2 = []
-            # for idx, kw in enumerate(db_kw):
-            #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-            #     ents_kosten_2 = ents_kosten_2 + [ents_preis_int[idx] / wirkungsgrad]
-            #
-            # # calculation Brennstoffkosten
-            # bs_kosten_2 = []
-            # for idx, kw in enumerate(db_kw):
-            #     wirkungsgrad = kw.kraftwerkstyp.wirkungsgrad
-            #     bs_kosten_2 = bs_kosten_2 + [bs_preis_int[idx] / wirkungsgrad]
-            #
-            # # calculation Grenzkosten (Marginal Cost)
-            # grenz_kosten_2 = []
-            # for idx, kw in enumerate(db_kw):
-            #     grenz_kosten_2 = grenz_kosten_2 + [varopex_int[idx] + bs_kosten_2[idx] + co2_kosten_2[idx] + ents_kosten_2[idx]]
 
             time3 = time.time()
             d_time = time3 - time2
@@ -449,35 +423,7 @@ def start_db():
     return session
 
 
-# Create database and fill with dummy data
-def create_db():
-    load_dotenv()
-    db_path = environ.get("KW_DB_dummy")
-
-    # an engine is the real DB
-    engine = create_engine(db_path)
-
-    # delete all tables
-    Base.metadata.drop_all(engine)
-    # create all tables
-    Base.metadata.create_all(engine)
-    # a session is used to communicate with the DB
-    Base.metadata.bind = engine
-    session = sessionmaker(bind=engine)()
-    # create dummy data
-    create_dummy_data(session)
-
-    return session
-
-
 if __name__ == "__main__":
-    # possibility to create dummy data
-    # db = create_db()
-    #
-    # kws = db.query(Kraftwerk).all()
-    # kw = db.query(Kraftwerk).first()
-    # stop = 1
-
     # define Input, build time array
     dt = 900
     t0 = time.time()

@@ -1,7 +1,7 @@
 # European Power Plant Database
 
-This Model reads the European Power Plant Database, interpolates and combines data and outputs the combined 
-data for all following models to use.
+This Model reads adatabase containing Data for the European Power Plants in different future scenarios.
+It interpolates and combines data and outputs the combined data for all following models to use.
 
 ## Inputs
 The input to this model is the **simulation time** from the scheduler.
@@ -26,7 +26,7 @@ Key | Description | Unit
 "bez_kraftwerkstyp" | power plant type name | [-]
 "bez_subtyp" | power plant subtype name | [-]
 "wirkungsgrad" | power plant efficiency | [-]
-"spez_opex" | variable OPEX | [€/J]
+"var_opex" | variable OPEX | [€/J]
 "capex" | CAPEX | [€/W_el]
 "p_typisch" | typical power of power plant type | [W]
 "spez_info" | special info of power plant type| for wind turbines: dict containing hub height: "NH" [m] and ground roughness: "Z0" [m]
