@@ -1,22 +1,26 @@
 class Powerplant {
-    constructor(parent, projection) {
-        this.parent = parent;
+    constructor(parentObj, parentNode, projection, tooltip) {
+        this.parentObj = parentObj;
+        this.parentNode = parentNode;
         this.projection = projection;
+        this.tooltip = tooltip;
+
         let obj = this;
         this.run = 0;
 
-        this.tooltip_pp = new ToolTip_PP(parent.svg);
-
-        this.pp_g = this.parent.g.append('g')
+        this.Node = this.parentNode.append('g')
             .attr('id', 'powerplants')
             .attr('class', 'circles');
+
+
+
     }
 
     set data(data) {
-        this.items = this.pp_g.selectAll('.circles').data(data);
+        this.items = this.Node.selectAll('circle').data(data);
         this._exit();
         this._enter();
-        this.items = this.pp_g.selectAll('.circles');
+        this.items = this.Node.selectAll('circle');
         this._update();
     }
 
@@ -29,7 +33,28 @@ class Powerplant {
 
         let new_items = this.items.enter();
         new_items.append("circle")
-            .attr("r", "4px")
+            .on("mouseover", function(d) {
+                let kw_bez = d.kw_bezeichnung;
+                let p = d.p_inst/1E9;
+                let p_info = "installed power: " + p.toString() + " GW";
+                let posx = obj.projection([d.long, d.lat])[0];
+                let posy = obj.projection([d.long, d.lat])[1];
+                obj.tooltip.show(kw_bez, p_info, posx, posy); })
+            .on("mouseout", function() { obj.tooltip.hide(); });
+    }
+
+    _update() {
+        let obj = this;
+
+        this.items
+            .attr("r", function (d) {return 5*Math.sqrt(d.p_inst/1E9)})
+            .attr("cx", function (d) {return obj.projection([d.long, d.lat])[0]})
+            .attr("cy", function (d) {return obj.projection([d.long, d.lat])[1]})
+            .style("stroke", "white")
+            .style("fill", "white")
+
+        /*
+        let items = this.pp_g.selectAll(".circles").selectAll("circle")
             .attr("cx", function (d) {return obj.projection([d.long, d.lat])[0]})
             .attr("cy", function (d) {return obj.projection([d.long, d.lat])[1]})
             .style("stroke", "white")
@@ -42,36 +67,33 @@ class Powerplant {
                 let posy = obj.projection([d.long, d.lat])[1];
                 obj.tooltip_pp.show(kw_bez, p_info, posx, posy); })
             .on("mouseout", function() { obj.tooltip_pp.hide(); });
-    }
-
-    _update() {
-        let obj = this;
-
+        */
     }
 
 }
 
 class ToolTip_PP {
-    constructor(parent) {
-        this.parent = parent;
+    constructor(parentObj, parentNode) {
+        this.parentObj = parentObj;
+        this.parentNode = parentNode;
 
-        this.g = this.parent.append("g")
+        this.Node = this.parentNode.append("g")
             .attr("class", "tooltip_pp")
             .style("opacity", 0);
 
-        this.rect = this.g.append("rect");
-        this.kw_bez = this.g.append("text")
+        this.rect = this.Node.append("rect");
+        this.kw_bez = this.Node.append("text")
             .attr("id", "kb_bez");
-        this.val_p = this.g.append("text")
+        this.val_p = this.Node.append("text")
             .attr("id", "val_p");
 
         this.padding = 10;
     }
 
     show(kw_bez, value_p, posx, posy){
-        this.g.moveToFront();
+        this.Node.moveToFront();
 
-        let size = parseInt(this.g.style("font-size"));
+        let size = parseInt(this.Node.style("font-size"));
         this.kw_bez.text(kw_bez)
             .attr("y",size);
         this.val_p.text(value_p)
@@ -88,14 +110,14 @@ class ToolTip_PP {
             .attr("width", width+2*this.padding)
             .attr("height", height+2*this.padding);
 
-        this.g
+        this.Node
             .attr("transform", "translate(" + (posx-width/2) + "," + (posy-10-this.padding-height) + ")")
             .transition().duration(this.updateSpeed)
             .style("opacity", .9);
     }
 
     hide(){
-        this.g.transition()
+        this.Node.transition()
             .duration(this.updateSpeed)
             .style("opacity", 0);
     }

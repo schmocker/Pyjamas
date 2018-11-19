@@ -13,7 +13,7 @@ class PP_Map {
         // Elements
         this.svg = parent.append("svg")
             .attr("width", this.width + this.margin.left + this.margin.right)
-            .attr("height", this.height + this.margin.top + this.margin.bottom)
+            .attr("height", this.height + this.margin.top + this.margin.bottom);
 
         this.g = this.svg.append("g");
 
@@ -28,8 +28,11 @@ class PP_Map {
         // Country
         this.country = new Country(this, this.geo_path);
 
+        // Tooltip
+        this.tooltip_pp = new ToolTip_PP(this, this.g);
+
         // Power plant
-        this.powerplant = new Powerplant(this, this.projection);
+        this.powerplant = new Powerplant(this, this.g, this.projection, this.tooltip_pp);
 
         // Zoom
         this.zoom = new Zoom(this);
@@ -79,7 +82,8 @@ class PP_Map {
                     kw_bezeichnung: data_temp["kw_bezeichnung"][id_c],
                     lat: data_temp["lat"][id_c],
                     long: data_temp["long"][id_c],
-                    bez_kraftwerkstyp: data_temp["bez_kraftwerkstyp"][id_c]
+                    bez_kraftwerkstyp: data_temp["bez_kraftwerkstyp"][id_c],
+                    p_inst: data_temp["p_inst"][id_c]
                 }
             });
 
@@ -111,10 +115,11 @@ class Zoom {
         g.call(d3.zoom().scaleExtent([0.1, 8])
             .on("zoom", function(){
                 let t = d3.event.transform;
-                d3.select(this).selectAll("g").selectAll("path").attr("transform", t);
-                d3.select(this).selectAll("g").selectAll("circle")
-                    .attr("transform", t)
-                    .attr("r", 4/t.k);
+                d3.select(this).transition().duration(30).attr("transform", t);
+                //d3.select(this).selectAll("g").selectAll("path").attr("transform", t);
+                //d3.select(this).selectAll("g").selectAll("circle")
+                    //.attr("transform", t)
+                    //.attr("r", 4/t.k);
             })
         )
 
