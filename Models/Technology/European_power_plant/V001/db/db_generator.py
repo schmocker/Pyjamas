@@ -1,5 +1,5 @@
-from Models.Technology.European_power_plant.V001.db import Base, Brennstofftyp, Brennstoffpreis, Kraftwerkstyp, \
-    Kraftwerk, Kraftwerksleistung, VarOpex, Capex, Entsorgungspreis, Co2Preis
+from Models.Technology.European_power_plant.V001.db.db_declarative import Base, Brennstofftyp, Brennstoffpreis, \
+    Kraftwerkstyp, Kraftwerk, Kraftwerksleistung, VarOpex, Capex, Entsorgungspreis, Co2Preis
 
 # imports for database
 from sqlalchemy import create_engine
@@ -8,18 +8,17 @@ from sqlalchemy import exc
 
 # general imports
 from dotenv import load_dotenv
-from os import environ
 
 # pandas for reading excel files
 import pandas as pd
 
-# ------------------------- define data source ----------------------------------
-source_file = 'database_source.xlsx'
+# ------------------------- define paths ----------------------------------
+source_file = 'Data.xlsx'
+db_path = 'sqlite:///pyjamas_powerplants_new'
 
 # ------------------------- create database  ------------------------------------
 load_dotenv()
 
-db_path = environ.get("KW_DB_new")
 # an engine is the real DB
 engine = create_engine(db_path)
 
@@ -32,21 +31,18 @@ Base.metadata.bind = engine
 session = sessionmaker(bind=engine)()
 
 
-# ------------------------- read excel ------------------------------------------
+# ------------------------- read excel sheets -----------------------------------
 BSP = pd.read_excel(source_file, sheet_name='DB_BSP')  # Brennstoffpreise
 BST = pd.read_excel(source_file, sheet_name='DB_BST')  # Brennstofftypen
-#CAPEX = pd.read_excel(source_file, sheet_name='DB_CAPEX')  # CAPEX
 CO2 = pd.read_excel(source_file, sheet_name='DB_CO2')  # Co2-Preise
 ENTS = pd.read_excel(source_file, sheet_name='DB_ENTS')  # Entsorgungspreise
-KW = pd.read_excel(source_file, sheet_name='DB_KW_KWL')  # Kraftwerke
-#KWL = pd.read_excel(source_file, sheet_name='DB_KW_KWL')  # Kraftwerksleistungen
-KWT = pd.read_excel(source_file, sheet_name='DB_KWT')  # Kraftwerkstypen
-#OPEX = pd.read_excel(source_file, sheet_name='OPEX')  # Variabler Opex
+KW = pd.read_excel(source_file, sheet_name='DB_KW_KWL')  # Kraftwerke / Kraftwerksleistungen
+KWT = pd.read_excel(source_file, sheet_name='DB_KWT')  # Kraftwerkstypen / CAPEX / OPEX
 
 
 # ------------------------- fill database ---------------------------------------
 # pandas reads integers as Int64, which leads to problems with mysql/sqlalchemy
-# therefore integers are converted to Int (id=int(...)
+# therefore integers are converted to Int (id=int(...))
 
 # Brennstofftyp
 session.query(Brennstofftyp).delete()
@@ -125,18 +121,17 @@ except exc.IntegrityError as e:
 session.query(Kraftwerksleistung).delete()
 session.commit()
 
-KW_fk_kw = list(pd.concat([KW['fk_kraftwerk_1'], KW['fk_kraftwerk_2'],
-                           KW['fk_kraftwerk_3'], KW['fk_kraftwerk_4']]))
-KW_p_inst = list(pd.concat([KW['power_inst_1 [W]'], KW['power_inst_2 [W]'],
-                            KW['power_inst_3 [W]'], KW['power_inst_4 [W]']]))
-KW_datetime = list(pd.concat([KW['unix timestamp_1'], KW['unix timestamp_2'],
+# concatenate columns
+KWL_fk_kw = list(pd.concat([KW['fk_kw_1'], KW['fk_kw_2'], KW['fk_kw_3'], KW['fk_kw_4']]))
+KWL_p_inst = list(pd.concat([KW['p_inst_1 [W]'], KW['p_inst_2 [W]'], KW['p_inst_3 [W]'], KW['p_inst_4 [W]']]))
+KWL_datetime = list(pd.concat([KW['unix timestamp_1'], KW['unix timestamp_2'],
                               KW['unix timestamp_3'], KW['unix timestamp_4']]))
 
-for i, _ in enumerate(KW_fk_kw):
-    kwl = Kraftwerksleistung(id=i+1,
-                             fk_kraftwerk=KW_fk_kw[i],
-                             power_inst=KW_p_inst[i],
-                             datetime=KW_datetime[i]
+for i, _ in enumerate(KWL_fk_kw):
+    kwl = Kraftwerksleistung(id=i+1,  # i starting at 0, id starting at 1
+                             fk_kraftwerk=KWL_fk_kw[i],
+                             power_inst=KWL_p_inst[i],
+                             datetime=KWL_datetime[i]
                              )
     session.add(kwl)
 try:
@@ -149,13 +144,13 @@ except exc.IntegrityError as e:
 session.query(VarOpex).delete()
 session.commit()
 
-KWT_fk_KWT = list(pd.concat([KWT['fk_kraftwerkstyp'], KWT['fk_kraftwerkstyp']]))
+OPEX_fk_KWT = list(pd.concat([KWT['fk_kraftwerkstyp'], KWT['fk_kraftwerkstyp']]))
 OPEX_datetime = list(pd.concat([KWT['unix timestamp var opex 1'], KWT['unix timestamp var opex 2']]))
 OPEX_varopex = list(pd.concat([KWT['var opex 1 [EUR/J]'], KWT['var opex 2 [EUR/J]']]))
 
-for i, _ in enumerate(KWT_fk_KWT):
-    var_opex = VarOpex(id=i+1,
-                       fk_kraftwerkstyp=KWT_fk_KWT[i],
+for i, _ in enumerate(OPEX_fk_KWT):
+    var_opex = VarOpex(id=i+1,  # i starting at 0, id starting at 1
+                       fk_kraftwerkstyp=OPEX_fk_KWT[i],
                        datetime=OPEX_datetime[i],
                        preis=OPEX_varopex[i]
                        )
@@ -173,9 +168,9 @@ session.commit()
 CAPEX_datetime = list(pd.concat([KWT['unix timestamp 1'], KWT['unix timestamp 2']]))
 CAPEX_capex = list(pd.concat([KWT['capex 1 [EUR/W]'], KWT['capex 2 [EUR/W]']]))
 
-for i, _ in enumerate(KWT_fk_KWT):
-    capex = Capex(id=i+1,
-                  fk_kraftwerkstyp=KWT_fk_KWT[i],
+for i, _ in enumerate(OPEX_fk_KWT):
+    capex = Capex(id=i+1,  # i starting at 0, id starting at 1
+                  fk_kraftwerkstyp=OPEX_fk_KWT[i],
                   datetime=CAPEX_datetime[i],
                   preis=CAPEX_capex[i]
                   )
