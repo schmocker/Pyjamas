@@ -13,7 +13,7 @@ import time
 
 
 # ------------------------- define paths ----------------------------------
-db_path = 'sqlite:///pyjamas_powerplants_dummy'
+db_path = 'sqlite:///pyjamas_powerplants_dummy.db'
 
 # ------------------------- create database  ------------------------------------
 load_dotenv()
@@ -116,7 +116,7 @@ session.query(Kraftwerk).delete()
 session.commit()
 
 kwts = session.query(Kraftwerkstyp).all()
-for i in range(100):
+for i in range(1000):
     kwt = random.choice(kwts)
     kw = Kraftwerk(bezeichnung=kwt.bezeichnung + "_" + str(i),
                    fk_kraftwerkstyp=kwt.id,

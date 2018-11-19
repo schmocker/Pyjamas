@@ -107,28 +107,7 @@ class Model(Supermodel):
                 # append new kw_bs_preis (list) to existing list
                 bs_preis_int = bs_preis_int + kw_bs_preis
 
-            ''' Tobias: faster example
-            def fn_bs_preis_int(kw):
-                if kw.kraftwerkstyp.brennstofftyp.bezeichnung == "None":
-                    return float(0)  # Brennstoffpreis to zero if type equals "None"
-                else:
-                    db_bsp = kw.kraftwerkstyp.brennstofftyp.brennstoffpreise
-                    return self.interpol_3d([i.datetime for i in db_bsp],
-                                            [i.lat for i in db_bsp],
-                                            [i.long for i in db_bsp],
-                                            [i.preis for i in db_bsp],
-                                            kw.lat, kw.long, kw_time)[0]
-    
-            bs_preis_int = [fn_bs_preis_int(kw) for kw in db_kw]
-            '''
-
             # CO2-Preis Interpolation
-            ''' Tobias: faster example
-            co2_preis_int = []
-            for _ in db_kw:
-                # append new co2_preis (list) to existing list
-                co2_preis_int = co2_preis_int + self.interpol_1d(db_co2_t, db_co2_preis, kw_time)
-            '''
             co2_preis_int = [self.interpol_1d(db_co2_t, db_co2_preis, kw_time)[0] for _ in db_kw]
 
             # Entsorgungspreis Interpolation
@@ -150,21 +129,6 @@ class Model(Supermodel):
 
                 # append new ents_preis_kw (list) to existing list
                 ents_preis_int = ents_preis_int + kw_ents
-
-            ''' Tobias: faster example
-            def fn_ents_preis_int(kw):
-                db_ents = kw.kraftwerkstyp.entsorgungspreise
-                if len(db_ents) == 0:
-                    return float(0)  # Brennstoffpreis to zero if type equals "None"
-                else:
-                    return self.interpol_3d([i.datetime for i in db_ents],
-                                            [i.lat for i in db_ents],
-                                            [i.long for i in db_ents],
-                                            [i.preis for i in db_ents],
-                                            kw.lat, kw.long, kw_time)[0]
-    
-            ents_preis_int = [fn_ents_preis_int(kw) for kw in db_kw]
-            '''
 
             # Installed power Interpolation
             pinst_int = []

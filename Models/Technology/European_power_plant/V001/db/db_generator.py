@@ -14,7 +14,7 @@ import pandas as pd
 
 # ------------------------- define paths ----------------------------------
 source_file = 'Data.xlsx'
-db_path = 'sqlite:///pyjamas_powerplants_new'
+db_path = 'sqlite:///pyjamas_powerplants_final.db'
 
 # ------------------------- create database  ------------------------------------
 load_dotenv()
