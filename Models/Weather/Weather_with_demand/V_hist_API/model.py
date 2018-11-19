@@ -536,12 +536,24 @@ class Model(Supermodel):
         # add point information to weather_data
         weather_df = pd.DataFrame(data=weather_data, columns=['lat', 'lon', 'time', 'temperature', 'windspeed', 'radiation'])
         point_vec = list(range(1, 26))
-        #time_vec = weather_df['time'].unique()
-        #point_info = np.repeat(np.array(point_vec), time_vec.size, axis=0)
+        # time_vec = weather_df['time'].unique()
+        # point_info = np.repeat(np.array(point_vec), time_vec.size, axis=0)
         time_size = int(weather_df["time"].size/point_vec.__len__())
         time_vec = weather_df["time"][0:time_size]
-        point_info = np.repeat(np.array(point_vec), time_size, axis=0)
-        weather_df['point'] = point_info
+        # point_info = np.repeat(np.array(point_vec), time_size, axis=0)
+        # weather_df['point'] = point_info
+
+        # read weather data point
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        filename = os.path.join(dir_path, 'confidential', 'weatherpoints.json')
+        with open(filename, 'r') as f:
+            data_wp = json.load(f)
+        weatherpoints = pd.DataFrame(data_wp)
+        weather_df['point'] = np.nan
+        for ni in range(0, weather_df["lat"].__len__()):
+            bool_idx = (weatherpoints["lat"] == weather_df["lat"][ni]) & (weatherpoints["lon"] == weather_df["lon"][ni])
+            weather_df['point'][ni] = weatherpoints["pointnr"][bool_idx]
 
         # interpolate weather data (point) to countries
         # - analogous to done for neural network
