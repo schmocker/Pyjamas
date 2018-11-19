@@ -541,6 +541,7 @@ class Model(Supermodel):
         time_size = int(weather_df["time"].size/point_vec.__len__())
         time_vec = weather_df["time"][0:time_size]
         # point_info = np.repeat(np.array(point_vec), time_size, axis=0)
+        # weather_df['point'] = point_info
 
         # read weather data point
         path = os.path.abspath(__file__)
@@ -553,10 +554,6 @@ class Model(Supermodel):
         for ni in range(0, weather_df["lat"].__len__()):
             bool_idx = (weatherpoints["lat"] == weather_df["lat"][ni]) & (weatherpoints["lon"] == weather_df["lon"][ni])
             weather_df['point'][ni] = weatherpoints["pointnr"][bool_idx]
-
-
-
-        #weather_df['point'] = point_info
 
         # interpolate weather data (point) to countries
         # - analogous to done for neural network
