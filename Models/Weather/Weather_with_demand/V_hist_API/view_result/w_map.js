@@ -4,6 +4,7 @@ class W_map {
 
         let obj = this;
         this.run = 0;
+        this.TimeType_ID = 0;
 
         // Margin
         this.margin = {top: 50, right: 50, bottom: 50, left: 100};
@@ -41,10 +42,13 @@ class W_map {
     }
 
     async setTimeType(id) {
+        let change = this.TimeType_ID !== id;
         this.TimeType_ID = id;
-        this.run = 0;
-        await this.updateData();
-        await this.updateView();
+        if(change){
+            this.run = 0;
+            await this.updateData();
+            await this.updateView();
+        }
     }
 
     async updateData() {
@@ -92,7 +96,7 @@ class W_map {
             case "Radiation":
                 i_meteotype = 3;
                 i_meteotype_s = "radiation";
-                col_scale_range = [0, 2000];
+                col_scale_range = [0, 1000];
                 col_scale_prop = [1/(col_scale_range[1]-col_scale_range[0]),
                 -col_scale_range[0]/(col_scale_range[1]-col_scale_range[0])];
                 threshold = 10;
@@ -114,7 +118,7 @@ class W_map {
             });
         }
         */
-        i_timetype = 0; // take always current state
+        i_timetype = this.TimeType_ID; // take always current state
 
 
         // data of meteo
