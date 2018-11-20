@@ -11,10 +11,7 @@ class Powerplant {
         this.Node = this.parentNode.append('g')
             .attr('id', 'powerplants')
             .attr('class', 'circles');
-
-
-
-    }
+   }
 
     set data(data) {
         this.items = this.Node.selectAll('circle').data(data);
@@ -36,6 +33,7 @@ class Powerplant {
             .on("mouseover", function(d) {
                 let kw_bez = d.kw_bezeichnung;
                 let p = d.p_inst/1E9;
+                p = Math.round(p*100)/100;
                 let p_info = "installed power: " + p.toString() + " GW";
                 let posx = obj.projection([d.long, d.lat])[0];
                 let posy = obj.projection([d.long, d.lat])[1];
