@@ -31,12 +31,12 @@ class Model(Supermodel):
         self.outputs['y_label'] = Output(name='y label', unit='', info='Label of y axis')
 
         # define properties
-        ET_def = {"location": ['Baden'],
-                  "border": [[-1., -0.8, -0.3, 0., 0.3, 0.8, 1.]],
-                  "weight": [[-2., -1.25, -0.75, 0.75, 1.25, 2.]]}
-        NT_def = {"location": ['Baden'],
-                  "border": [[-1., -0.7, -0.4, 0., 0.4, 0.7, 1.]],
-                  "weight": [[-1.75, -1., -0.5, 0.5, 1., 1.75]]}
+        ET_def = {"location": ["Baden"],
+                  "border": [[-1.0, -0.5, -0.2, 0.0, 0.2, 0.5, 1.0]],
+                  "weight": [[-0.3, -0.6, -0.8, 1.1, 1.3, 1.5]]}
+        NT_def = {"location": ["Baden"],
+                  "border": [[-1.0, -0.8, -0.5, 0.0, 0.4, 0.8, 1.0]],
+                  "weight": [[-0.5, -0.6, -0.8, 1.2, 1.5, 1.8]]}
         ET_def = json.dumps(ET_def)
         NT_def = json.dumps(NT_def)
         self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers', example=ET_def)
