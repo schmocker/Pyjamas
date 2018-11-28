@@ -27,12 +27,13 @@ The output of this model is:
 The basic PV system having nominal power of 1kW is implemented using the following equations under the standard test 
 conditions(STC) for module's temperature
 ```
-    Pout = (Pn - Ptemp)*(Rtilt/1000)
+    Pout = (Pn - Ptemp)*(Rtilt/Rn)
     Ptmep = (Tmod - 25) * 0.0034 * Pn
     Rtilt = (1- Gloss)*Gr
     where,
     Pout = Output power[W]
     Pn = Module's nominal power[W]
+    Rn = Radiation at standard test conditions [W/m^2]
     Ptemp = Loss[W] due to modules temperature
     Tmod = PV module's temperature[°C] (STC = 25°C)
     Rtilt = Radiation on tilted surface[W/m^2]
