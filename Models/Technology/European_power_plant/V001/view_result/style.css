@@ -77,3 +77,7 @@ svg {
 .tooltip_pp>rect{
     fill: cornflowerblue;
 }
+
+.cn_active{
+    background-color: grey;
+}

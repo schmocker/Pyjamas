@@ -15,6 +15,7 @@ class Menu {
     }
 
     updateMenu(updateSpeed){
+        let obj = this;
         let allButtons = this.parent.selectAll(".cn").data(this.pp_types);
 
         allButtons.exit().remove();
@@ -23,8 +24,15 @@ class Menu {
             .text(function (d) { return d })
             .classed("cn", true)
             .on('click', function(d) {
+                obj.parent.selectAll(".cn").classed("cn_active", false);
+                d3.select(this).classed("cn_active", true);
                 d_map.setPPtype(d);
                 //console.log(d);
+            })
+            .each(function (d,i) {
+                if(i===0){
+                    d3.select(this).classed("cn_active", true);
+                }
             });
     }
 
