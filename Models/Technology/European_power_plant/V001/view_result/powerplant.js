@@ -77,7 +77,8 @@ class ToolTip_PP {
 
         this.Node = this.parentNode.append("g")
             .attr("class", "tooltip_pp")
-            .style("opacity", 0);
+            .style("opacity", 0.8)
+            .style("display", "none");
 
         this.rect = this.Node.append("rect");
         this.kw_bez = this.Node.append("text")
@@ -111,12 +112,12 @@ class ToolTip_PP {
         this.Node
             .attr("transform", "translate(" + (posx-width/2) + "," + (posy-10-this.padding-height) + ")")
             .transition().duration(this.updateSpeed)
-            .style("opacity", .9);
+            .style("display", "inline");
     }
 
     hide(){
         this.Node.transition()
             .duration(this.updateSpeed)
-            .style("opacity", 0);
+            .style("display", "none");
     }
 }

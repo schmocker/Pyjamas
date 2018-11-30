@@ -237,7 +237,8 @@ class ToolTip{
 
         this.g = this.axis.g.append("g")
             .attr("class", "tooltip")
-            .style("opacity", 0);
+            .style("opacity", 0.8)
+            .style("display", "none");
 
         this.rect = this.g.append("rect");
 
@@ -272,13 +273,13 @@ class ToolTip{
         this.g
             .attr("transform", "translate(" + (this.axis.xScale(xVal)-width/2) + "," + (this.axis.yScale(yVal)-10-this.padding-height) + ")")
             .transition().duration(this.updateSpeed)
-            .style("opacity", .9);
+            .style("display", "inline");
     }
 
     hide(){
         this.g.transition()
             .duration(this.updateSpeed)
-            .style("opacity", 0);
+            .style("display", "none");
     }
 }
 
