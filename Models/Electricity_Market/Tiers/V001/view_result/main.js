@@ -1,16 +1,31 @@
 let run = 0;
 let menu;
 let diag;
+let diag_tiers_try;
+let diag_int_try;
 let update_speed = 0.2;
 let update_interval_time = 1;
 let update_interval;
 
 
 window.onload = async function() {
+
+    // ET and NT Tiers
+    let d3Tiers = d3.select("#d3_tiers");
+    diag_tiers_try = new EN_Tiers(d3Tiers);
+
     // Diagram
-    let d3d = d3.select("#d3_drawing");
+    let d3d = d3.select("#d3_timeseries");
     //d3d.style("color", "blue");
     diag = new Diagram(d3d);
+
+    // Integrated
+    let d3Int = d3.select("#d3_integrated");
+    diag_int_try = new Integrated(d3Int);
+
+    // Buttons
+    let d3_button = d3.select("#d3_buttons");
+    buttons = new Buttons(d3_button);
 
     // menu
     menu = new Menu(d3.select("#menu"));
@@ -27,12 +42,21 @@ async function updateAll(updateSpeed) {
     await menu.updateData();
     menu.updateMenu(updateSpeed);
 
+    await buttons.updateData();
+    buttons.updateMenu(updateSpeed);
+
     await diag.updateData();
     try {
         diag.updateView(updateSpeed);
     } catch (e) {
         console.log("no view update - wait for data")
     }
+
+    await diag_tiers_try.updateData();
+    diag_tiers_try.updateView(updateSpeed);
+
+    await diag_int_try.updateData();
+    diag_int_try.updateView(updateSpeed);
 }
 
 async function set_updater() {

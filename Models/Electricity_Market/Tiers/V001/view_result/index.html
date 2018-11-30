@@ -9,7 +9,10 @@
 
     <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=main.js"></script>
     <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=Menu.js"></script>
+    <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=Buttons.js"></script>
     <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=Diagram.js"></script>
+    <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=EN_Tiers.js"></script>
+    <script type="text/javascript" src="model_view_static?MU_id={{MU_id}}&view={{view}}&fn=Integrated.js"></script>
     <script>
         let mu_id = {{MU_id}};
     </script>
@@ -18,6 +21,9 @@
 </head>
 <body>
 <div id="menu"></div>
-<div id="d3_drawing"></div>
+<div id="d3_buttons"></div>
+<div id="d3_tiers" class="tabcontent" style="display: none;"></div>
+<div id="d3_timeseries" class="tabcontent" style="display: none;"></div>
+<div id="d3_integrated" class="tabcontent" style="display: none;"></div>
 </body>
 </html>

@@ -93,6 +93,10 @@ class Model(Supermodel):
         # electricity rate
         el_rate = []
         border_tiers = []
+        border_val = []
+        ET_val = []
+        NT_val = []
+        MP_val = []
         for nt in range(0, len_loc_distnet):
 
             # compare location of distribution network with tiers locations, in it?
@@ -122,9 +126,61 @@ class Model(Supermodel):
             el_rate.append(el_rate_i)
             border_tiers.append(border_tiers_i)
 
+            border_val_i = []
+            ET_val_i = []
+            NT_val_i = []
+            border_i = border_tiers[nt]
+            len_border_i = len(border_i["borders"])
+
+            for ni in range(0, len_border_i):
+                if ni == 0:
+                    border_val_i.append(border_i["borders"][ni])
+                    ET_val_i.append(border_i["ET_tiers"][ni])
+                    NT_val_i.append(border_i["NT_tiers"][ni])
+                if ni == (len_border_i-1):
+                    border_val_i.append(border_i["borders"][ni])
+                    ET_val_i.append(border_i["ET_tiers"][ni-1])
+                    NT_val_i.append(border_i["NT_tiers"][ni-1])
+                if ((ni>0) & (ni<(len_border_i-1))):
+                    border_val_i.append(border_i["borders"][ni])
+                    ET_val_i.append(border_i["ET_tiers"][ni-1])
+                    NT_val_i.append(border_i["NT_tiers"][ni-1])
+                    border_val_i.append(border_i["borders"][ni])
+                    ET_val_i.append(border_i["ET_tiers"][ni])
+                    NT_val_i.append(border_i["NT_tiers"][ni])
+
+
+            border_val.append(border_val_i)
+            ET_val.append(ET_val_i)
+            NT_val.append(NT_val_i)
+
+            MP_val_data = []
+            for mi in range(0, el_rate_i.__len__()):
+                MP_val_i = [];
+                for ni in range(0, len_border_i):
+                    erate_i = el_rate_i[mi]
+                    if ni == 0:
+                        MP_val_i.append(erate_i[ni])
+                    if ni == (len_border_i - 1):
+                        MP_val_i.append(erate_i[ni-1])
+                    if ((ni > 0) & (ni < (len_border_i - 1))):
+                        MP_val_i.append(erate_i[ni-1])
+                        MP_val_i.append(erate_i[ni])
+
+                MP_val_data.append(MP_val_i)
+            MP_val.append(MP_val_data)
+
+
+        tier_val = [ET_val, NT_val]
+        border_lines = {"borders": border_val,
+                        "tiers": ["ET Tiers", "NT Tiers"],
+                        "tier_values": tier_val,
+                        "prices": MP_val}
+
         output = {'Stao_ID': loc_distnet,
                   'values': el_rate,
-                  'borders': border_tiers
+                  'borders': border_tiers,
+                  'border_lines': border_lines
                   }
 
         # set output

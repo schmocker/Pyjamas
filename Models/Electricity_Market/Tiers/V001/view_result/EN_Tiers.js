@@ -1,27 +1,29 @@
-class Diagram {
-    constructor(parent) {
-        this.parent = parent;
+class EN_Tiers {
+    constructor(parentObj) {
+        this.parentObj = parentObj;
         this.run = 0;
-        this.data = [];
 
         // Margin
         this.margin = {top: 100, right: 100, bottom: 170, left: 100};
         this.width = window.innerWidth - this.margin.left - this.margin.right;
-        this.height = 800;
+        this.height = 800; //parentObj.node().getBoundingClientRect().height - this.margin.top - this.margin.bottom;
 
         // Elements
-        this.svg = parent.append("svg")
+        this.svg = parentObj.append("svg")
             .attr("width", this.width + this.margin.left + this.margin.right)
             .attr("height", this.height + this.margin.top + this.margin.bottom);
 
-        this.axis = new Axis(this.svg, 100, 100, this.width, this.height);
-        this.axis.xLabel = "Date";
+        this.axis = new Axis_Tiers(this.svg, 100, 100, this.width, this.height);
+        this.axis.xLabelLeft = "Production";
+        this.axis.xLabelRight = "Consumption";
+        this.axis.yLabel = "Weights";
 
-        this.line = new Line(this.axis);
+        this.line = new Line_Tiers(this.axis);
 
-        this.legend = new Legend(this.axis, 0, this.height + 140);
+        this.legend = new Legend_Tiers(this.axis, 0, this.height + 140);
 
     }
+
 
     async setDistNet(id) {
         this.Stao_ID = id;
@@ -33,8 +35,12 @@ class Diagram {
     async updateData() {
         let obj = this;
 
-        let filter = {};
+        let filter = {
+            'stao': ["el_rate", "Stao_ID"],
+            'data': ["el_rate", "border_lines"]
+        };
 
+        //filter = {};
         let data_dict = {'mu_id': mu_id, 'mu_run': this.run, 'filter': filter};
         let data = await get(data_dict);
         data = JSON.parse(data);
@@ -42,61 +48,52 @@ class Diagram {
         // select stao
         let i_stao = -1;
         if (data) {
-            i_stao = data.result.el_rate.Stao_ID.findIndex(function (i) {
+            i_stao = data.result.stao.findIndex(function (i) {
                 return i === obj.Stao_ID;
             });
         }
 
         if (data && i_stao >= 0) {
             this.run = data.run;
-            let y_scaling = data.result.y_scaling;
 
             let data_stao = {
-                Stao_ID: data.result.el_rate.Stao_ID[i_stao],
-                borders: data.result.el_rate.borders[i_stao],
-                values: data.result.el_rate.values[i_stao]
+                Stao_ID: data.result.stao[i_stao],
+                borders: data.result.data.borders[i_stao],
+                tier_values: [data.result.data.tier_values[0][i_stao], data.result.data.tier_values[1][i_stao]]
             };
 
             // Level labels (legend)
-            let l_borders = data_stao.borders.borders.length;
-            let labels = [];
-            let ib;
-            for (ib = 0; ib < (l_borders - 1); ib++) {
-                labels[ib] = "[" + data_stao.borders.borders[ib].toString() + ", " +
-                    data_stao.borders.borders[ib + 1].toString() + "]";
-            }
+            let labels = data.result.data.tiers;
 
             // Data
-            this.data = data_stao.values[0].map(function (c, id_c) {
+            this.data = labels.map(function (c, id_c) {
                 return {
                     id: id_c,
-                    label: labels[id_c],
-                    values: data.result.times.map(function (d, id_d) {
+                    label: c,
+                    values: data_stao.borders.map(function (d, id_d) {
                         return {
-                            date: new Date(d * 1E3),
-                            y: data_stao.values[id_d][id_c]*y_scaling
+                            x: d,
+                            y: data_stao.tier_values[id_c][id_d]
                         }
                     })
                 }
             });
             this.data.label = labels;
-            this.data.yLabel = data.result.y_label;
         }
     }
 
+
     async updateView(updateSpeed) {
-        //console.log(new Date());
         if (this.data) {
-            this.axis.yLabel = this.data.yLabel;
 
             let x_min = d3.min(this.data, function (c) {
                 return d3.min(c.values, function (d) {
-                    return d.date;
+                    return d.x;
                 });
             });
             let x_max = d3.max(this.data, function (c) {
                 return d3.max(c.values, function (d) {
-                    return d.date;
+                    return d.x;
                 });
             });
             this.axis.xLimits = [x_min, x_max];
@@ -121,13 +118,13 @@ class Diagram {
     }
 }
 
-class Axis {
+
+class Axis_Tiers {
     constructor(parent, x, y, width, height){
 
-        this.formatTime = d3.timeFormat("%Y-%m-%d %H:%M:%S");
         this.updateSpeed=200;
 
-        this.xScale = d3.scaleTime().range([0, width]);
+        this.xScale = d3.scaleLinear().range([0, width]);
         this.yScale = d3.scaleLinear().range([height, 0]);
 
         this.zScale = d3.scaleOrdinal(d3.schemeCategory10);
@@ -135,7 +132,7 @@ class Axis {
         this.g = parent.append("g")
             .attr("transform", "translate(" + x + "," + y + ")");
 
-        this.g.append('text').text('Time Series')
+        this.g.append('text').text('Tiers')
             .style("text-anchor", "middle")
             .attr("transform", "translate(" + width/2 + ",-20)");
 
@@ -143,27 +140,34 @@ class Axis {
             .attr("class", "axis axis--x")
             .attr("transform", "translate(0," + height + ")");
 
-        this._xLabel = this.xAxis.append("text")
-            .attr('class', 'xLabel')
-            .attr("y", 110)
-            .attr("x", width/2)
+        this._xLabelLeft = this.xAxis.append("text")
+            .attr('class', 'xLabelL')
             .style("fill", "#000")
-            .text("");
+            .attr("text-anchor", "start");
+
+        this._xLabelRight = this.xAxis.append("text")
+            .attr('class', 'xLabelR')
+            .style("fill", "#000")
+            .attr("text-anchor", "end");
 
         this.yAxis = this.g.append("g")
             .attr("class", "axis axis--y");
 
         this._yLabel = this.yAxis.append("text")
             .attr('class', 'yLabel')
-            .attr("transform", "rotate(-90)")
-            .attr("y", -70)
-            .attr("x",0- (height / 2))
-            .style("fill", "#000")
-            .text("");
+            .attr('text-anchor', 'start')
+            .attr('alignment-baseline', 'hanging')
+            //.attr("transform", "rotate(-90)")
+            //.attr("y", -70)
+            //.attr("x",0- (height / 2))
+            .style("fill", "#000");
     }
 
-    set xLabel(xLabel){
-        this._xLabel.text(xLabel);
+    set xLabelLeft(xLabelLeft){
+        this._xLabelLeft.text(xLabelLeft);
+    }
+    set xLabelRight(xLabelRight){
+        this._xLabelRight.text(xLabelRight);
     }
     set yLabel(yLabel){
         this._yLabel.text(yLabel);
@@ -179,11 +183,14 @@ class Axis {
         this.yScale.domain(yLimits);
         this.updateYAxis();
     }
+    get yLimits(){
+        return this.yScale.domain();
+    }
     set zLimits(zLimits){
         try {
             let n = zLimits.length;
+            let colors = Array.apply(0, Array(n)).map(function(d,i) { return d3.interpolateRdYlBu(i/(n-1)) });
             //let colors = Array.apply(0, Array(n)).map(function(d,i) { return d3.interpolateRdYlGn(i/(n-1)) });
-            let colors = Array.apply(0, Array(n)).map(function(d,i) { return d3.interpolateRdYlGn(1-i/(n-1)) });
             this.zScale = d3.scaleOrdinal(colors);
             this.zScale.domain(zLimits);
         } catch (e) {
@@ -194,22 +201,35 @@ class Axis {
     updateXAxis(){
         this.xAxis
             .transition().duration(this.updateSpeed)
-            .call(d3.axisBottom(this.xScale).tickFormat(this.formatTime))
+            .call(d3.axisBottom(this.xScale))
+            .attr('transform', 'translate(0,' + (this.yScale(0)) + ')')
             .selectAll(".tick").selectAll("text")
-            .style("text-anchor", "end")
-            .attr("dx", "0em").attr("dy", "1em")
-            .attr("transform", "rotate(-15)");
+            .style("text-anchor", "middle")
+            .attr("dx", "0em").attr("dy", "1em");
+
+        this.xAxis.selectAll(".xLabelL")
+            .attr("y", -10)
+            .attr("x", this.xScale(this.xLimits[0]));
+
+        this.xAxis.selectAll(".xLabelR")
+            .attr("y", -10)
+            .attr("x", this.xScale(this.xLimits[1]));
     }
 
     updateYAxis(){
         this.yAxis
             .transition().duration(this.updateSpeed)
-            .call(d3.axisLeft(this.yScale));
+            .call(d3.axisLeft(this.yScale))
+            .attr('transform', 'translate(' + (this.xScale(0)) + ',0)');
+
+        this.yAxis.selectAll(".yLabel")
+            .attr("y", this.yScale(this.yLimits[1])+10)
+            .attr("x", 10);
     }
 }
 
 
-class Line {
+class Line_Tiers {
     constructor(axis){
         this.parent = axis.g;
         this.axis = axis;
@@ -218,10 +238,8 @@ class Line {
 
         this.line = d3.line()
             .defined(function(d) { return d.y!==undefined; })
-            .x(function(d) { return obj.axis.xScale(d.date); })
+            .x(function(d) { return obj.axis.xScale(d.x); })
             .y(function(d) { return obj.axis.yScale(d.y); });
-
-        this.tooltip = new ToolTip(axis);
 
         this.updateSpeed = 500;
 
@@ -241,8 +259,10 @@ class Line {
 
     _enter(){
         let new_items = this.items.enter().append("g").attr("class", "line");
-        new_items.append("path");
-        new_items.append("g").attr("class", "circles");
+        new_items.append("path").style("stroke-dasharray", function (d, i) {
+            return i>0 ? 8 : 0;
+        }).style("stroke-width", 4);
+        //new_items.append("g").attr("class", "circles");
     }
 
     _update(){
@@ -251,91 +271,10 @@ class Line {
             .transition().duration(this.updateSpeed)
             .attr("d", function(d) {return obj.line(d.values); })
             .style("stroke", function(d) {return obj.axis.zScale(d.id); });
-
-        //this.items.select('circle').remove();
-
-        // Circles
-        let circles = this.items.select(".circles").selectAll("circle")
-            .data(function (d) {return d.values.filter(function(item){return item.y !== undefined}); });
-
-
-        circles.exit().remove();
-
-        circles.enter().append('circle')
-            .attr("r", 3).style("opacity", 0)
-            .on("mouseover", function(d) { obj.tooltip.show(d.date, d.y); })
-            .on("mouseout", function() { obj.tooltip.hide(); });
-
-        circles = this.items.select(".circles").selectAll("circle");
-
-        circles
-            .style("stroke", function() {return obj.axis.zScale(this.parentNode.__data__.id); })
-            .style("fill", function() {return obj.axis.zScale(this.parentNode.__data__.id); });
-        circles
-            .transition().duration(this.updateSpeed)
-            .attr("cx", function(d) { return obj.axis.xScale(d.date); })
-            .attr("cy", function(d) { return obj.axis.yScale(d.y); });
-        circles
-            .transition().delay(this.updateSpeed)
-            .style("opacity", 1);
     }
 }
 
-class ToolTip{
-    constructor(axis){
-        this.axis = axis;
-        this.formatTime = axis.formatTime;
-        this.updateSpeed = 200;
-
-        this.g = this.axis.g.append("g")
-            .attr("class", "tooltip")
-            .style("opacity", 0);
-
-        this.rect = this.g.append("rect");
-
-        this.xVal = this.g.append("text").attr("id", "xVal");
-        this.yVal = this.g.append("text").attr("id", "yVal");
-
-        this.padding = 10;
-    }
-
-    show(xVal, yVal){
-
-        this.g.moveToFront();
-
-        let size = parseInt(this.g.style("font-size"));
-        this.xVal.text(this.formatTime(xVal))
-            .attr("y",size);
-        this.yVal.text(yVal)
-            .attr("y",2.5*size);
-
-        let height = 2.5*size;
-
-        let wx = this.xVal.node().clientWidth;
-        let wy = this.yVal.node().clientWidth;
-        let width = Math.max(wx,wy);
-
-        this.rect
-            .attr("x",-this.padding)
-            .attr("y",-this.padding)
-            .attr("width", width+2*this.padding)
-            .attr("height", height+2*this.padding);
-
-        this.g
-            .attr("transform", "translate(" + (this.axis.xScale(xVal)-width/2) + "," + (this.axis.yScale(yVal)-10-this.padding-height) + ")")
-            .transition().duration(this.updateSpeed)
-            .style("opacity", .9);
-    }
-
-    hide(){
-        this.g.transition()
-            .duration(this.updateSpeed)
-            .style("opacity", 0);
-    }
-}
-
-
-class Legend {
+class Legend_Tiers {
     constructor(axis, x, y) {
         this.axis = axis;
 
@@ -396,17 +335,12 @@ class Legend {
             return g.getBBox().width
         });
         let maxwidth_clients = d3.max(allWidths);
-        maxwidth_clients = d3.max([120, maxwidth_clients]);
         let space = 20;
-        if (maxwidth_clients) {
-            obj.dx = maxwidth_clients + space;
-        } else {
-            obj.dx = 0;
-        }
-
+        obj.dx = maxwidth_clients + space;
         this.items.attr("transform", function (d, i) {
             return "translate(" + obj.x + obj.dx * i + "," + obj.y + ")"
         });
     }
 
 }
+

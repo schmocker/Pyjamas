@@ -11,10 +11,13 @@ class Menu {
         await this.updateData();
         if(this.data){
             await diag.setDistNet(this.data[0]);
+            await diag_tiers_try.setDistNet(this.data[0]);
+            await diag_int_try.setDistNet(this.data[0]);
         }
     }
 
     updateMenu(updateSpeed){
+        let obj = this;
         let allButtons = this.parent.selectAll(".cn").data(this.data);
 
         allButtons.exit().remove();
@@ -23,8 +26,14 @@ class Menu {
             .text(function (d) { return d })
             .classed("cn", true)
             .on('click', function(d) {
+                obj.parent.selectAll(".cn").classed("cn_active", false);
+                d3.select(this).classed("cn_active", true);
                 diag.setDistNet(d);
-                log(d);
+            })
+            .each(function (d,i) {
+                if(i===0){
+                    d3.select(this).classed("cn_active", true);
+                }
             });
     }
 
