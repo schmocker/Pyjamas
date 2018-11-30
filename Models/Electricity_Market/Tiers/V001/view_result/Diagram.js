@@ -81,6 +81,7 @@ class Diagram {
             });
             this.data.label = labels;
             this.data.yLabel = data.result.y_label;
+            this.data.y_unit = data.result.y_unit;
         }
     }
 
@@ -116,6 +117,7 @@ class Diagram {
             this.axis.zLimits = this.data.label;
 
             this.line.data = this.data;
+            this.line.unit = this.data.y_unit;
             this.legend.data = this.data.label;
         }
     }
@@ -227,12 +229,17 @@ class Line {
 
         this.items = null;
     }
+
     set data(data){
         this.items = this.parent.selectAll('.line').data(data);
         this._exit();
         this._enter();
         this.items = this.parent.selectAll('.line');
         this._update();
+    }
+
+    set unit(y_unit){
+        this.y_unit = y_unit;
     }
 
     _exit(){
@@ -263,7 +270,7 @@ class Line {
 
         circles.enter().append('circle')
             .attr("r", 3).style("opacity", 0)
-            .on("mouseover", function(d) { obj.tooltip.show(d.date, d.y); })
+            .on("mouseover", function(d) { obj.tooltip.show(d.date, d.y, obj.y_unit); })
             .on("mouseout", function() { obj.tooltip.hide(); });
 
         circles = this.items.select(".circles").selectAll("circle");
@@ -289,7 +296,8 @@ class ToolTip{
 
         this.g = this.axis.g.append("g")
             .attr("class", "tooltip")
-            .style("opacity", 0);
+            .style("opacity", 0.8)
+            .style("display", "none");
 
         this.rect = this.g.append("rect");
 
@@ -299,14 +307,15 @@ class ToolTip{
         this.padding = 10;
     }
 
-    show(xVal, yVal){
+    show(xVal, yVal, y_unit){
 
         this.g.moveToFront();
 
         let size = parseInt(this.g.style("font-size"));
         this.xVal.text(this.formatTime(xVal))
             .attr("y",size);
-        this.yVal.text(yVal)
+        let y_label = 'Price: ' + Math.round(yVal*100)/100 + ' '+ y_unit;
+        this.yVal.text(y_label)
             .attr("y",2.5*size);
 
         let height = 2.5*size;
@@ -324,13 +333,13 @@ class ToolTip{
         this.g
             .attr("transform", "translate(" + (this.axis.xScale(xVal)-width/2) + "," + (this.axis.yScale(yVal)-10-this.padding-height) + ")")
             .transition().duration(this.updateSpeed)
-            .style("opacity", .9);
+            .style("display", "inline");
     }
 
     hide(){
         this.g.transition()
             .duration(this.updateSpeed)
-            .style("opacity", 0);
+            .style("display", "none");
     }
 }
 

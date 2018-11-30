@@ -28,6 +28,7 @@ class Model(Supermodel):
         self.outputs['el_rate'] = Output(name='Electricity rate', unit='€/J', info='electricity rate')
         self.outputs['times'] = Output(name='Times', unit='s', info='Times')
         self.outputs['y_scaling'] = Output(name='Scaling of y axis', unit='', info='Scaling of y axis')
+        self.outputs['y_unit'] = Output(name='Unit of y axis', unit='', info='Unit of y axis')
         self.outputs['y_label'] = Output(name='y label', unit='', info='Label of y axis')
 
         # define properties
@@ -39,10 +40,14 @@ class Model(Supermodel):
                   "weight": [[-0.5, -0.6, -0.8, 1.2, 1.5, 1.8]]}
         ET_def = json.dumps(ET_def)
         NT_def = json.dumps(NT_def)
-        self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-', info='borders and weights of energy tiers', example=ET_def)
-        self.properties['weight_NT'] = Property(default=NT_def, data_type=str, name='net tiers', unit='-', info='borders and weights of net tiers', example=NT_def)
+        self.properties['weight_ET'] = Property(default=ET_def, data_type=str, name='energy tiers', unit='-',
+                                                info='borders and weights of energy tiers', example=ET_def)
+        self.properties['weight_NT'] = Property(default=NT_def, data_type=str, name='net tiers', unit='-',
+                                                info='borders and weights of net tiers', example=NT_def)
         self.properties["scaling"] = Property(default=1, data_type=float, name='Scaling factor', unit='-',
                                               info='Scaling factor for y axis', example='3.6e9')
+        self.properties["y_unit"] = Property(default='€/MWh', data_type=str, name='unit of y label', unit='-',
+                                             info='Unit of label for y axis', example='[€/MWh]')
         self.properties["y_labeling"] = Property(default='Price', data_type=str, name='y label', unit='-',
                                                  info='Label for y axis', example='Price [€/MWh]')
 
@@ -50,6 +55,7 @@ class Model(Supermodel):
         self.weight_ET = None
         self.weight_NT = None
         self.y_scaling = None
+        self.y_unit = None
         self.y_labeling = None
 
     async def func_birth(self):
@@ -67,6 +73,9 @@ class Model(Supermodel):
 
         if 'scaling' in keys:
             self.y_scaling = self.get_property("scaling")
+
+        if 'y_unit' in keys:
+            self.y_unit = self.get_property("y_unit")
 
         if 'y_labeling' in keys:
             self.y_labeling = self.get_property("y_labeling")
@@ -187,6 +196,7 @@ class Model(Supermodel):
         self.set_output("el_rate", output)
         self.set_output("times", await self.get_input('futures'))
         self.set_output("y_scaling", self.y_scaling)
+        self.set_output("y_unit", self.y_unit)
         self.set_output("y_label", self.y_labeling)
 
     def det_border_tiers(self, it):

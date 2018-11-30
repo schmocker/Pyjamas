@@ -17,8 +17,6 @@ class Integrated {
         this.axis = new Axis_Int(this.svg, 100, 100, this.width, this.height);
         this.axis.xLabelLeft = "Production";
         this.axis.xLabelRight = "Consumption";
-        this.axis.yLabel = "Costs [€/MWh]";
-
 
         this.line = new Line_Int(this.axis);
 
@@ -65,7 +63,7 @@ class Integrated {
                       'prices': ['el_rate', 'border_lines', 'prices', i_stao, i_time],
                       'prices_border': ['el_rate', 'border_lines', 'borders', i_stao],
                       'y_scaling': ['y_scaling'],
-                      'y_label': ['y_label']
+                      'y_unit': ['y_unit']
             };
 
             let data_dict = {'mu_id': mu_id, 'mu_run': this.run, 'filter': filter};
@@ -87,7 +85,7 @@ class Integrated {
 
             // Level labels (legend)
             //let labels = ["Consumption", "Consumption_bar", "Production_bar", "Production"];
-            let labels = ["Consumption costs", "Consumption price", "Production price", "Production costs"];
+            let labels = ["Consumption price", "Consumption tiers price", "Production tiers price", "Production price"];
             this.data.label = labels;
 
             // Cost per energy
@@ -183,11 +181,16 @@ class Integrated {
             });
 
             this.data.label = labels;
+            this.data.y_scaling = y_scaling;
+            this.data.y_unit = data.result.y_unit;
         }
     }
 
     async updateView(updateSpeed) {
         if (this.data) {
+            let ylabel = 'Price ' + this.data.y_unit;
+            this.axis.yLabel = ylabel;
+
             let x_min = d3.min(this.data, function (c) {
                 return d3.min(c.values, function (d) {
                     return d.x;
@@ -215,6 +218,7 @@ class Integrated {
             this.axis.zLimits = this.data.label;
 
             this.line.data = this.data;
+            this.line.unit = this.data.y_unit;
             this.legend.data = this.data.label;
         }
     }
@@ -237,7 +241,7 @@ class Axis_Int {
         this.g = parent.append("g")
             .attr("transform", "translate(" + x + "," + y + ")");
 
-        this.g.append('text').text('Costs')
+        this.g.append('text').text('Prices')
             .style("text-anchor", "middle")
             .attr("transform", "translate(" + width/2 + ",-20)");
 
@@ -354,12 +358,17 @@ class Line_Int {
 
         this.items = null;
     }
+
     set data(data){
         this.items = this.parent.selectAll('.line').data(data);
         this._exit();
         this._enter();
         this.items = this.parent.selectAll('.line');
         this._update();
+    }
+
+    set unit(y_unit){
+        this.y_unit = y_unit;
     }
 
     _exit(){
@@ -389,8 +398,9 @@ class Line_Int {
         circles.exit().remove();
 
         circles.enter().append('circle')
-            .attr("r", 3).style("opacity", 0)
-            .on("mouseover", function(d) { obj.tooltip.show(d.x, d.y); })
+            .attr("r", 3)
+            .style("opacity", 0)
+            .on("mouseover", function(d) { obj.tooltip.show(d.x, d.y, obj.y_unit); })
             .on("mouseout", function() { obj.tooltip.hide(); });
 
         circles = this.items.select(".circles").selectAll("circle");
@@ -426,13 +436,13 @@ class ToolTip_Int {
         this.padding = 10;
     }
 
-    show(xVal, yVal){
+    show(xVal, yVal, y_unit){
 
         this.g.moveToFront();
 
         let size = parseInt(this.g.style("font-size"));
-        let x_label = 'rel. power: ' + Math.round(xVal*100)/100;
-        let y_label = 'cost: ' + Math.round(yVal*100)/100 + ' €/MWh';
+        let x_label = 'Rel. power: ' + Math.round(xVal*100)/100;
+        let y_label = 'Price: ' + Math.round(yVal*100)/100 + ' '+ y_unit;
         this.xVal.text(x_label)
             .attr("y",size);
         this.yVal.text(y_label)
