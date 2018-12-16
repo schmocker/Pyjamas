@@ -1,5 +1,5 @@
-from core.util import Input, Output, Property
-from core.supermodel import Supermodel
+from pyjamas_core.util import Input, Output, Property
+from pyjamas_core.supermodel import Supermodel
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.path import Path

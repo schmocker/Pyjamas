@@ -1,5 +1,5 @@
-from core import Supermodel
-from core.util import Input, Output
+from pyjamas_core import Supermodel
+from pyjamas_core.util import Input, Output
 
 
 # define the model class and inherit from class "Supermodel"

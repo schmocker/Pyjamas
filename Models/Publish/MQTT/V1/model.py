@@ -1,5 +1,5 @@
-from core.util import Input, Output, Property
-from core.supermodel import Supermodel
+from pyjamas_core.util import Input, Output, Property
+from pyjamas_core.supermodel import Supermodel
 import paho.mqtt.client as mqtt
 import json
 
@@ -12,7 +12,7 @@ class Model(Supermodel):
 
         self.properties['host'] = Property(default='iot.eclipse.org', data_type=str, name='Broker Address', unit='-', info='string')
         self.properties['port'] = Property(default=1883, data_type=int, name='Broker Port', unit='-', info='int, usually 1883 for MQTT')
-        self.properties['topic'] = Property(default='pyjamas', data_type=str, name='Topic', unit='-', info='string')
+        self.properties['topic'] = Property(default='pyjamas.db', data_type=str, name='Topic', unit='-', info='string')
 
         self.client = None
         self.host = None
@@ -81,7 +81,7 @@ if __name__=='__main__':
     properties = {
         'host': '147.86.10.49',
         'port': 50100,
-        'topic': 'pyjamas/values'
+        'topic': 'pyjamas.db/values'
     }
 
     outputs = Model.test(inputs, properties)

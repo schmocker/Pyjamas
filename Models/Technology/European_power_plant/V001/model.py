@@ -1,6 +1,6 @@
 # imports from core
-from core import Supermodel
-from core.util import Input, Output
+from pyjamas_core import Supermodel
+from pyjamas_core.util import Input, Output
 
 # imports for database
 from sqlalchemy import create_engine
