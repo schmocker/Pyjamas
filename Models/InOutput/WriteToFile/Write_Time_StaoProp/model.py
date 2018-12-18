@@ -1,5 +1,5 @@
-from core import Supermodel
-from core.util import Input, Output, Property
+from pyjamas_core.util import Input, Output, Property
+from pyjamas_core.supermodel import Supermodel
 from datetime import datetime, timedelta
 from Models._utils.time import datetime2utc_time, utc_time2datetime
 import numpy as np
