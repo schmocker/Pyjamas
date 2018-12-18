@@ -1,6 +1,6 @@
 import asyncio
-from core.util import Input, Output, Property
-from core.supermodel import Supermodel
+from pyjamas_core.util import Input, Output, Property
+from pyjamas_core.supermodel import Supermodel
 
 class Model(Supermodel):
     """outputs a string representing a sliding window on the full_text property

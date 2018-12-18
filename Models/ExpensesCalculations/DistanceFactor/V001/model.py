@@ -1,5 +1,5 @@
-from core import Supermodel
-from core.util import Input, Output, Property
+from pyjamas_core import Supermodel
+from pyjamas_core.util import Input, Output, Property
 from geopy.distance import geodesic
 import numpy as np
 

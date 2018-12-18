@@ -1,10 +1,10 @@
 from FlaskApp.app import app
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore
-from core import Controller
+from pyjamas_core import Controller
 
 
-# instantiate Controller from pyjamas core
+# instantiate Controller from pyjamas_core
 controller = Controller(logging_path='logs', DEBUG=app.config['FLASK_DEBUG'])
 print("CONTROLLER CREATED")
 

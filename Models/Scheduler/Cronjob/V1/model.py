@@ -1,6 +1,6 @@
 import asyncio
-from core.util import Output, Property
-from core.supermodel import Supermodel
+from pyjamas_core.util import Output, Property
+from pyjamas_core.supermodel import Supermodel
 import time
 import calendar as cal
 
