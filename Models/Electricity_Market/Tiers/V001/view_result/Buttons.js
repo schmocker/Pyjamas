@@ -51,7 +51,7 @@ class Buttons {
     }
 
     async updateData(){
-        this.diag_types = {d3_tiers: "ET & NT Tiers", d3_timeseries: "Time series", d3_integrated: "Costs"};
+        this.diag_types = {d3_tiers: "ET & NT Tiers", d3_timeseries: "Time series", d3_integrated: "Prices"};
 
         this.diag_types = d3.entries(this.diag_types);
     }
