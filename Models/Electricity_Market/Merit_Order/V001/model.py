@@ -80,6 +80,19 @@ class Model(Supermodel):
         prices = {'distribution_networks': dn, 'prices': prices}
         pp_ids = {'distribution_networks': dn, 'pp_ids': pp_ids}
 
+
+
+        def final_load(i_pp, i_dn, i_t):
+            if power_plants['total_costs'][i_pp][i_dn] <= prices['prices'][i_dn][i_t]:
+                return power_plants['load'][i_pp][i_t]
+            else:
+                return 0
+
+        power_plants['sold_load'] = [[[final_load(i_pp, i_dn, i_t)
+                                        for i_t in range(len(prices['prices'][0]))]
+                                       for i_dn in range(len(prices['distribution_networks']))]
+                                      for i_pp in range(len(power_plants['id']))]
+
         self.set_output("market_prices", prices)
         self.set_output("sorted_pp_id", pp_ids)
         self.set_output("power_plants2", power_plants)
