@@ -35,3 +35,6 @@ The following properties are writen to the file:
 
 ## Remarks
 
+* write a new file, when no file existing with corresponding start, time step and end date.
+* else it appends the data
+* => to force a new file, delete old ones
