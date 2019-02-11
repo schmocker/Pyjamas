@@ -9,3 +9,15 @@ Pyjamas is a web-based simulation environment. The word Pyjamas is short for:
 * **S**imulation program: That's actually what Pyjamas is all about!
 
 For more information go to the [Pyjamas Wiki](https://github.com/schmocker/Pyjamas/wiki)
+
+## Pyjamas Core
+The [Simulation Core](https://github.com/schmocker/pyjamas_core) (without the flask app and the pre-existing models) is implemented seperatly and can be installed using:
+```
+pip install pyjamas-core
+```
+
+## Dependencies
+Install all dependencies using:
+```
+pip install -r requirements.txt
+```
