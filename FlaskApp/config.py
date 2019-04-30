@@ -22,7 +22,7 @@ DB_PORT = environ.get("DB_PORT", default=3306)
 DB_DATABASE = environ.get("DB_DATABASE", default='pyjamas.db')
 DB_USER = environ.get("DB_USER", default='pyjamas_db_user')
 DB_PASSWORD = environ.get("DB_PASSWORD", default='PYJAMAS_DB_PWD')
-DB_DRIVER = environ.get("DB_DRIVER", default='mysql+pymysql')
+DB_DRIVER = environ.get("DB_DRIVER", default='sqlite')  # for mysql use: mysql+pymysql
 
 
 SECRET_KEY = environ.get("SECRET_KEY", default='pyjamas_secret')

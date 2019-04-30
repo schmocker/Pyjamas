@@ -1,22 +1,27 @@
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/header.css')}}">
-<div id="header">
-    <div id="title">
-        <a id="title-logo" href="/"><img src="/static/images/favicon.png"></a>
-        <a id="title-text" href="/">
-            <h1>Pyjamas</h1>
-        </a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="/">
+        <img src="{{ url_for('static', filename='images/favicon.png') }}" width="30" height="30"
+             class="d-inline-block align-top " alt="">
+        Pyjamas
+    </a>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/schmocker/Pyjamas/wiki" target="_blank">Wiki</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/agents">Agents</a>  <!--  {% if not loggedin %}disabled{% endif %} -->
+            </li>
+            <li class="nav-item">
+                {% if loggedin %}
+                    <a class="nav-link" href="/logout">Logout</a>
+                {% else %}
+                    <a class="nav-link" href="/login">Login</a>
+                {% endif %}
+            </li>
+        </ul>
     </div>
-    <div id="menu">
-        <a class="menu_item" href="/">Home</a>
-        {% if loggedin %}
-        <a class="menu_item" href="/agents">Agents</a>
-        {% endif %}
-        <a class="menu_item" href="https://github.com/schmocker/Pyjamas/wiki" target="_blank">Wiki</a>
-        {% if loggedin %}
-        <a class="menu_item" href="/logout">Logout</a>
-        {% else %}
-        <a class="menu_item" href="/login">Login</a>
-        {% endif %}
-        <a class="menu_item" href="/agents">Agents</a>
-    </div>
-</div>
+</nav>

@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_socketio import SocketIO
 import jinja2
 
 # instantiate Flask app
@@ -10,5 +11,8 @@ app.jinja_loader = jinja2.ChoiceLoader([ app.jinja_loader,jinja2.FileSystemLoade
 # load configs
 app.config.from_pyfile('config.py')
 
+# create web socket
+socketio = SocketIO(app)
+
 # load routes
-from . import routes
+from .routes import *

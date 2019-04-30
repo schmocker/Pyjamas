@@ -1,16 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Pyjamas</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css')}}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/home.css')}}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/code.css')}}">
-</head>
-<body>
-    {% include 'imports/header.html' %}
+{% extends 'layout.html' %}
 
-    <div id="content">{{ content }}</div>
-</body>
-</html>
+ {% block content %}
+     <div class="container">{{ content }}</div>
+ {% endblock %}

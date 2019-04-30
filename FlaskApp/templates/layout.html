@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pyjamas</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+            integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+            integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+            crossorigin="anonymous"></script>
+    <!-- End Bootstrap -->
+
+
+    {#    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">#}
+    {#    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/home.css') }}">#}
+    {#    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/code.css') }}">#}
+</head>
+<body>
+{% include 'imports/header.html' %}
+{% block content %}{% endblock %}
+<footer class="container-fluid bg-secondary">
+    <div class="row justify-content-between p-2 m-0">
+        <div class="col">
+            <img class="mb-2 " src="{{ url_for('static', filename='images/fhnw_logo.png') }}" alt="FHNW Logo"
+                 style="max-width: 80%">
+        </div>
+        <div class="col">
+            <h5>Features</h5>
+            <ul class="list-unstyled text-small">
+                <li><a class="text-muted" href="#">Cool stuff</a></li>
+                <li><a class="text-muted" href="#">Random feature</a></li>
+                <li><a class="text-muted" href="#">Team feature</a></li>
+                <li><a class="text-muted" href="#">Stuff for developers</a></li>
+                <li><a class="text-muted" href="#">Another one</a></li>
+                <li><a class="text-muted" href="#">Last time</a></li>
+            </ul>
+        </div>
+        <div class="col">
+            <h5>Projekt-Team</h5>
+            <ul class="list-unstyled text-small">
+                <li>Tobias Schmocker</li>
+                <li>Fabienne Mangold</li>
+                <li>Simon Beck</li>
+                <li>Linus Walker</li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-copyright text-center py-3">© 2019 Copyright:
+        <a href="https://www.fhnw.ch"> FHNW</a>
+    </div>
+</footer>
+</body>
+</html>

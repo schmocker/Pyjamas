@@ -7,6 +7,7 @@ bcrypt
 Flask
 flask_security
 flask_sqlalchemy
+flask-socketio
 pyjamas_core==0.1.1
 
 # required for models

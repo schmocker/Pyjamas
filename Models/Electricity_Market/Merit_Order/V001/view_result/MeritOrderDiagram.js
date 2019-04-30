@@ -12,7 +12,7 @@ class MeritOrderDiagram {
 
         this.div = parent.append("div").attr("class", "tooltip");
 
-        this.margin = {top: 20, right: 50, bottom: 50, left: 50};
+        this.margin = {top: 20, right: 50, bottom: 70, left: 70};
         this.width = window.innerWidth - this.margin.left - this.margin.right;
         this.height = parent.node().getBoundingClientRect().height - this.margin.top - this.margin.bottom;
 
@@ -40,7 +40,8 @@ class MeritOrderDiagram {
         this.yAxis = this.svg.append("g")
             .classed('y_axis', true);
 
-        this.yLabel = this.createXLabel(this.svg);
+        this.xLabel = this.createXLabel(this.svg);
+        this.yLabel = this.createYLabel(this.svg);
 
     }
 
@@ -147,10 +148,19 @@ class MeritOrderDiagram {
     }
     async updateXLabel(updateSpeed){
         let obj = this;
-        this.yLabel
+        this.xLabel
             .transition().duration(updateSpeed)
             .text('Power ['+this.power_unit+']')
             .attr("transform", function() { return "translate(" + obj.xScale(obj.xScale.domain()[1]/2) + "," + obj.yScale(0-obj.yScale.domain()[1]/9) + ")"; });
+    }
+
+    createYLabel(parent){
+        return parent.append("text")
+            .text('Marginal Costs + Distance Costs [€/MWh]')
+            .attr('class', 'yLabel')
+            .attr("transform", "rotate(-90)")
+            .style("text-anchor", "end")
+            .attr("y", -35);
     }
 
 
