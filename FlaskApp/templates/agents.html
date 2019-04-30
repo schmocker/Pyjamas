@@ -1,38 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Pyjamas</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css')}}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/agents.css')}}">
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script type="text/javascript" src="static/js/agents.js"></script>
-</head>
-<body>
-{% include 'imports/header.html' %}
-<div id="content">
-    <h2>Agents</h2>
-    <div class="agents agents-grid-container">
-        {% for agent in agents %}
-        <div class="agent agents-grid-item">
-            <img src="static/images/icons/remove.png" class="remove" title="remove" onclick="remove_agent({{agent.id}});">
-            <img src="static/images/icons/edit.png" class="edit" title="edit" onclick="edit_agent({{agent.id}});">
-            <img src="static/images/icons/rename.png" class="rename" title="rename" onclick="rename('{{agent.id}}', '{{agent.name}}');">
-            <img src="static/images/icons/duplicate.png" class="duplicate" title="duplicate" onclick="duplicate('{{agent.id}}', '{{agent.name}}');">
-            <div class="name">{{agent.name}}</div>
+{% extends 'layout.html' %}
 
+{% block content %}
+    <div id="content">
+        <h2>Agents</h2>
+        <div class="agents agents-grid-container">
+            {% for agent in agents %}
+                <div class="agent agents-grid-item">
+                    <img src="static/images/icons/remove.png" class="remove" title="remove"
+                         onclick="remove_agent({{ agent.id }});">
+                    <img src="static/images/icons/edit.png" class="edit" title="edit"
+                         onclick="edit_agent({{ agent.id }});">
+                    <img src="static/images/icons/rename.png" class="rename" title="rename"
+                         onclick="rename('{{ agent.id }}', '{{ agent.name }}');">
+                    <img src="static/images/icons/duplicate.png" class="duplicate" title="duplicate"
+                         onclick="duplicate('{{ agent.id }}', '{{ agent.name }}');">
+                    <div class="name">{{ agent.name }}</div>
+
+                </div>
+            {% endfor %}
+            <div class="agent agents-grid-item">
+                <form method="post" id="add_agent_form">
+                    <label>Add Agent:</label>
+                    <input type="hidden" name="fnc" value="add_agent"/>
+                    <input id="agent_name" name="agent_name" type="text" placeholder="agent_name" required/>
+                    <input id="submit" type="submit" value="Add Agent">
+                </form>
+            </div>
+            </ul>
         </div>
-        {% endfor %}
-        <div class="agent agents-grid-item">
-            <form method="post" id="add_agent_form">
-                <label>Add Agent:</label>
-                <input type="hidden" name="fnc" value="add_agent" />
-                <input id="agent_name" name="agent_name" type="text" placeholder="agent_name" required/>
-                <input id="submit" type="submit" value="Add Agent">
-            </form>
-        </div>
-        </ul>
     </div>
-</div>
-</body>
-</html>
+{% endblock %}
